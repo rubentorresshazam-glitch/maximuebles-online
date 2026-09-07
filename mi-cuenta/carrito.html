@@ -12,53 +12,42 @@
     <meta name="geo.position" content="-39.32;-65.67">
     <meta name="ICBM" content="-39.32, -65.67">
     
-    <!-- ✅ TUS ENLACES → TAL CUAL LOS TENÍAS -->
+    <!-- ✅ ESTILOS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/carrito.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    
-    <!-- ✅ ESTILO PARA ACHICAR LA BARRA -->
-    <style>
-      .cabecera-principal {
-        padding: 0.4rem 0 !important; /* ← Mucho más chica arriba y abajo */
-        margin-bottom: 1rem !important;
-      }
-      .cabecera-principal .contenedor {
-        padding: 0.3rem 1.5rem !important; /* ← Menos espacio interno */
-        display: flex !important;
-        justify-content: flex-start !important; /* ← Logo a la izquierda */
-      }
-      .logo-imagen {
-        max-height: 55px !important; /* ← Tamaño del logo */
-        width: auto !important;
-        display: block;
-      }
-    </style>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body>
-    <!-- ✅ ENCABEZADO → SOLO TU LOGO, BARRA BIEN CHICA -->
-    <header class="cabecera-principal">
-        <div class="contenedor">
-            <!-- ✅ TU LOGO → a la izquierda, tamaño ajustado -->
-            <a href="/index.html" class="logo">
-                <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
+    <!-- ✅ ENCABEZADO → SOLO LOGO — SIN MENÚ -->
+    <header class="cabecera-carrito">
+        <div class="contenedor-cabecera">
+            <a href="/index.html" class="logo-carrito">
+                <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles" class="logo-imagen">
             </a>
         </div>
     </header>
 
-    <!-- ✅ TODO LO DEMÁS → EXACTAMENTE IGUAL A TU HTML -->
+    <!-- ✅ CONTENIDO PRINCIPAL DEL CARRITO -->
     <main class="contenedor pagina-carrito">
-        <h2 class="titulo-pagina">Mi Carrito</h2>
+        <h1 class="titulo-pagina">Mi Carrito</h1>
+
         <div class="contenedor-principal">
+            <!-- ✅ COLUMNA IZQUIERDA: Productos o Carrito Vacío -->
             <div class="columna-productos">
+                <!-- Carrito Vacío → Se muestra por defecto -->
                 <div id="pantalla-vacia" class="pantalla-vacia">
                     <div class="contenido-vacio">
                         <div class="icono-grande">🛒</div>
-                        <h3>Tu carrito está vacío</h3>
+                        <h2>Tu carrito está vacío</h2>
                         <p>Aún no agregaste ningún producto. Explorá nuestra tienda y elegí tus muebles.</p>
-                        <a href="/index.html" class="boton-ir-tienda">✨ Ir a ver productos</a>
+                        <a href="/index.html" class="boton-ir-tienda">
+                            <i class="fa-solid fa-store"></i> Ir a ver productos
+                        </a>
                     </div>
                 </div>
+
+                <!-- Lista de productos → Se muestra cuando hay items -->
                 <div id="lista-contenedor" class="lista-contenedor oculto">
                     <h3 class="subtitulo-lista">Productos Seleccionados</h3>
                     <div id="lista-items">
@@ -66,6 +55,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ✅ COLUMNA DERECHA: Resumen y Botones -->
             <div class="columna-resumen">
                 <div class="panel-resumen">
                     <h3>Resumen del Pedido</h3>
@@ -83,23 +74,25 @@
                         <strong id="total">$ 0,00</strong>
                     </div>
                     <div class="botones-acciones">
-                        <button id="btn-vaciar" class="boton-vaciar">🗑️ Vaciar Carrito</button>
-                        <a href="/mi-cuenta/checkout.html" id="btn-pagar" class="boton-pagar">✅ Finalizar Compra</a>
+                        <button id="btn-vaciar" class="boton-vaciar">
+                            <i class="fa-solid fa-trash-can"></i> Vaciar Carrito
+                        </button>
+                        <a href="/mi-cuenta/checkout.html" id="btn-pagar" class="boton-pagar">
+                            <i class="fa-solid fa-lock"></i> Finalizar Compra
+                        </a>
                     </div>
-                    <p class="texto-seguridad">🔒 Compra segura y protegida</p>
+                    <p class="texto-seguridad">🔒 Compra segura y protegida · Envío y armado gratuito</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- ✅ TU PIE DE PÁGINA → IGUAL AL TUYO -->
-    <footer class="pie-pagina">
-        <div class="derechos">
-            <p>&copy; 2026 MaxiMuebles — Todos los derechos reservados</p>
-        </div>
+    <!-- ✅ PIE DE PÁGINA SIMPLE -->
+    <footer class="pie-carrito">
+        <p>&copy; 2026 MaxiMuebles — Todos los derechos reservados</p>
     </footer>
 
-    <!-- ✅ TUS SCRIPTS → TAL CUAL LOS TENÍAS -->
+    <!-- ✅ SCRIPTS -->
     <script src="/js/api.js"></script>
     <script src="/js/carrito.js"></script>
 </body>
