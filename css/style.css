@@ -1766,3 +1766,95 @@ img[src*="user"] {
     z-index: 10;
 }
 
+/* ==================================================
+   🛋️ TARJETAS DE PRODUCTOS — ESTILO UNIFICADO
+   Para TODAS las secciones: Inicio, Dormitorio, Comedor,
+   Living, Oficina, Ofertas y Detalle
+   ================================================== */
+
+/* ✅ TARJETA — FONDO NEGRO PARA TODAS */
+.product-card,
+.tarjeta-producto,
+.item-producto,
+[class*="tarjeta"],
+div[class*="producto"] {
+  background-color: #0A0C0A !important; /* Negro profundo */
+  border: 1px solid #1E241E !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+}
+
+/* ✅ EFECTO AL PASAR EL MOUSE */
+.product-card:hover,
+.tarjeta-producto:hover,
+.item-producto:hover {
+  transform: translateY(-4px) !important;
+  border-color: #226627 !important;
+  box-shadow: 0 8px 20px rgba(34, 102, 39, 0.25) !important;
+}
+
+/* ✅ TEXTO — BLANCO EN TODAS */
+.product-card h2, .product-card h3, .product-card h4,
+.tarjeta-producto h2, .tarjeta-producto h3, .tarjeta-producto h4,
+.nombre-producto,
+.descripcion-producto {
+  color: #FFFFFF !important; /* Blanco puro */
+}
+
+/* ✅ PRECIO — VERDE EN TODAS */
+.precio,
+.precio-producto,
+.product-card .precio,
+.tarjeta-producto .precio {
+  color: #34A039 !important; /* Verde brillante */
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+}
+
+/* ✅ BOTONES — VERDE EN TODAS LAS TARJETAS */
+button,
+.btn,
+.btn-agregar,
+.btn-carrito,
+.btn-ver,
+.product-card button,
+.tarjeta-producto button,
+[class*="btn-"] {
+  background-color: #226627 !important; /* Verde oficial */
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+/* ✅ BOTÓN AL PASAR EL MOUSE */
+button:hover,
+.btn:hover,
+.btn-agregar:hover,
+.product-card button:hover,
+.tarjeta-producto button:hover {
+  background-color: #34A039 !important; /* Verde más claro */
+  color: #FFFFFF !important;
+}
+
+/* ✅ ASEGURAMOS EN CADA SECCIÓN */
+#ofertas-grid > *,
+#productos-grid > *,
+.dormitorio *,
+.comedor *,
+.living *,
+.oficina *,
+.ofertas * {
+  background-color: #0A0C0A !important;
+}
+
+.dormitorio button,
+.comedor button,
+.living button,
+.oficina button,
+.ofertas button {
+  background-color: #226627 !important;
+}
