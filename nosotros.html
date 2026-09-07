@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nosotros - Maximuebles</title>
+    <title>Nosotros - MaxiMuebles</title>
     <!-- MISMAS FUENTES E ICONOS QUE EN EL INDEX -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,8 +15,8 @@
 </head>
 <body>
     <!-- ==============================================
-                  BARRA SUPERIOR → IGUAL
-         ============================================== -->
+                    BARRA SUPERIOR → IGUAL
+     ============================================== -->
     <section class="topbar">
         <div class="topbar-container">
             <div class="topbar-item">
@@ -35,99 +35,101 @@
     </section>
 
     <!-- ==============================================
-         ENCABEZADO → SIN "MI CUENTA", TUS ICONOS IGUALES
-       ============================================== -->
-    <header class="header">
+         ENCABEZADO → LOGO | BUSCADOR CENTRADO | ICONOS
+      ============================================== -->
+    <header class="header-principal">
         <div class="header-top">
             <div class="header-top-container">
-                <!-- Logo → IGUAL -->
-                <div class="header-left">
+
+                <!-- ✅ IZQUIERDA: LOGO -->
+                <div class="logo">
                     <a href="/index.html" class="logo-link">
                         <img src="/assets/logos/logomaxibuebles.png" alt="Maximuebles" class="logo-imagen">
                     </a>
                 </div>
-                <!-- Buscador → IGUAL -->
-                 <div class="header-center">
-                    <div class="search-bar">
-                    <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
-                    <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                 </button>
-              </div>
-           </div>
-                <!-- Iconos → SIN "MI CUENTA", TUS BOTONES SE QUEDAN IGUALES -->
-                <div class="header-right">
-                    <!-- ✅ QUITAMOS "MI CUENTA / PERFIL" → YA NO EXISTE -->
-                    <button class="header-btn">
-                        <i class="fa-solid fa-heart"></i>
+
+                <!-- ✅ CENTRO: BUSCADOR -->
+                <div class="header-center">
+                    <form class="search-bar" role="search" onsubmit="aplicarFiltros(); return false;">
+                        <input type="search" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" aria-label="Buscar productos" autocomplete="off" onkeyup="aplicarFiltros()">
+                        <button type="submit" class="search-btn" aria-label="Buscar" title="Buscar">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
+                <div class="iconos-nav">
+                    <span class="guest-label">Compra como invitado</span>
+                    <button type="button" class="header-btn" aria-label="Ver favoritos">
+                        <i class="fa-solid fa-heart" aria-hidden="true"></i>
                         <span>Favoritos</span>
                     </button>
-                    <!-- ✅ TU CARRITO → SE QUEDA EXACTAMENTE IGUAL -->
-                    <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        <div class="cart-count" id="headerCartCount">0</div>
+                    <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" aria-label="Ir al carrito">
+                        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                        <div class="cart-count" id="headerCartCount" aria-label="Cantidad de productos en el carrito"></div>
                     </a>
-        <!-- ==============================================
-                     MENÚ PRINCIPAL → CORREGIDO
-          ============================================== -->
-        <nav class="navbar">
-            <div class="navbar-container menu-pc">
-                <a href="/index.html" class="nav-item">Inicio</a>
-                <a href="/nosotros.html" class="nav-item active">Nosotros</a>
-                <a href="/pages/living.html" class="nav-item">Living</a>
-                <!-- ✅ CORREGIDO: dormitorio.html (SIN la "s") -->
-                <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
-                <a href="/pages/comedor.html" class="nav-item">Comedor</a>
-                <a href="/pages/oficina.html" class="nav-item">Oficina</a>
-                <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
-                <a href="/contacto.html" class="nav-item">Contacto</a>
-
-                <div class="redes-contenedor">
-                    <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </a>
-                    <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-                    <div class="wp-boton-final">
-                        <a href="#" class="boton-wp" aria-label="WhatsApp">
-                            <i class="fa-brands fa-whatsapp"></i>
-                        </a>
-                        <div class="lista-wp">
-                            <!-- ✅ CORREGIDO: nombre "MaxiMuebles" -->
-                            <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
-                            <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
-                            <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
-                        </div>
-                    </div>
                 </div>
+
             </div>
-        </nav>
+        </div>
     </header>
 
     <!-- ==============================================
-              CONTENIDO DE NOSOTROS → EXACTO
-       ============================================== -->
+                MENÚ PRINCIPAL → CORREGIDO
+     ============================================== -->
+    <nav class="navbar">
+        <div class="navbar-container menu-pc">
+            <a href="/index.html" class="nav-item">Inicio</a>
+            <a href="/nosotros.html" class="nav-item active">Nosotros</a>
+            <a href="/pages/living.html" class="nav-item">Living</a>
+            <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
+            <a href="/pages/comedor.html" class="nav-item">Comedor</a>
+            <a href="/pages/oficina.html" class="nav-item">Oficina</a>
+            <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
+            <a href="/contacto.html" class="nav-item">Contacto</a>
+            <div class="redes-contenedor">
+                <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <div class="wp-boton-final">
+                    <a href="#" class="boton-wp" aria-label="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <div class="lista-wp">
+                        <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
+                        <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
+                        <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==============================================
+                  CONTENIDO DE NOSOTROS
+     ============================================== -->
     <main class="nosotros-page">
         <div class="nosotros-container">
             <div class="nosotros-titulo">
                 <h1>Sobre Nosotros</h1>
-                <p class="subtitulo">Conocé la historia detrás de Maximuebles</p>
+                <p class="subtitulo">Conocé la historia detrás de MaxiMuebles</p>
             </div>
-
             <section class="nosotros-seccion">
                 <div class="texto">
                     <h2>Nuestra Historia</h2>
-                    <p><strong>Maximuebles</strong> fue fundada el 8 de julio de 2015 por Samuel Adrián Cruz, Juan Manuel Díaz y Gonzalo Daniel del Bares, con un propósito claro: ofrecer muebles de calidad, excelente diseño y precios justos para los hogares de nuestra zona y toda la Patagonia.</p>
+                    <p><strong>MaxiMuebles</strong> fue fundada el 8 de julio de 2015 por Samuel Adrián Cruz, Juan Manuel Díaz y Gonzalo Daniel del Bares, con un propósito claro: ofrecer muebles de calidad, excelente diseño y precios justos para los hogares de nuestra zona y toda la Patagonia.</p>
                     <p>Los socios contaban con una amplia trayectoria en el rubro del mobiliario, desarrollada en otra empresa, donde adquirieron todo el conocimiento necesario para conocer en profundidad lo que los clientes realmente necesitan. Fue así que decidieron dar un paso decisivo: dejar esa actividad para constituir su propio proyecto, con una forma de trabajar basada en la seriedad y el compromiso.</p>
                     <p>Con esfuerzo, dedicación y la confianza de quienes nos eligieron, la empresa fue creciendo hasta consolidarse como un referente, contando actualmente con nuestros locales físicos. Hoy damos un nuevo paso, inaugurando por primera vez nuestra tienda online, para acercar nuestra propuesta a todos desde cualquier lugar.</p>
                     <p>Seguimos fieles al mismo compromiso con el que iniciamos: seleccionar cada producto pensando en ustedes, para brindarles comodidad y darle a su hogar el estilo que se merece.</p>
                 </div>
                 <div class="imagen">
-                    <img src="/assets/hero/nosotros.png" alt="Nuestra tienda Maximuebles">
+                    <img src="/assets/hero/nosotros.png" alt="Nuestra tienda MaxiMuebles">
                 </div>
             </section>
-
             <section class="nosotros-valores">
                 <div class="valor">
                     <i class="fa-solid fa-bullseye"></i>
@@ -145,7 +147,6 @@
                     <p>Honestidad, calidad, respeto por el cliente y pasión por lo que hacemos. Cada compra es un voto de confianza que cuidamos al máximo.</p>
                 </div>
             </section>
-
             <section class="nosotros-elegir">
                 <h2>¿Por qué elegirnos?</h2>
                 <div class="lista-puntos">
@@ -174,7 +175,7 @@
         </div>
     </main>
 
-    <!-- MISMO PIE DE PÁGINA CORREGIDO -->
+    <!-- PIE DE PÁGINA -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-logo-area">
@@ -182,19 +183,18 @@
                 <p class="footer-slogan">Tu tienda de muebles de confianza</p>
             </div>
             <div class="footer-links-simples">
-                <a href="/nosotros.html">Nosotros</a>
-                <!-- ✅ CORREGIDO: /ayuda.html -->
+                <a href="/nosotros.html" class="activo">Nosotros</a>
                 <a href="/ayuda.html">Ayuda</a>
                 <a href="/contacto.html">Contacto</a>
                 <a href="/terminos.html">Términos</a>
             </div>
             <div class="footer-bottom">
-                &copy; 2026 Maximuebles. Todos los derechos reservados.
+                &copy; 2026 MaxiMuebles. Todos los derechos reservados.
             </div>
         </div>
     </footer>
 
-    <!-- ✅ SCRIPTS → SIN menu-cuenta.js porque ya no se usa -->
+    <!-- ✅ SCRIPTS -->
     <script src="/js/api.js"></script>
     <script src="/js/carrito.js"></script>
 </body>

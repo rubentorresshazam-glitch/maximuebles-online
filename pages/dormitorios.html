@@ -49,74 +49,82 @@
     </section>
 
     <!-- ==============================================
-         ENCABEZADO → CARRITO SIN NÚMERO FIJO
-       ============================================== -->
-    <header class="header">
+         ENCABEZADO → LOGO | BUSCADOR CENTRADO | ICONOS
+      ============================================== -->
+    <header class="header-principal">
         <div class="header-top">
             <div class="header-top-container">
-                <!-- Logo -->
-                <div class="header-left">
+
+                <!-- ✅ IZQUIERDA: LOGO -->
+                <div class="logo">
                     <a href="/index.html" class="logo-link">
                         <img src="/assets/logos/logomaxibuebles.png" alt="Maximuebles - Muebles para Dormitorios" class="logo-imagen">
                     </a>
                 </div>
-                <!-- Buscador ✅ Con ID y evento -->
+
+                <!-- ✅ CENTRO: BUSCADOR -->
                 <div class="header-center">
-                   <div class="search-bar">
-                   <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
-                    <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
-                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                   </button>
+                    <div class="search-bar">
+                        <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
+                        <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-                <!-- Iconos → CARRITO CORREGIDO -->
-                <div class="header-right">
+
+                <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
+                <div class="iconos-nav">
+                    <span class="guest-label">Compra como invitado</span>
                     <button class="header-btn">
                         <i class="fa-solid fa-heart"></i>
                         <span>Favoritos</span>
                     </button>
-                    <!-- ✅ SIN NÚMERO ESCRITO → el JS lo muestra solo si hay productos -->
                     <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" aria-label="Ver carrito de compras" title="Ver carrito de compras">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <div class="cart-count" id="headerCartCount"></div>
                     </a>
-            <!-- ==============================================
-                            MENÚ PRINCIPAL → IGUAL
-             ============================================== -->
-           <nav class="navbar">
-                <div class="navbar-container menu-pc">
-                    <a href="/index.html" class="nav-item">Inicio</a>
-                    <a href="/nosotros.html" class="nav-item">Nosotros</a>
-                    <a href="/pages/living.html" class="nav-item">Living</a>
-                    <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
-                    <a href="/pages/comedor.html" class="nav-item active">Comedor</a>
-                    <a href="/pages/oficina.html" class="nav-item">Oficina</a>
-                    <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
-                    <a href="/contacto.html" class="nav-item">Contacto</a>
-                    <div class="redes-contenedor">
-                        <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
-                            <i class="fa-brands fa-facebook-f"></i>
-                        </a>
-                        <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
-                            <i class="fa-brands fa-instagram"></i>
-                        </a>
-                        <div class="wp-boton-final">
-                            <a href="#" class="boton-wp" aria-label="WhatsApp">
-                                <i class="fa-brands fa-whatsapp"></i>
-                            </a>
-                            <div class="lista-wp">
-                                <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
-                                <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
-                                <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </nav>
+
+            </div>
         </div>
     </header>
+
     <!-- ==============================================
-         CONTENIDO DE DORMITORIOS → CON ID EN GRILLA
+                MENÚ PRINCIPAL → CORREGIDO Y ACTIVO
+     ============================================== -->
+    <nav class="navbar">
+        <div class="navbar-container menu-pc">
+            <a href="/index.html" class="nav-item">Inicio</a>
+            <a href="/nosotros.html" class="nav-item">Nosotros</a>
+            <a href="/pages/living.html" class="nav-item">Living</a>
+            <a href="/pages/dormitorios.html" class="nav-item active">Dormitorios</a>
+            <a href="/pages/comedor.html" class="nav-item">Comedor</a>
+            <a href="/pages/oficina.html" class="nav-item">Oficina</a>
+            <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
+            <a href="/contacto.html" class="nav-item">Contacto</a>
+            <div class="redes-contenedor">
+                <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <div class="wp-boton-final">
+                    <a href="#" class="boton-wp" aria-label="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <div class="lista-wp">
+                        <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
+                        <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
+                        <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==============================================
+                  CONTENIDO DE DORMITORIOS
      ============================================== -->
     <main class="pagina-seccion">
         <h1>Muebles para Dormitorios</h1>
@@ -164,7 +172,7 @@
                 <a href="/terminos.html">Términos</a>
             </div>
             <div class="footer-bottom">
-                &copy; 2026 Maximuebles. Todos los derechos reservados.
+                &copy; 2026 MaxiMuebles. Todos los derechos reservados.
             </div>
         </div>
     </footer>

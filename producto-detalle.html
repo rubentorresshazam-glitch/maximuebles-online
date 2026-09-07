@@ -25,7 +25,9 @@
     <link rel="stylesheet" href="/css/producto-detalle.css">
 </head>
 <body>
-    <!-- BARRA SUPERIOR -->
+    <!-- ==============================================
+                    BARRA SUPERIOR → IGUAL
+     ============================================== -->
     <section class="topbar">
         <div class="topbar-container">
             <div class="topbar-item">
@@ -43,77 +45,85 @@
         </div>
     </section>
 
-    <!-- ENCABEZADO -->
-    <header class="header">
+    <!-- ==============================================
+         ENCABEZADO → LOGO | BUSCADOR CENTRADO | ICONOS
+      ============================================== -->
+    <header class="header-principal">
         <div class="header-top">
             <div class="header-top-container">
-                <!-- Logo -->
-                <div class="header-left">
+
+                <!-- ✅ IZQUIERDA: LOGO -->
+                <div class="logo">
                     <a href="/index.html" class="logo-link">
                         <img src="/assets/logos/logomaxibuebles.png" alt="Maximuebles - Tienda de Muebles Valle Medio" class="logo-imagen">
                     </a>
                 </div>
 
-                <!-- ✅ Buscador CON ID y evento -->
+                <!-- ✅ CENTRO: BUSCADOR -->
                 <div class="header-center">
-                 <div class="search-bar">
-                  <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
-                  <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
-                   <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                </button>
-           </div>
-         </div>
+                    <div class="search-bar">
+                        <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
+                        <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
 
-                <!-- Iconos -->
-                <div class="header-right">
+                <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
+                <div class="iconos-nav">
+                    <span class="guest-label">Compra como invitado</span>
                     <button class="header-btn">
                         <i class="fa-solid fa-heart"></i>
                         <span>Favoritos</span>
                     </button>
-                    <!-- ✅ Carrito → Ruta corregida -->
-                    <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        <div class="cart-count" id="headerCartCount">0</div>
+                    <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" aria-label="Ver carrito" title="Ver carrito">
+                        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                        <div class="cart-count" id="headerCartCount"></div>
                     </a>
+                </div>
 
-        <!-- MENÚ DE NAVEGACIÓN ✅ RUTAS CORREGIDAS -->
-        <nav class="navbar">
-            <div class="navbar-container menu-pc">
-                <a href="/index.html" class="nav-item">Inicio</a>
-                <a href="/nosotros.html" class="nav-item">Nosotros</a>
-                <a href="/pages/living.html" class="nav-item">Living</a>
-                <!-- ✅ CORREGIDO: dormitorio.html (sin la "s") -->
-                <a href="/pages/dormitorio.html" class="nav-item">Dormitorios</a>
-                <a href="/pages/comedor.html" class="nav-item">Comedor</a>
-                <a href="/pages/oficina.html" class="nav-item">Oficina</a>
-                <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
-                <a href="/contacto.html" class="nav-item">Contacto</a>
+            </div>
+        </div>
+    </header>
 
-                <!-- Redes sociales -->
-                <div class="redes-contenedor">
-                    <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
-                        <i class="fa-brands fa-facebook-f"></i>
+    <!-- ==============================================
+                MENÚ PRINCIPAL → RUTAS CORREGIDAS
+     ============================================== -->
+    <nav class="navbar">
+        <div class="navbar-container menu-pc">
+            <a href="/index.html" class="nav-item">Inicio</a>
+            <a href="/nosotros.html" class="nav-item">Nosotros</a>
+            <a href="/pages/living.html" class="nav-item">Living</a>
+            <!-- ✅ CORREGIDO: dormitorios.html (con "s" como archivo real) -->
+            <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
+            <a href="/pages/comedor.html" class="nav-item">Comedor</a>
+            <a href="/pages/oficina.html" class="nav-item">Oficina</a>
+            <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
+            <a href="/contacto.html" class="nav-item">Contacto</a>
+            <div class="redes-contenedor">
+                <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <div class="wp-boton-final">
+                    <a href="#" class="boton-wp" aria-label="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
                     </a>
-                    <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-                    <!-- WhatsApp con submenú -->
-                    <div class="wp-boton-final">
-                            <a href="#" class="boton-wp" aria-label="WhatsApp">
-                                <i class="fa-brands fa-whatsapp"></i>
-                            </a>
-                            <div class="lista-wp">
-                                <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
-                                <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
-                                <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
-                            </div>
+                    <div class="lista-wp">
+                        <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
+                        <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
+                        <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
                     </div>
                 </div>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ==============================================
+                  CONTENIDO PRINCIPAL
+     ============================================== -->
     <main>
         <div class="producto-contenedor">
             <!-- GALERÍA DE IMÁGENES -->
@@ -133,7 +143,6 @@
                     </button>
                 </div>
             </div>
-
             <!-- DATOS DEL PRODUCTO -->
             <div class="producto-datos">
                 <h1 id="nombre-producto"></h1>
@@ -143,7 +152,6 @@
                 </div>
                 <p class="cuotas-info" id="cuotas-info"></p>
                 <p class="descripcion-corta" id="descripcion-corta"></p>
-
                 <!-- Selector de cantidad -->
                 <div class="cantidad-bloque">
                     <label for="cantidad">Cantidad:</label>
@@ -153,8 +161,7 @@
                         <button class="btn-cantidad" id="btn-mas" type="button" title="Aumentar cantidad" aria-label="Aumentar cantidad">+</button>
                     </div>
                 </div>
-
-                <!-- BOTONES DE ACCIÓN → ESTILO PREMIUM -->
+                <!-- BOTONES DE ACCIÓN -->
                 <div class="botones-accion">
                     <button type="button" class="btn-comprar-ahora" id="btn-comprar-ahora">
                         <i class="fa-solid fa-bolt"></i> Comprar ahora
@@ -170,7 +177,6 @@
                 </div>
             </div>
         </div>
-
         <!-- DESCRIPCIÓN LARGA -->
         <div class="descripcion-larga">
             <h2>Descripción del producto</h2>
@@ -201,8 +207,7 @@
     <script src="/js/api.js"></script>
     <script src="/js/carrito.js"></script>
     <script src="/js/producto-detalle.js"></script>
-
-    <!-- ✅ SEO DINÁMICO → Actualiza título y descripción según el producto -->
+    <!-- ✅ SEO DINÁMICO -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const nombre = document.getElementById('nombre-producto');

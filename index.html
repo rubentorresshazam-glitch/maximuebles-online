@@ -78,75 +78,83 @@
     </section>
 
     <!-- ==============================================
-         ENCABEZADO → CARRITO SIN NÚMERO FIJO
-       ============================================== -->
-    <header class="header">
+         ENCABEZADO → LOGO | BUSCADOR CENTRADO | ICONOS
+      ============================================== -->
+    <header class="header-principal">
         <div class="header-top">
             <div class="header-top-container">
-                <!-- Logo → IGUAL -->
-                <div class="header-left">
+
+                <!-- ✅ IZQUIERDA: LOGO -->
+                <div class="logo">
                     <a href="/index.html" class="logo-link">
                         <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
                     </a>
                 </div>
-                <!-- Buscador → IGUAL -->
-              <div class="header-center">
-               <div class="search-bar">
-               <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
-               <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
-                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-             </button>
-         </div>
-     </div>
-                <!-- Iconos → CARRITO CORREGIDO -->
-                <div class="header-right">
+
+                <!-- ✅ CENTRO: BUSCADOR → TU CÓDIGO ORIGINAL -->
+                <div class="header-center">
+                    <div class="search-bar">
+                        <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
+                        <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
+                <div class="iconos-nav">
                     <span class="guest-label">Compra como invitado</span>
                     <button class="header-btn">
                         <i class="fa-solid fa-heart"></i>
                         <span>Favoritos</span>
                     </button>
-                    <!-- ✅ CARRITO: SIN NÚMERO ESCRITO → el JS lo maneja SOLO -->
                     <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" title="Carrito de compras" aria-label="Carrito de compras">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <div class="cart-count" id="headerCartCount"></div>
                     </a>
-            <!-- ==============================================
-                            MENÚ PRINCIPAL → IGUAL
-             ============================================== -->
-            <nav class="navbar">
-                <div class="navbar-container menu-pc">
-                    <a href="/index.html" class="nav-item active">Inicio</a>
-                    <a href="/nosotros.html" class="nav-item">Nosotros</a>
-                    <a href="/pages/living.html" class="nav-item">Living</a>
-                    <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
-                    <a href="/pages/comedor.html" class="nav-item">Comedor</a>
-                    <a href="/pages/oficina.html" class="nav-item">Oficina</a>
-                    <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
-                    <a href="/contacto.html" class="nav-item">Contacto</a>
-                    <div class="redes-contenedor">
-                        <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
-                            <i class="fa-brands fa-facebook-f"></i>
-                        </a>
-                        <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
-                            <i class="fa-brands fa-instagram"></i>
-                        </a>
-                       <div class="wp-boton-final">
-                        <a href="#" class="boton-wp" aria-label="WhatsApp">
-                            <i class="fa-brands fa-whatsapp"></i>
-                        </a>
-                        <div class="lista-wp">
-                            <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
-                            <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
-                            <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
-                        </div>
-                        </div>
-                    </div>
                 </div>
-            </nav>
+
+            </div>
         </div>
     </header>
 
-    <!-- BANNER PRINCIPAL → IGUAL -->
+    <!-- ==============================================
+                MENÚ PRINCIPAL
+     ============================================== -->
+    <nav class="navbar">
+        <div class="navbar-container menu-pc">
+            <a href="/index.html" class="nav-item active">Inicio</a>
+            <a href="/nosotros.html" class="nav-item">Nosotros</a>
+            <a href="/pages/living.html" class="nav-item">Living</a>
+            <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
+            <a href="/pages/comedor.html" class="nav-item">Comedor</a>
+            <a href="/pages/oficina.html" class="nav-item">Oficina</a>
+            <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
+            <a href="/contacto.html" class="nav-item">Contacto</a>
+            <div class="redes-contenedor">
+                <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <div class="wp-boton-final">
+                    <a href="#" class="boton-wp" aria-label="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <div class="lista-wp">
+                        <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
+                        <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
+                        <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==============================================
+                BANNER PRINCIPAL
+     ============================================== -->
     <section class="hero">
         <div class="hero-inner">
             <div class="hero-left">
@@ -179,7 +187,7 @@
     </section>
 
     <main>
-        <!-- BENEFICIOS → IGUAL -->
+        <!-- BENEFICIOS -->
         <section class="benefits">
             <div class="benefits-container">
                 <div class="benefit-item"><i class="fa-solid fa-truck-fast"></i><h3>Envíos a todo el Valle Medio</h3><p>Desde Chimpay hasta Pomona</p></div>
@@ -189,9 +197,9 @@
             </div>
         </section>
 
-        <!-- CATEGORÍAS → IGUAL -->
+        <!-- CATEGORÍAS -->
         <section class="categories">
-           <div class="categories-grid">
+            <div class="categories-grid">
                 <a href="/pages/living.html" class="category-card"><div class="category-image-container"><img src="/assets/categories/living.jpg" alt="Muebles de Living y estar - MaxiMuebles" class="category-full-image" loading="lazy"></div><div class="category-overlay"><h3>Living</h3></div></a>
                 <a href="/pages/dormitorios.html" class="category-card"><div class="category-image-container"><img src="/assets/categories/dormitorio.jpg" alt="Muebles de Dormitorio - MaxiMuebles" class="category-full-image" loading="lazy"></div><div class="category-overlay"><h3>Dormitorio</h3></div></a>
                 <a href="/pages/comedor.html" class="category-card"><div class="category-image-container"><img src="/assets/categories/comedor.jpg" alt="Muebles de Comedor - MaxiMuebles" class="category-full-image" loading="lazy"></div><div class="category-overlay"><h3>Comedor</h3></div></a>
@@ -199,7 +207,7 @@
             </div>
         </section>
 
-        <!-- ✅ PRODUCTOS EN OFERTA → CARGA DESDE LA BD -->
+        <!-- PRODUCTOS EN OFERTA -->
         <section class="featured-offers">
             <div class="featured-container">
                 <div class="featured-header">
@@ -207,13 +215,12 @@
                     <p class="subtitulo-ofertas">Los mejores precios, cargados automáticamente</p>
                 </div>
                 <div class="products-grid" id="ofertas-grid">
-                    <!-- ✅ Aquí se cargarán SOLO los productos con categoría "ofertas" desde la base de datos -->
                     <p class="mensaje-cargando">Cargando ofertas...</p>
                 </div>
             </div>
         </section>
 
-        <!-- MAPA → IGUAL -->
+        <!-- MAPA -->
         <section class="seccion-mapa">
             <div class="featured-header"><h2>Nuestros locales físicos</h2><p class="subtitulo-mapa">Encontranos en el Valle Medio de Río Negro</p></div>
             <div class="buscador-mapa"><input type="text" id="buscar-direccion" placeholder="Escribí una dirección o localidad..." class="input-buscar"><button type="button" class="btn-buscar" onclick="buscarEnMapa()" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button></div>
@@ -222,7 +229,7 @@
         </section>
     </main>
 
-    <!-- PIE → IGUAL -->
+    <!-- PIE DE PÁGINA -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-logo-area">
@@ -246,7 +253,7 @@
     <script src="/js/carrito.js?v=10"></script>
     <script src="/js/index.js"></script>
 
-    <!-- Banner automático → IGUAL -->
+    <!-- Banner automático -->
     <script>
         const fotosBanner = document.querySelectorAll('.hero-image');
         const indicadores = document.querySelectorAll('.hero-indicators .indicator');
