@@ -2048,3 +2048,106 @@ nav *,
 .barra-navegacion * {
   box-sizing: border-box !important;
 }
+
+/* ==================================================
+   🔍 FUERZA TODO EN UNA SOLA LÍNEA — LOGO | BUSCADOR | ICONOS
+   ================================================== */
+
+/* ✅ CONTENEDOR PRINCIPAL — ALTURA FIJA, NO SE AGRANDA */
+.header-principal,
+nav,
+.barra-navegacion {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: 70px !important;
+  min-height: 70px !important;
+  padding: 0 20px !important;
+  margin: 0 !important;
+}
+
+/* ✅ LOGO — IZQUIERDA */
+.logo {
+  flex: 0 0 auto !important;
+  order: 1 !important;
+}
+
+/* ✅ BUSCADOR — CENTRO */
+.header-center {
+  flex: 1 1 auto !important;
+  order: 2 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 15px !important;
+  min-width: 250px !important;
+}
+
+/* ✅ CAJA DEL BUSCADOR */
+.search-bar {
+  display: flex !important;
+  align-items: center !important;
+  background-color: #0A0C0A !important;
+  border: 2px solid #226627 !important;
+  border-radius: 50px !important;
+  padding: 6px 15px !important;
+  max-width: 400px !important;
+  width: 100% !important;
+}
+
+.search-input {
+  flex: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 14px !important;
+  padding: 8px 10px !important;
+  outline: none !important;
+}
+
+.search-input::placeholder {
+  color: #AAAAAA !important;
+}
+
+.search-btn {
+  background-color: #226627 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+.search-btn:hover {
+  background-color: #34A039 !important;
+}
+
+/* ✅ ICONOS — DERECHA */
+.iconos-nav,
+.header-derecha {
+  flex: 0 0 auto !important;
+  order: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+/* ✅ NADA BAJA DE LÍNEA */
+.header-principal > *,
+nav > *,
+.barra-navegacion > * {
+  flex-wrap: nowrap !important;
+  margin: 0 !important;
+}
+
+.header-center {
+  flex-shrink: 1 !important;
+}
