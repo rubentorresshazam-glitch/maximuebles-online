@@ -47,14 +47,14 @@
                     </a>
                 </div>
                 <!-- Buscador → IGUAL -->
-                <div class="header-center">
+                 <div class="header-center">
                     <div class="search-bar">
-                        <input type="text" class="search-input" placeholder="¿Qué estás buscando?">
-                        <button type="button" class="search-btn" aria-label="Buscar" title="Buscar">
-                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                </div>
+                    <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
+                    <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                 </button>
+              </div>
+           </div>
                 <!-- Iconos → SIN "MI CUENTA", TUS BOTONES SE QUEDAN IGUALES -->
                 <div class="header-right">
                     <!-- ✅ QUITAMOS "MI CUENTA / PERFIL" → YA NO EXISTE -->
@@ -67,9 +67,6 @@
                         <i class="fa-solid fa-cart-shopping"></i>
                         <div class="cart-count" id="headerCartCount">0</div>
                     </a>
-            </div>
-        </div>
-
         <!-- ==============================================
                      MENÚ PRINCIPAL → CORREGIDO
           ============================================== -->
