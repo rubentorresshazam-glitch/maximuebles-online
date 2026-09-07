@@ -1859,88 +1859,192 @@ button:hover,
   background-color: #226627 !important;
 }
 
-
 /* ==================================================
-   🔍 BUSCADOR — ESTILO EXACTO DE MAXIMUEBLES
-   Para TODAS las secciones: Inicio, Dormitorio, Comedor,
-   Living, Oficina, Ofertas
+   🔍 BUSCADOR — ESTILO UNIFICADO PARA TODAS LAS PÁGINAS
    ================================================== */
 
-/* ✅ CONTENEDOR PRINCIPAL */
-.header-center {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  width: 100% !important;
-  padding: 10px 0 !important;
-}
-
-/* ✅ CAJA DEL BUSCADOR */
-.search-bar {
-  display: flex !important;
-  align-items: center !important;
-  background-color: #0A0C0A !important; /* Negro profundo */
-  border: 2px solid #226627 !important; /* Verde */
+/* ✅ CONTENEDOR DEL BUSCADOR — MISMO DISEÑO EN TODAS */
+.buscador,
+.busqueda,
+.caja-buscador,
+[class*="buscador"] {
+  background-color: #0A0C0A !important;
+  border: 2px solid #226627 !important;
   border-radius: 50px !important;
-  padding: 8px 15px !important;
-  max-width: 550px !important;
-  width: 100% !important;
-  box-shadow: 0 2px 10px rgba(34, 102, 39, 0.15) !important;
+  padding: 10px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  max-width: 600px !important;
+  margin: 15px auto !important;
+  box-shadow: 0 2px 8px rgba(34, 102, 39, 0.15) !important;
 }
 
 /* ✅ CAMPO DE TEXTO */
-.search-input {
+.buscador input,
+.busqueda input,
+.caja-buscador input,
+input[type="search"],
+.buscar-input {
   flex: 1 !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  color: #FFFFFF !important; /* Blanco */
-  font-size: 15px !important;
-  padding: 10px 15px !important;
+  color: #FFFFFF !important;
+  font-size: 16px !important;
+  padding: 8px 12px !important;
 }
 
 /* ✅ TEXTO DE AYUDA */
-.search-input::placeholder {
-  color: #AAAAAA !important; /* Gris claro */
+.buscador input::placeholder,
+.busqueda input::placeholder,
+.buscar-input::placeholder {
+  color: #AAAAAA !important;
 }
 
-/* ✅ BOTÓN DE LUPA */
-.search-btn {
-  background-color: #226627 !important; /* Verde */
-  color: #FFFFFF !important;
+/* ✅ BOTÓN DEL BUSCADOR */
+.buscador button,
+.busqueda button,
+.btn-buscar {
+  background-color: #226627 !important;
+  color: white !important;
   border: none !important;
   border-radius: 50% !important;
-  width: 42px !important;
-  height: 42px !important;
+  width: 40px !important;
+  height: 40px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
   transition: background-color 0.2s ease !important;
-  font-size: 16px !important;
 }
 
-/* ✅ EFECTO AL PASAR EL MOUSE */
-.search-btn:hover {
-  background-color: #34A039 !important; /* Verde más claro */
+.buscador button:hover,
+.busqueda button:hover,
+.btn-buscar:hover {
+  background-color: #34A039 !important;
 }
 
 /* ✅ ASEGURAMOS QUE SE VEA EN TODAS LAS SECCIONES */
-.dormitorio .header-center,
-.comedor .header-center,
-.living .header-center,
-.oficina .header-center,
-.ofertas .header-center,
-.pagina-seccion .header-center {
+.dormitorio .buscador,
+.comedor .buscador,
+.living .buscador,
+.oficina .buscador,
+.ofertas .buscador,
+.pagina-seccion .buscador {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-/* ✅ EVITAMOS QUE OTROS ESTILOS LO ROMPAN */
-.header-center *,
-.search-bar *,
-.search-input *,
-.search-btn * {
+/* ==================================================
+   🔍 BUSCADOR — EN EL CENTRO, SIN ROMPER EL MENÚ
+   Todo en una sola línea → igual que antes pero con el nuevo estilo
+   ================================================== */
+
+/* ✅ BARRA PRINCIPAL DEL NAV → TODOS ELEMENTOS EN UNA SOLA LÍNEA */
+.header-principal,
+nav,
+.barra-navegacion {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 10px 20px !important;
+  height: auto !important;
+  min-height: 70px !important;
+}
+
+/* ✅ LOGO → A LA IZQUIERDA */
+.logo {
+  flex-shrink: 0 !important;
+}
+
+/* ✅ CONTENEDOR DEL BUSCADOR → EN EL CENTRO */
+.header-center {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 20px !important;
+}
+
+/* ✅ CAJA DEL BUSCADOR → TAMAÑO COMPACTO */
+.search-bar {
+  display: flex !important;
+  align-items: center !important;
+  background-color: #0A0C0A !important;
+  border: 2px solid #226627 !important;
+  border-radius: 50px !important;
+  padding: 5px 12px !important;
+  max-width: 420px !important;
+  width: 100% !important;
+  box-shadow: 0 2px 8px rgba(34, 102, 39, 0.15) !important;
+}
+
+/* ✅ CAMPO DE TEXTO → COMPACTO */
+.search-input {
+  flex: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #FFFFFF !important;
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+  line-height: 1.4 !important;
+}
+
+.search-input::placeholder {
+  color: #AAAAAA !important;
+}
+
+/* ✅ BOTÓN DE LUPA → TAMAÑO AJUSTADO */
+.search-btn {
+  background-color: #226627 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+}
+
+.search-btn:hover {
+  background-color: #34A039 !important;
+}
+
+/* ✅ ICONOS CARRITO Y FAVORITOS → A LA DERECHA, MISMA LÍNEA */
+.header-derecha,
+.iconos-nav {
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+/* ✅ ASEGURAMOS QUE NADA SE ROMPA EN NINGUNA SECCIÓN */
+.dormitorio .header-center,
+.comedor .header-center,
+.living .header-center,
+.oficina .header-center,
+.ofertas .header-center {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 15px !important;
+}
+
+/* ✅ EVITAMOS QUE EL NAV SE AGRANDE */
+.header-principal *,
+nav *,
+.barra-navegacion * {
   box-sizing: border-box !important;
 }
