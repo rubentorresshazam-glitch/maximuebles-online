@@ -34,7 +34,7 @@
 /* Párrafo introductorio */
 .ayuda-intro {
   text-align: center;
-  color: var(--negro-empresa);
+  color: var(--verde-empresa);
   margin-bottom: 50px;
   font-size: 1.15rem;
   max-width: 750px;
