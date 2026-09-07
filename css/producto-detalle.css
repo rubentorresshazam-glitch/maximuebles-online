@@ -1,6 +1,7 @@
 /* ==================================================
-   ESTILOS: DETALLE DE PRODUCTO · VERSIÓN PREMIUM
-   → Reorganizado · Mejorado · Botón de compra renovado
+   📦 DETALLE DE PRODUCTO · CORREGIDO Y MEJORADO
+   → Sección Precio + Cantidad + Botones renovados
+   → Paleta: Negro · Verde Premium · Blanco
 ================================================== */
 
 /* ---------- VARIABLES (ALINEADAS AL DISEÑO GENERAL) ---------- */
@@ -125,11 +126,13 @@ main {
     line-height: 1.3;
 }
 
+/* ✅ SECCIÓN PRECIO — CORREGIDA Y MEJORADA */
 .bloque-precios {
     display: flex;
     align-items: baseline;
     gap: 14px;
     flex-wrap: wrap;
+    padding: 0.5rem 0;
 }
 
 .precio-original {
@@ -140,7 +143,7 @@ main {
 }
 
 .precio-actual {
-    font-size: 2.6rem;
+    font-size: 2.8rem;
     font-weight: 900;
     color: var(--color-principal);
     letter-spacing: -0.5px;
@@ -150,8 +153,8 @@ main {
     font-size: 1rem;
     color: var(--color-texto-claro);
     font-weight: 500;
-    margin: 0;
-    padding: 8px 14px;
+    margin: 0.5rem 0 0 0;
+    padding: 10px 16px;
     background: rgba(34, 181, 72, 0.08);
     border-radius: var(--radius-sm);
     display: inline-block;
@@ -175,36 +178,41 @@ main {
     border: 0;
 }
 
-/* ---------- SECCIÓN CANTIDAD ---------- */
+/* ✅ SECCIÓN CANTIDAD — CORREGIDA Y MEJORADA */
 .cantidad-bloque {
     display: flex;
     align-items: center;
     gap: 1.2rem;
-    margin-top: 0.5rem;
+    margin-top: 1rem;
+    padding: 1.2rem;
+    background: var(--color-fondo-claro);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-borde);
 }
 
 .cantidad-bloque label {
     font-weight: 600;
     color: var(--color-texto);
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 
 .selector-cantidad {
     display: flex;
     align-items: center;
-    border: 1px solid var(--color-borde);
+    border: 2px solid var(--color-borde);
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: var(--color-fondo-claro);
+    background: var(--color-fondo);
 }
 
 .btn-cantidad {
-    width: 46px;
-    height: 46px;
+    width: 50px;
+    height: 50px;
     border: none;
     background: transparent;
     color: var(--color-texto);
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
     display: flex;
@@ -218,33 +226,33 @@ main {
 }
 
 .selector-cantidad input {
-    width: 65px;
-    height: 46px;
+    width: 70px;
+    height: 50px;
     border: none;
     background: transparent;
     color: var(--color-texto);
     text-align: center;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
     outline: none;
 }
 
-/* ---------- BOTONES DE ACCIÓN · RENOVADOS ---------- */
+/* ✅ BOTONES DE COMPRA — CORREGIDOS Y RENOVADOS */
 .botones-accion {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 1rem;
+    gap: 16px;
+    margin-top: 1.5rem;
 }
 
 .btn-comprar-ahora {
     width: 100%;
-    padding: 16px;
+    padding: 18px;
     background: linear-gradient(90deg, var(--color-principal), #34d15c);
     color: var(--color-fondo);
     border: none;
     border-radius: var(--radius-md);
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -261,12 +269,12 @@ main {
 
 .btn-agregar-carrito {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     background: transparent;
     color: var(--color-principal);
     border: 2px solid var(--color-principal);
     border-radius: var(--radius-md);
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
@@ -277,14 +285,17 @@ main {
 }
 
 .btn-agregar-carrito:hover {
-    background: rgba(34, 181, 72, 0.08);
+    background: rgba(34, 181, 72, 0.12);
     transform: translateY(-2px);
+    border-color: var(--color-verde-oscuro);
+    color: #34d15c;
 }
 
+/* ---------- BOTÓN FAVORITO ---------- */
 .boton-favorito-wrapper {
     display: flex;
     justify-content: center;
-    margin-top: 4px;
+    margin-top: 8px;
 }
 
 .btn-favorito {
@@ -340,7 +351,6 @@ main {
     .producto-contenedor {
         gap: 2rem;
     }
-
     .imagen-principal {
         height: 380px;
     }
@@ -351,19 +361,19 @@ main {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-
     .imagen-principal {
         height: 340px;
     }
-
     .producto-datos h1 {
         font-size: 1.7rem;
     }
-
     .precio-actual {
-        font-size: 2.2rem;
+        font-size: 2.4rem;
     }
-
+    .cantidad-bloque {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
     .botones-accion {
         flex-direction: column;
     }
@@ -373,14 +383,16 @@ main {
     .imagen-principal {
         height: 280px;
     }
-
     .miniatura {
         width: 65px;
         height: 65px;
     }
+    .precio-actual {
+        font-size: 2rem;
+    }
 }
 
-/* ---------- PIE DE PÁGINA (ALINEADO AL DISEÑO GENERAL) ---------- */
+/* ---------- PIE DE PÁGINA ---------- */
 .footer {
     background-color: var(--color-fondo-claro);
     color: var(--color-texto);
