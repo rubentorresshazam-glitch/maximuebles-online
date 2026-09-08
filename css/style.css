@@ -2151,3 +2151,161 @@ nav > *,
 .header-center {
   flex-shrink: 1 !important;
 }
+
+/* ==================================================
+   📍 SECCIÓN MAPA Y TARJETAS — ALINEADO AL DISEÑO
+   ================================================== */
+.seccion-mapa {
+    padding: 3.5rem 1.5rem;
+    background: linear-gradient(180deg, #0A0C0A, #141814);
+    border-top: 1px solid rgba(52, 160, 57, 0.15);
+}
+
+.featured-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.featured-header h2 {
+    color: #FFFFFF;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.subtitulo-mapa {
+    color: #889088;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* BUSCADOR */
+.buscador-mapa {
+    display: flex;
+    gap: 0.8rem;
+    max-width: 520px;
+    margin: 0 auto 1.5rem;
+}
+
+.input-buscar {
+    flex: 1;
+    padding: 0.95rem 1.2rem;
+    background: #141814;
+    border: 1px solid rgba(52, 160, 57, 0.15);
+    border-radius: 10px;
+    color: #FFFFFF;
+    font-size: 0.98rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.input-buscar:focus {
+    border-color: rgba(52, 160, 57, 0.4);
+}
+
+.btn-buscar {
+    padding: 0.95rem 1.3rem;
+    background: linear-gradient(135deg, #226627, #34A039);
+    border: none;
+    border-radius: 10px;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-buscar:hover {
+    background: linear-gradient(135deg, #34A039, #4CCD52);
+    transform: translateY(-1px);
+}
+
+/* CONTENEDOR DEL MAPA */
+.contenedor-mapa {
+    max-width: 1120px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+    border: 2px solid rgba(52, 160, 57, 0.15);
+    outline: none;
+}
+
+.contenedor-mapa:focus {
+    box-shadow: 0 0 0 3px rgba(52, 160, 57, 0.35), 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.mapa-embed {
+    display: block;
+    width: 100%;
+    height: 420px;
+}
+
+/* TARJETAS DE DIRECCIÓN */
+.info-locales {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.2rem;
+    max-width: 1120px;
+    margin: 2rem auto 0;
+}
+
+.tarjeta-local {
+    padding: 1.5rem;
+    background: linear-gradient(145deg, #141814, rgba(30, 36, 30, 0.85));
+    border: 1px solid rgba(52, 160, 57, 0.12);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.tarjeta-local:hover {
+    border-color: rgba(52, 160, 57, 0.28);
+    transform: translateY(-2px);
+}
+
+.tarjeta-local h3 {
+    color: #FFFFFF;
+    font-size: 1rem;
+    margin: 0 0 0.6rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.tarjeta-local h3 i {
+    color: #34A039;
+    font-size: 1.1rem;
+}
+
+.tarjeta-local p {
+    color: #B0B8B0;
+    font-size: 0.95rem;
+    margin: 0.3rem 0;
+    line-height: 1.5;
+}
+
+.tarjeta-destacada {
+    background: linear-gradient(145deg, #163D18, rgba(30, 36, 30, 0.9));
+    border-color: rgba(52, 160, 57, 0.22);
+}
+
+.texto-destacado {
+    color: #4CCD52 !important;
+    font-weight: 500;
+    margin-top: 0.5rem !important;
+}
+
+/* 📱 RESPONSIVE */
+@media (max-width: 768px) {
+    .seccion-mapa {
+        padding: 2.5rem 1rem;
+    }
+    .buscador-mapa {
+        flex-direction: column;
+    }
+    .mapa-embed {
+        height: 320px;
+    }
+    .info-locales {
+        grid-template-columns: 1fr;
+    }
+}
