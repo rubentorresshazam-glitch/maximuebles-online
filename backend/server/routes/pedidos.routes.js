@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 // ✅ Controlador de pedidos
 const pedidoController = require('../controllers/pedidos.controller');
 
@@ -18,5 +17,11 @@ router.get('/mis-pedidos', pedidoController.verPedidoCliente);
 
 // ✅ Ver detalle de UN pedido → GET /api/pedidos/:id
 router.get('/:id', pedidoController.verDetalle);
+
+// ✅ Guardar WhatsApp y datos de facturación
+router.post('/actualizar-factura', pedidoController.actualizarFactura);
+
+// ✅ Generar factura PDF y devolverla para descarga
+router.post('/generar-factura-pdf', pedidoController.generarFacturaPDF);
 
 module.exports = router;

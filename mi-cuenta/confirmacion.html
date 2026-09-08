@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <!-- ✅ SEO PRINCIPAL -->
     <title>¡Compra Confirmada! | MaxiMuebles</title>
     <meta name="description" content="¡Pago realizado con éxito! Gracias por tu compra. Envíos y armado gratuito en el Valle Medio desde Chimpay hasta Pomona.">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://tudominio.com/mi-cuenta/confirmacion.html">
-
+    <link rel="canonical" href="https://maximuebles-online.onrender.com/mi-cuenta/confirmacion.html">
     <!-- ✅ GEOLOCALIZACIÓN -->
     <meta name="geo.region" content="AR-R">
     <meta name="geo.placename" content="Valle Medio, Río Negro">
-
     <!-- ✅ COLOR EN NAVEGADOR MÓVIL -->
     <meta name="theme-color" content="#006633">
-
     <!-- Fuentes e Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/confirmacion.css?v=2">
+    <link rel="stylesheet" href="/css/confirmacion.css?v=3">
 </head>
 <body>
-
-    <!-- BARRA SUPERIOR → Actualizada al Valle Medio -->
+    <!-- BARRA SUPERIOR -->
     <section class="topbar">
         <div class="topbar-container">
             <div class="topbar-item"><i class="fa-solid fa-truck-fast"></i> Envíos a todo el Valle Medio</div>
@@ -46,7 +41,6 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="confirmacion-container">
-
         <!-- ✅ MENSAJE DE ÉXITO -->
         <div class="tarjeta-exito">
             <div class="icono-exito">
@@ -59,7 +53,6 @@
         <!-- 📋 DATOS DE LA COMPRA -->
         <div class="tarjeta-datos">
             <h2><i class="fa-solid fa-file-invoice"></i> Detalles de tu compra</h2>
-
             <div class="dato-fila">
                 <span class="etiqueta">Número de Operación:</span>
                 <span class="valor" id="mp-orden-id">—</span>
@@ -81,35 +74,33 @@
                 <span class="valor total" id="mp-total">$ 0,00</span>
             </div>
         </div>
-
-        <!-- 🧾 ENVIAR FACTURA POR CORREO -->
+               <!-- 🧾 DESCARGAR FACTURA EN PDF DIRECTAMENTE -->
         <div class="tarjeta-factura">
-            <h2><i class="fa-solid fa-file-invoice-dollar"></i> ¿Querés que te enviemos tu Factura?</h2>
-            <p class="texto-ayuda">Ingresá tu correo y te la enviamos ahora mismo con tu factura oficial (Consumidor Final).</p>
-
+            <h2><i class="fa-solid fa-file-pdf"></i> Descargar tu Factura</h2>
+            <p class="texto-ayuda">Escribí tu WhatsApp y generá tu factura en PDF para descargarla. Tu número quedará guardado en nuestro sistema.</p>
             <form id="form-factura">
                 <div class="form-grupo">
-                    <label>¿Querés recibir tu factura por correo electrónico?</label>
+                    <label>¿Querés descargar tu factura en PDF?</label>
                     <div class="radio-opciones">
                         <label class="radio-label">
-                            <input type="radio" name="enviar_factura" value="no" checked onchange="mostrarCampoCorreo()">
+                            <input type="radio" name="enviar_factura" value="no" checked onchange="mostrarCampoWhatsApp()">
                             <span>No, gracias</span>
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="enviar_factura" value="si" onchange="mostrarCampoCorreo()">
-                            <span>Sí, enviarla a mi correo</span>
+                            <input type="radio" name="enviar_factura" value="si" onchange="mostrarCampoWhatsApp()">
+                            <span>Sí, descargar mi factura</span>
                         </label>
                     </div>
                 </div>
-                <div id="campo-correo" class="campos-ocultos">
+                <div id="campo-whatsapp" class="campos-ocultos">
                     <div class="form-grupo">
-                        <label for="correo_cliente">Tu Correo Electrónico *</label>
-                        <input type="email" id="correo_cliente" placeholder="ejemplo@correo.com" required>
+                        <label for="whatsapp_cliente">Tu WhatsApp * (obligatorio)</label>
+                        <input type="tel" id="whatsapp_cliente" placeholder="Ej: +54 9 294 412-3456" required>
                     </div>
-
-                    <button type="button" class="btn btn-enviar-factura" onclick="solicitarFactura()">
-                        <i class="fa-solid fa-check"></i> Enviar Factura
+                    <button type="button" class="btn btn-enviar-factura" onclick="generarYDescargarPDF()">
+                        <i class="fa-solid fa-download"></i> Generar y Descargar Factura PDF
                     </button>
+                    <p id="mensaje-descarga" style="margin-top:15px; display:none;"></p>
                 </div>
             </form>
         </div>
@@ -120,7 +111,6 @@
                 <i class="fa-solid fa-home"></i> Volver al Inicio
             </a>
         </div>
-
     </main>
 
     <!-- PIE DE PÁGINA -->
@@ -130,7 +120,7 @@
         </div>
     </footer>
 
-    <!-- ✅ Script versión actualizada -->
-    <script src="/js/confirmacion.js?v=2"></script>
+    <!-- ✅ Script con WhatsApp -->
+    <script src="/js/confirmacion.js?v=3"></script>
 </body>
 </html>

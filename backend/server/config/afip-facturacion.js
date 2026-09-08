@@ -1,12 +1,12 @@
 // ==================================================
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
-// CUIT: 30-71500272-4 · Punto de Venta: 00010
-// ✅ SE GENERA Y SE MUESTRA EN LOGS PARA WHATSAPP
+// ✅ SE GENERA AUTOMÁTICAMENTE EN PDF Y SE GUARDA
 // ==================================================
 const fs = require('fs');
 const path = require('path');
+const PDFDocument = require('pdfkit'); // ✅ Genera PDF
 
-// ✅ RUTA AUTOMÁTICA → funciona en Render y en tu PC
+// ✅ RUTA DE TU CARPETA DE FACTURAS
 const CARPETA_FACTURAS = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
 
 // ✅ DATOS DE LA EMPRESA
@@ -25,6 +25,7 @@ if (!fs.existsSync(CARPETA_FACTURAS)) {
 
 // ✅ CONTADOR DE NÚMEROS DE FACTURA
 const ARCHIVO_CONTADOR = path.join(CARPETA_FACTURAS, 'ultimo-numero.txt');
+
 function obtenerUltimoNumero() {
   try {
     if (fs.existsSync(ARCHIVO_CONTADOR)) {
@@ -35,6 +36,7 @@ function obtenerUltimoNumero() {
   }
   return 1000;
 }
+
 function guardarUltimoNumero(n) {
   try {
     fs.writeFileSync(ARCHIVO_CONTADOR, String(n), 'utf8');
@@ -42,6 +44,7 @@ function guardarUltimoNumero(n) {
     console.log('⚠️ No se pudo guardar número de factura:', err.message);
   }
 }
+
 function generarNumeroFactura() {
   const ult = obtenerUltimoNumero() + 1;
   guardarUltimoNumero(ult);
@@ -49,88 +52,96 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 💾 GUARDAR FACTURA EN ARCHIVO
+// 💾 GENERAR FACTURA EN PDF AUTOMÁTICAMENTE
 // ==================================================
-function guardarFacturaEnArchivo(datos) {
-  const numero = datos.numero;
-  const nombreArchivo = `Factura-${numero}.txt`;
-  const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
-  const fecha = new Date().toLocaleString('es-AR');
-  const contenido = `
-============================================================
-          F A C T U R A   E L E C T R Ó N I C A
-               MAXIMUEBLES S.R.L.
-           CUIT: 30-71500272-4
-       Punto de Venta N°: 00010
-============================================================
-FACTURA N°: ${numero}
-FECHA: ${fecha}
-TIPO: CONSUMIDOR FINAL ✅
-------------------------------------------------------------
-DATOS DEL COMPRADOR
-------------------------------------------------------------
-Nombre: ${datos.nombre || "Consumidor Final"}
-WhatsApp: ${datos.whatsapp || "No indicado"}
-DNI/CUIL: ${datos.dni || "Consumidor Final"}
-Domicilio: ${datos.domicilio || "Sin especificar"}
-------------------------------------------------------------
-DETALLE DE PRODUCTOS
-------------------------------------------------------------
-${datos.productos.map(p => `• ${p.nombre} x${p.cantidad} — $ ${(p.precio * p.cantidad).toFixed(2).replace('.', ',')}`).join('\n')}
-------------------------------------------------------------
-TOTAL A PAGAR: $ ${Number(datos.total).toFixed(2).replace('.', ',')}
-------------------------------------------------------------
-✅ Lista para enviar por WhatsApp
-============================================================
-  `.trim();
-  
-  try {
-    fs.writeFileSync(rutaCompleta, contenido, 'utf8');
-    console.log(`✅ Factura guardada: ${nombreArchivo}`);
-    return rutaCompleta;
-  } catch (err) {
-    console.log('⚠️ No se pudo guardar archivo:', err.message);
-    return null;
-  }
+async function generarFacturaPDF(datos) {
+  return new Promise((resolve, reject) => {
+    const numero = datos.numero;
+    const nombreArchivo = `Factura-${numero}.pdf`;
+    const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
+    const fecha = new Date().toLocaleString('es-AR');
+
+    // ✅ Crear documento PDF
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const stream = fs.createWriteStream(rutaCompleta);
+    doc.pipe(stream);
+
+    // ✅ CONTENIDO DE LA FACTURA
+    doc.fontSize(20).font('Helvetica-Bold').text('FACTURA ELECTRÓNICA', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(14).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
+    doc.fontSize(11).font('Helvetica').text(`CUIT: 30-71500272-4`, { align: 'center' });
+    doc.text(`Domicilio Fiscal: Roque Sáenz Peña y Castillón N° 0 - Luis Beltrán - Río Negro`, { align: 'center' });
+    doc.text(`Punto de Venta N°: ${PUNTO_VENTA}`, { align: 'center' });
+    doc.moveDown(1);
+
+    doc.fontSize(12).font('Helvetica-Bold').text(`FACTURA N°: ${numero}`);
+    doc.fontSize(11).font('Helvetica').text(`Fecha: ${fecha}`);
+    doc.text(`Tipo: Consumidor Final`);
+    doc.moveDown(1);
+
+    doc.fontSize(12).font('Helvetica-Bold').text('DATOS DEL COMPRADOR');
+    doc.fontSize(11).font('Helvetica');
+    doc.text(`Nombre: ${datos.nombre || 'Consumidor Final'}`);
+    doc.text(`WhatsApp: ${datos.whatsapp || 'No indicado'}`);
+    doc.text(`DNI/CUIL: ${datos.dni || 'Consumidor Final'}`);
+    doc.text(`Domicilio: ${datos.domicilio || 'Sin especificar'}`);
+    doc.moveDown(1);
+
+    doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE PRODUCTOS');
+    doc.fontSize(11).font('Helvetica');
+    const productos = datos.productos || [];
+    productos.forEach(p => {
+      const subtotal = (p.precio * p.cantidad).toFixed(2).replace('.', ',');
+      doc.text(`• ${p.nombre}  x${p.cantidad}  —  $ ${subtotal}`);
+    });
+    doc.moveDown(1);
+
+    doc.fontSize(14).font('Helvetica-Bold').text(`TOTAL A PAGAR: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`, { align: 'right' });
+    doc.moveDown(2);
+
+    doc.fontSize(10).font('Helvetica-Oblique').fillColor('gray').text('Factura generada automáticamente — MaxiMuebles S.R.L.', { align: 'center' });
+
+    doc.end();
+    stream.on('finish', () => {
+      console.log(`✅ FACTURA PDF GENERADA: ${rutaCompleta}`);
+      resolve({ numero, ruta: rutaCompleta });
+    });
+    stream.on('error', reject);
+  });
 }
 
 // ==================================================
-// 📱 GENERAR FACTURA Y MOSTRAR EN CONSOLA PARA WHATSAPP
+// 🚀 FUNCIÓN PRINCIPAL — SE LLAMA DESDE EL PEDIDO
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
     const numero = generarNumeroFactura();
     const datosCompletos = { ...datos, numero };
 
-    // ✅ Guardar archivo
-    guardarFacturaEnArchivo(datosCompletos);
+    // ✅ GENERA EL PDF AUTOMÁTICAMENTE
+    await generarFacturaPDF(datosCompletos);
 
-    // ✅ Mostrar TODO en consola para copiar y enviar por WhatsApp
+    // ✅ MUESTRA DATOS EN CONSOLA PARA ENVIAR POR WHATSAPP
     console.log('');
     console.log('==================================================');
-    console.log('📱 FACTURA PARA ENVIAR POR WHATSAPP');
+    console.log('📱 FACTURA GENERADA — ENVIAR POR WHATSAPP');
     console.log('==================================================');
     console.log(`🧾 FACTURA N° ${numero} — MaxiMuebles`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`👤 Cliente: ${datos.nombre || 'Consumidor Final'}`);
     console.log(`📱 WhatsApp: ${datos.whatsapp || 'No indicado'}`);
     console.log(`🪪 DNI: ${datos.dni || 'Consumidor Final'}`);
     console.log(`📍 Domicilio: ${datos.domicilio || 'No indicado'}`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🛒 Productos:');
-    datos.productos.forEach(p => {
-      console.log(`  • ${p.nombre} x${p.cantidad} — $ ${(p.precio * p.cantidad).toFixed(2).replace('.', ',')}`);
-    });
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`💰 TOTAL: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`📂 PDF guardado en: facturacionadmin/facturas-generadas/Factura-${numero}.pdf`);
     console.log('==================================================');
-    console.log(`✅ Copiá el texto de arriba y envíalo por WhatsApp`);
-    console.log('');
 
     return numero;
-
   } catch (error) {
-    console.log('⚠️ Error en facturación (pedido guardado OK):', error.message);
+    console.log('⚠️ Error al generar factura PDF (pedido guardado OK):', error.message);
     return 'SIN-FACTURA';
   }
 }

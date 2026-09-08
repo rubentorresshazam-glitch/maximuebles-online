@@ -44,12 +44,12 @@ exports.crearPedido = async (req, res) => {
       pedidoId: pedidoId
     });
 
-    // ✅ FACTURA — ENVÍA WHATSAPP A LA FUNCIÓN
+    // ✅ FACTURA — SE GENERA EN SEGUNDO PLANO
     if (factura) {
       enviarCorreoConFactura({
         pedido_id: pedidoId,
         nombre,
-        whatsapp, // ✅ EN LUGAR DE CORREO
+        whatsapp,
         dni: dni_comprador,
         domicilio: domicilio_comprador,
         productos,
@@ -68,6 +68,7 @@ exports.crearPedido = async (req, res) => {
         console.log('⚠️ Factura no se pudo generar (pedido guardado OK):', err.message);
       });
     }
+
   } catch (error) {
     console.error('❌ ERROR AL GUARDAR PEDIDO:', error.message);
     res.status(500).json({ 
@@ -92,7 +93,7 @@ exports.listarPedidos = async (req, res) => {
   }
 };
 
-// ✅ Ver mis pedidos como cliente — SIGUE IGUAL
+// ✅ Ver mis pedidos como cliente
 exports.verPedidoCliente = async (req, res) => {
   try {
     const sesion_id = req.query.sesion_id;
@@ -114,7 +115,7 @@ exports.verPedidoCliente = async (req, res) => {
   }
 };
 
-// ✅ Ver detalle de un pedido — SIGUE IGUAL
+// ✅ Ver detalle de un pedido
 exports.verDetalle = async (req, res) => {
   try {
     const pedido = await db.query(
@@ -134,5 +135,40 @@ exports.verDetalle = async (req, res) => {
   } catch (error) {
     console.error('❌ Error al cargar detalle:', error.message);
     res.status(500).json({ ok: false, mensaje: 'Error al cargar detalle' });
+  }
+};
+
+// ✅ GUARDAR WHATSAPP DEL CLIENTE DESDE CONFIRMACIÓN
+exports.actualizarFactura = async (req, res) => {
+  try {
+    const { sesion_id, whatsapp } = req.body;
+    await db.query(
+      `UPDATE pedidos SET whatsapp = $1 WHERE sesion_id = $2`,
+      [whatsapp, sesion_id]
+    );
+    res.json({ ok: true, mensaje: "WhatsApp guardado correctamente" });
+  } catch (error) {
+    console.error("❌ Error guardando WhatsApp:", error.message);
+    res.status(500).json({ ok: false, mensaje: "No se pudo guardar el WhatsApp" });
+  }
+};
+
+// ✅ GENERAR FACTURA PDF Y DEVOLVER ENLACE DE DESCARGA
+exports.generarFacturaPDF = async (req, res) => {
+  try {
+    const { enviarCorreoConFactura } = require('../config/afip-facturacion');
+    const numeroFactura = await enviarCorreoConFactura(req.body);
+    
+    res.json({ 
+      ok: true, 
+      mensaje: "Factura generada con éxito",
+      datos: {
+        numero: numeroFactura,
+        url: `/facturacionadmin/facturas-generadas/Factura-${numeroFactura}.pdf`
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error generando PDF:", error.message);
+    res.status(500).json({ ok: false, mensaje: "No se pudo generar la factura" });
   }
 };
