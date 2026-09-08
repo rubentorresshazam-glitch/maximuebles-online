@@ -74,14 +74,15 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
-                <div class="iconos-nav">
-                    <span class="guest-label">Compra como invitado</span>
-                    <button class="header-btn">
-                        <i class="fa-solid fa-heart"></i>
-                        <span>Favoritos</span>
-                    </button>
+          <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
+                    <div class="iconos-nav">
+                        <span class="guest-label">Compra como invitado</span>
+                        <!-- ❤️ Ícono Favoritos → AL HACER CLIC VA A favoritos.html -->
+                        <a href="/favoritos.html" class="header-btn" title="Ver mis Favoritos" aria-label="Mis Favoritos">
+                            <i class="fa-solid fa-heart"></i>
+                            <span>Favoritos</span>
+                            <div class="fav-count" id="favCount"></div>
+                        </a>
                     <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" aria-label="Carrito" title="Carrito">
                         <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
                         <div class="cart-count" id="headerCartCount" aria-label="Cantidad de productos en el carrito"></div>
