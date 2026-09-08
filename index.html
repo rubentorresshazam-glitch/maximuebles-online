@@ -228,10 +228,10 @@
                 </div>
             </div>
         </section>
-
-             <!-- ==================================================
-             🗺️ MAPA INTERACTIVO + BUSCADOR
-             Vista Satelital · Vista Calle · Táctil · Tecla Enter
+      
+                   <!-- ==================================================
+             🗺️ MAPA INTERACTIVO · TARJETAS PREMIUM
+             Sin enlaces visibles · Vista Satelital · Calle · Táctil
              ================================================== -->
         <section class="seccion-mapa">
             <div class="featured-header">
@@ -239,7 +239,7 @@
                 <p class="subtitulo-mapa">Encontranos en el Valle Medio de Río Negro — desde Chimpay hasta Pomona</p>
             </div>
 
-            <!-- ✅ BUSCADOR DE DIRECCIONES → TAL CUAL LO TENÍAS -->
+            <!-- ✅ BUSCADOR DE DIRECCIONES -->
             <div class="buscador-mapa">
                 <input type="text" id="buscar-direccion" placeholder="Escribí una dirección o localidad..." class="input-buscar">
                 <button type="button" class="btn-buscar" onclick="buscarEnMapa()" title="Buscar">
@@ -247,40 +247,153 @@
                 </button>
             </div>
 
-            <!-- ✅ MAPA INTERACTIVO COMPLETO -->
+            <!-- ✅ MAPA LIMPIO — SOLO SE VE EL MAPA, SIN ENLACES NI TEXTO ENCIMA -->
             <div class="contenedor-mapa" tabindex="0" role="region" aria-label="Mapa de ubicación de MaxiMuebles">
                 <iframe 
                     id="mapa-ubicacion"
                     class="mapa-embed"
-                    title="Ubicación locales MaxiMuebles - Choele Choel y Luis Beltrán"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27524.123!2d-65.67!3d-39.32!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91e0e0e0e0e0e0e1%3A0x123456789abcdef!2sChoele%20Choel%2C%20R%C3%ADo%20Negro!5e0!3m2!1ses-419!2sar!4v1725750000000!5m2!1ses-419!2sar!1sview%3Asatellite"
+                    title="Ubicación locales MaxiMuebles"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3490.56!2d-65.6745!3d-39.3182!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91e0ed48c0e0e0e1%3A0x6d8f9a7b6c5d4e3f!2sAvellaneda%20968%2C%20Choele%20Choel%2C%20R%C3%ADo%20Negro!5e0!3m2!1ses-419!2sar!4v1725750000000!5m2!1ses-419!2sar!1sview%3Asatellite"
                     width="100%" 
                     height="480"
                     style="border:0; border-radius: 16px;"
                     allowfullscreen=""
                     loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; street-view-viewer">
                 </iframe>
             </div>
 
-            <!-- ✅ DIRECCIONES ESCRITAS ABAJO DEL MAPA -->
-            <div class="info-locales">
-                <div class="tarjeta-local">
-                    <h3><i class="fa-solid fa-location-dot"></i> MaxiMuebles — Choele Choel</h3>
-                    <p>📍 Avellaneda 968, Río Negro</p>
+            <!-- ✅ TARJETAS PREMIUM — DIRECCIONES Y HORARIO CON ESTILO ELEGANTE -->
+            <div class="contenedor-tarjetas-locales">
+                <div class="tarjeta-local-premium">
+                    <div class="icono-tarjeta">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div class="contenido-tarjeta">
+                        <h3>Choele Choel — Sucursal Principal</h3>
+                        <p>Avellaneda 968, Río Negro</p>
+                    </div>
                 </div>
-                <div class="tarjeta-local">
-                    <h3><i class="fa-solid fa-location-dot"></i> MaxiMuebles — Luis Beltrán</h3>
-                    <p>📍 Enrique Goytia 759, Río Negro</p>
+
+                <div class="tarjeta-local-premium">
+                    <div class="icono-tarjeta">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div class="contenido-tarjeta">
+                        <h3>Luis Beltrán — Sucursal</h3>
+                        <p>Enrique Goytia 759, Río Negro</p>
+                    </div>
                 </div>
-                <div class="tarjeta-local horario">
-                    <h3><i class="fa-solid fa-clock"></i> Horarios y Zona</h3>
-                    <p>🕒 Lunes a Sábados: 9:00 a 13:00 · 17:00 a 21:00</p>
-                    <p>🚚 Envíos y armado gratuito: Chimpay → Choele Choel → Luis Beltrán → Pomona</p>
+
+                <div class="tarjeta-local-premium tarjeta-horario">
+                    <div class="icono-tarjeta">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="contenido-tarjeta">
+                        <h3>Horarios y Cobertura</h3>
+                        <p class="horario-texto">Lunes a Sábados: 9:00 a 13:00 · 17:00 a 21:00</p>
+                        <p class="envio-texto">🚚 Envío y armado gratuito en todo el Valle Medio</p>
+                    </div>
                 </div>
             </div>
         </section>
+
+        <!-- ✅ SCRIPT DEL BUSCADOR DE MAPA -->
+        <script>
+        function buscarEnMapa() {
+            const direccion = document.getElementById('buscar-direccion').value.trim();
+            if (!direccion) return;
+            const mapa = document.getElementById('mapa-ubicacion');
+            mapa.src = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion + ", Valle Medio, Río Negro") + "&output=embed";
+        }
+        </script>
+
+        <!-- ✅ ESTILOS PREMIUM DE LAS TARJETAS → PEGÁ TAMBIÉN ESTO EN TU style.css O DENTRO DEL <head> -->
+        <style>
+        /* ==================================================
+           📍 TARJETAS PREMIUM — DIRECCIONES Y HORARIO
+           ================================================== */
+        .contenedor-tarjetas-locales {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .tarjeta-local-premium {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.2rem;
+            padding: 1.8rem;
+            background: linear-gradient(145deg, #141814, #1E241E);
+            border-radius: 16px;
+            border: 1px solid rgba(52, 160, 57, 0.15);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tarjeta-local-premium:hover {
+            transform: translateY(-4px);
+            border-color: rgba(52, 160, 57, 0.35);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(52, 160, 57, 0.1);
+        }
+
+        .tarjeta-horario {
+            background: linear-gradient(145deg, #163D18, #1E241E);
+            border-color: rgba(52, 160, 57, 0.25);
+        }
+
+        .icono-tarjeta {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #226627, #34A039);
+            border-radius: 12px;
+            color: #FFFFFF;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(52, 160, 57, 0.25);
+        }
+
+        .contenido-tarjeta h3 {
+            color: #FFFFFF;
+            font-size: 1.05rem;
+            margin: 0 0 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .contenido-tarjeta p {
+            color: #B0B8B0;
+            font-size: 0.95rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .horario-texto {
+            color: #E0E0E0 !important;
+            font-weight: 500;
+        }
+
+        .envio-texto {
+            color: #4CCD52 !important;
+            font-weight: 500;
+            margin-top: 0.4rem !important;
+        }
+
+        /* 📱 RESPONSIVE */
+        @media (max-width: 768px) {
+            .contenedor-tarjetas-locales {
+                grid-template-columns: 1fr;
+            }
+            .tarjeta-local-premium {
+                padding: 1.5rem;
+            }
+        }
+        </style> 
+         
     <!-- PIE DE PÁGINA -->
     <footer class="footer">
         <div class="footer-container">
