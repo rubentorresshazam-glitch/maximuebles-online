@@ -3,26 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <!-- ✅ SEO PRINCIPAL -->
     <title>Finalizar Compra | MaxiMuebles · Envíos Valle Medio</title>
     <meta name="description" content="Completá tus datos y pagá de forma segura. Factura Consumidor Final. Envíos y armado gratuito desde Chimpay hasta Pomona.">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://tudominio.com/mi-cuenta/checkout.html">
-
+    <link rel="canonical" href="https://maximuebles-online.onrender.com/mi-cuenta/checkout.html">
     <!-- ✅ GEOLOCALIZACIÓN -->
     <meta name="geo.region" content="AR-R">
     <meta name="geo.placename" content="Valle Medio, Río Negro">
-
     <!-- Fuentes e Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/checkout.css?v=3">
+    <link rel="stylesheet" href="/css/checkout.css?v=4">
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet">
-
     <style>
         .input-lectura {
             width: 100%;
@@ -47,7 +43,6 @@
     </style>
 </head>
 <body>
-
     <section class="topbar">
         <div class="topbar-container">
             <div class="topbar-item"><i class="fa-solid fa-truck-fast"></i> Envíos a todo el Valle Medio</div>
@@ -55,7 +50,6 @@
             <div class="topbar-item"><i class="fa-solid fa-lock"></i> Compra segura</div>
         </div>
     </section>
-
     <header class="header header-simple">
         <div class="header-top-container">
             <div class="header-left">
@@ -72,10 +66,8 @@
             </div>
         </div>
     </header>
-
     <main class="checkout-container">
-
-        <!-- Paso 1: Datos de entrega ✅ CON CAMPOS DE REMITO -->
+        <!-- Paso 1: Datos de entrega ✅ CON WHATSAPP -->
         <div class="checkout-screen active" id="paso-envio">
             <h2 class="titulo-paso">📍 Datos de entrega</h2>
             <form id="form-envio" class="formulario-estilizado">
@@ -83,7 +75,12 @@
                     <label for="nombre">Nombre y Apellido *</label>
                     <input type="text" id="nombre" name="nombre" required placeholder="Ej: Juan Pérez">
                 </div>
-
+                <!-- ✅ WHATSAPP EN LUGAR DE CORREO -->
+                <div class="form-grupo">
+                    <label for="whatsapp">WhatsApp *</label>
+                    <input type="tel" id="whatsapp" name="whatsapp" required placeholder="Ej: +54 9 294 412-3456">
+                    <p class="ayuda-campo">Te enviaremos la factura por este número</p>
+                </div>
                 <div class="form-fila">
                     <div class="form-grupo">
                         <label for="dni">DNI / CUIL *</label>
@@ -95,7 +92,6 @@
                         <input type="hidden" id="tipo-factura" name="tipo-factura" value="consumidor_final">
                     </div>
                 </div>
-
                 <div class="form-fila">
                     <div class="form-grupo">
                         <label for="calle">Calle y Altura *</label>
@@ -106,7 +102,6 @@
                         <input type="text" id="piso" name="piso" placeholder="Ej: Piso 2, Depto B">
                     </div>
                 </div>
-
                 <div class="form-fila">
                     <div class="form-grupo">
                         <label for="cp">Código Postal *</label>
@@ -126,40 +121,49 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="form-grupo">
                     <label for="provincia-lectura">Provincia</label>
                     <input type="text" id="provincia-lectura" value="Río Negro" readonly class="input-lectura" aria-label="Provincia">
                     <input type="hidden" id="provincia" name="provincia" value="RN">
                 </div>
-
                 <div class="form-grupo">
-                    <label for="telefono">Teléfono de contacto *</label>
-                    <input type="tel" id="telefono" name="telefono" required placeholder="Ej: +54 294 4123456">
+                    <label for="telefono">Teléfono de contacto</label>
+                    <input type="tel" id="telefono" name="telefono" placeholder="Ej: +54 294 4123456">
                 </div>
-
-                <!-- ✅ CAMPOS EXCLUSIVOS DEL REMITO -->
+                <!-- ✅ ¿QUIERE FACTURA? -->
+                <div class="form-grupo">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="quiero_factura" name="quiero_factura" onchange="mostrarDatosFactura()">
+                        ✅ Quiero factura electrónica
+                    </label>
+                </div>
+                <!-- ✅ CAMPOS DE FACTURA → APARECEN SOLO SI MARCA SÍ -->
+                <div id="campos-factura" style="display:none; padding-left:20px; border-left:3px solid #22b548; margin:10px 0;">
+                    <div class="form-grupo">
+                        <label for="dni_comprador">DNI / CUIL para factura *</label>
+                        <input type="text" id="dni_comprador" name="dni_comprador" placeholder="Ej: 12.345.678">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="domicilio_comprador">Domicilio para factura *</label>
+                        <input type="text" id="domicilio_comprador" name="domicilio_comprador" placeholder="Ej: Calle y N°, Localidad">
+                    </div>
+                </div>
+                <!-- ✅ CAMPOS DEL REMITO -->
                 <div class="form-grupo">
                     <label for="recibe">¿Retira otra persona? Escribí su nombre</label>
                     <input type="text" id="recibe" name="recibe" placeholder="Si retira el mismo comprador, dejalo vacío">
                     <p class="ayuda-campo">Este dato solo aparece en el remito de entrega</p>
                 </div>
-
                 <div class="form-grupo">
-                                   <div class="form-grupo">
                     <label for="horario">Horario de entrega preferido</label>
                     <input type="text" id="horario" name="horario" placeholder="Ej: Mañana 10hs / Tarde 17hs / A convenir">
-                    <p class="ayuda-campo">Escribí el horario que te quede mejor. Ejemplos: 09 a 12hs — 16 a 20hs</p>
+                    <p class="ayuda-campo">Ejemplos: 09 a 12hs — 16 a 20hs</p>
                 </div>
-                    <p class="ayuda-campo">Este dato solo aparece en el remito de entrega</p>
-                </div>
-
             </form>
             <div class="grupo-botones">
                 <button type="button" class="btn btn-siguiente" onclick="irPaso(2)">Continuar</button>
             </div>
         </div>
-
         <!-- Paso 2: Datos de la empresa -->
         <div class="checkout-screen" id="paso-empresa">
             <h2 class="titulo-paso">🧾 Datos de la factura</h2>
@@ -183,11 +187,9 @@
                 <button type="button" class="btn btn-siguiente" onclick="irPaso(3)">Continuar</button>
             </div>
         </div>
-
         <!-- Paso 3: Forma de pago -->
         <div class="checkout-screen" id="paso-pago">
             <h2 class="titulo-paso">💳 Forma de pago</h2>
-
             <label class="opcion-pago">
                 <input type="radio" name="metodo-pago" value="mercadopago" checked>
                 <div class="contenido-opcion">
@@ -202,28 +204,24 @@
                     </ul>
                 </div>
             </label>
-
             <div class="grupo-botones">
                 <button type="button" class="btn btn-volver" onclick="irPaso(2)">Volver</button>
                 <button type="button" class="btn btn-siguiente" onclick="irPaso(4)">Continuar</button>
             </div>
         </div>
-
         <!-- Paso 4: Resumen final -->
         <div class="checkout-screen" id="paso-resumen">
             <h2 class="titulo-paso">📋 Resumen de tu compra</h2>
-
             <div class="resumen-factura">
                 <h3>Datos del comprador</h3>
                 <p><strong>Nombre:</strong> <span id="res_nombre"></span></p>
+                <p><strong>WhatsApp:</strong> <span id="res_whatsapp"></span></p>
                 <p><strong>DNI / CUIL:</strong> <span id="res_dni"></span></p>
                 <p><strong>Tipo de facturación:</strong> Consumidor Final</p>
                 <p><strong>Domicilio completo:</strong> <span id="res_domicilio"></span></p>
                 <p><strong>Teléfono de contacto:</strong> <span id="res_telefono"></span></p>
-                <!-- No mostramos Recibe ni Horario en la factura, solo en el remito -->
                 <p><strong>Método de pago elegido:</strong> <span id="res_metodo_pago"></span></p>
             </div>
-
             <div class="resumen-pedido">
                 <h3>Productos y totales</h3>
                 <div id="lista_productos"></div>
@@ -233,27 +231,30 @@
                     <h3>Total a pagar: <span id="res_total">$ 0,00</span></h3>
                 </div>
             </div>
-
             <div class="aviso-seguro">
                 <i class="fa-solid fa-lock"></i> Todos tus datos están protegidos y encriptados
             </div>
-
             <div class="grupo-botones">
                 <button type="button" class="btn btn-volver" onclick="irPaso(3)">Volver</button>
                 <button type="button" class="btn btn-finalizar" onclick="procesarPago()">Confirmar y finalizar compra</button>
             </div>
         </div>
-
     </main>
-
     <footer class="footer">
         <div class="footer-container">
             <p>&copy; 2026 MAXIMUEBLES S.R.L | CUIT: 30-71500272-4 | Punto de Venta N° 00010</p>
         </div>
     </footer>
-
+    <script>
+        // ✅ Mostrar campos de factura solo si marca que quiere
+        function mostrarDatosFactura() {
+            const quiere = document.getElementById('quiero_factura').checked;
+            document.getElementById('campos-factura').style.display = quiere ? 'block' : 'none';
+            document.getElementById('dni_comprador').required = quiere;
+            document.getElementById('domicilio_comprador').required = quiere;
+        }
+    </script>
     <script src="/js/api.js"></script>
-    <script src="/js/checkout.js?v=3"></script>
-
+    <script src="/js/checkout.js?v=4"></script>
 </body>
 </html>

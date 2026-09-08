@@ -48,7 +48,7 @@ const contactoRutas = require('./routes/contacto.routes');
 app.use('/api/contacto', contactoRutas);
 
 // ==================================================
-// 💳 MERCADO PAGO — DIRECCIONES CORREGIDAS
+// 💳 MERCADO PAGO — AHORA LEE WHATSAPP
 // ==================================================
 app.post('/api/crear-preferencia-pago', async (req, res) => {
   try {
@@ -68,9 +68,9 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
         items,
         payer: {
           name: datosComprador?.nombre || 'Invitado',
-          email: datosComprador?.correo || 'cliente@maximuebles.com'
+          // ✅ WHATSAPP EN LUGAR DE CORREO en MP
+          email: datosComprador?.whatsapp || 'cliente@maximuebles.com'
         },
-        // ✅ DIRECCIONES CORREGIDAS → APUNTAN A TU ARCHIVO REAL
         back_urls: {
           success: `${WEB_URL}/mi-cuenta/confirmacion.html`,
           failure: `${WEB_URL}/mi-cuenta/carrito.html`,
@@ -83,6 +83,7 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
     });
 
     res.json({ ok: true, mensaje: 'Preferencia creada', datos: respuesta });
+
   } catch (error) {
     console.error('❌ Error MP:', error.message);
     res.json({ ok: false, mensaje: error.message });

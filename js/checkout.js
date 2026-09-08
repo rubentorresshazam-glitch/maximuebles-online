@@ -3,7 +3,7 @@ let totalCompra = 0;
 let carrito = [];
 const CLAVE_PUBLICA_MP = "APP_USR-8dbfc25a-2ce6-4d62-a5d3-6b72841f1a46";
 
-// ✅ GENERAR CÓDIGO ÚNICO POR CLIENTE → NADIE se cruza con nadie
+// ✅ GENERAR CÓDIGO ÚNICO POR CLIENTE
 function obtenerSesionId() {
   let sesion_id = localStorage.getItem("sesion_id");
   if (!sesion_id) {
@@ -17,7 +17,7 @@ window.addEventListener("load", async () => {
   if (window.MercadoPago) {
     mp = new MercadoPago(CLAVE_PUBLICA_MP, { locale: "es-AR" });
   }
-  obtenerSesionId(); // ✅ Aseguramos que exista el identificador
+  obtenerSesionId();
   cambiarPantalla("paso-envio");
   await cargarResumenCarrito();
 });
@@ -64,9 +64,10 @@ async function cargarResumenCarrito() {
   document.getElementById("res_total").textContent = `$ ${totalCompra.toLocaleString("es-AR")}`;
 }
 
-// ✅ CARGA LOS DATOS EN EL RESUMEN
+// ✅ CARGA LOS DATOS EN EL RESUMEN — AHORA MUESTRA WHATSAPP
 function cargarResumenFinal() {
   document.getElementById("res_nombre").textContent = document.getElementById("nombre").value || "-";
+  document.getElementById("res_whatsapp").textContent = document.getElementById("whatsapp").value || "-";
   document.getElementById("res_dni").textContent = document.getElementById("dni").value || "-";
   document.getElementById("res_telefono").textContent = document.getElementById("telefono").value || "-";
   const calle = document.getElementById("calle").value;
@@ -81,9 +82,10 @@ function cargarResumenFinal() {
   document.getElementById("res_metodo_pago").textContent = "Pagar con Mercado Pago";
 }
 
-// ✅ PROCESAR PAGO — CORREGIDO ✅ CON sesion_id ✅
+// ✅ PROCESAR PAGO — WHATSAPP + DATOS DE FACTURA COMPLETOS
 async function procesarPago() {
   const nombre = document.getElementById("nombre").value.trim();
+  const whatsapp = document.getElementById("whatsapp").value.trim();
   const dni = document.getElementById("dni").value.trim();
   const calle = document.getElementById("calle").value.trim();
   const cp = document.getElementById("cp").value.trim();
@@ -91,14 +93,15 @@ async function procesarPago() {
   const telefono = document.getElementById("telefono").value.trim();
   const direccionCompleta = `${calle}, ${document.getElementById("piso").value.trim() || ''} - ${localidad} (${cp}), Río Negro`.trim();
 
-  if (!nombre || !dni || !calle || !cp || !localidad || !telefono) {
-    alert("⚠️ Completá todos los datos obligatorios por favor");
+  // ✅ Validación: AHORA PIDE WHATSAPP en lugar de correo
+  if (!nombre || !whatsapp || !calle || !cp || !localidad) {
+    alert("⚠️ Completá nombre, WhatsApp y dirección por favor");
     return;
   }
 
   alert("✅ Preparando el pago... en unos segundos irás a Mercado Pago");
 
-  // ✅ Convertimos para el servidor: id → producto_id
+  // ✅ Convertimos para el servidor
   const productosParaEnviar = carrito.map(item => ({
     producto_id: item.id,
     cantidad: item.cantidad,
@@ -106,16 +109,21 @@ async function procesarPago() {
     precio: item.precio
   }));
 
-  const sesion_id = obtenerSesionId(); // ✅ ID ÚNICO DEL CLIENTE
+  const sesion_id = obtenerSesionId();
+  const quiereFactura = document.getElementById("quiero_factura")?.checked || false;
 
+  // ✅ DATOS COMPLETOS: WHATSAPP + FACTURA
   const datosCompra = {
     nombre,
-    correo: document.getElementById("correo")?.value?.trim() || "cliente@maximuebles.com.ar",
+    whatsapp, // ✅ EN LUGAR DE CORREO
     telefono,
     direccion: direccionCompleta,
     productos: productosParaEnviar,
     total: totalCompra,
-    sesion_id: sesion_id, // ✅ ESTO ERA LO QUE FALTABA ❗
+    sesion_id,
+    quiero_factura: quiereFactura,
+    dni_comprador: quiereFactura ? (document.getElementById("dni_comprador")?.value?.trim() || dni) : "",
+    domicilio_comprador: quiereFactura ? (document.getElementById("domicilio_comprador")?.value?.trim() || direccionCompleta) : "",
     notas: `DNI: ${dni} | Recibe: ${document.getElementById("recibe")?.value || nombre} | Horario: ${document.getElementById("horario")?.value || "A convenir"}`
   };
 
@@ -126,27 +134,24 @@ async function procesarPago() {
     // ✅ PASO 1: Guardar pedido en la base de datos
     const respPedido = await peticion("/pedidos", "POST", datosCompra);
     console.log("📦 Pedido guardado:", respPedido);
-
     if (!respPedido.ok) {
       alert(respPedido.mensaje || "No se pudo registrar tu pedido. Intentá nuevamente.");
       return;
     }
 
-    // ✅ PASO 2: Generar enlace de Mercado Pago
+    // ✅ PASO 2: Generar enlace de Mercado Pago → ENVÍA WHATSAPP
     const respPago = await peticion("/crear-preferencia-pago", "POST", {
       productos: carrito,
       total: totalCompra,
-      sesion_id: sesion_id, // ✅ TAMBIÉN LO MANDAMOS ACÁ
+      sesion_id,
       datosComprador: {
         nombre,
-        correo: datosCompra.correo
+        whatsapp // ✅ MP recibe el WhatsApp
       }
     });
 
     console.log("💳 Respuesta Mercado Pago:", respPago);
-
     if (respPago.ok && respPago.datos && respPago.datos.init_point) {
-      // ✅ Pedido registrado → limpiamos carrito y redirigimos
       localStorage.removeItem("carrito");
       alert("✅ ¡Listo! A continuación serás redirigido a Mercado Pago para finalizar tu compra");
       window.location.href = respPago.datos.init_point;
