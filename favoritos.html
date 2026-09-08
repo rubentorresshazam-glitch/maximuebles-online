@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ✅ SEO PRINCIPAL -->
+    <title>Favoritos y Más Vendidos | MaxiMuebles · Valle Medio, Río Negro</title>
+    <meta name="description" content="Los productos favoritos de nuestros clientes y los más vendidos. Calidad y garantía en MaxiMuebles. Envíos gratuitos desde Chimpay hasta Pomona.">
+    <meta name="keywords" content="productos favoritos, más vendidos, muebles populares, mejores precios muebles, comprar muebles Río Negro">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://maximuebles-online.onrender.com/favoritos.html">
+    <!-- ✅ GEOLOCALIZACIÓN -->
+    <meta name="geo.region" content="AR-R">
+    <meta name="geo.placename" content="Valle Medio, Río Negro">
+    <!-- Fuentes e Iconos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/favoritos.css">
+</head>
+<body>
+    <!-- ==============================================
+                    BARRA SUPERIOR
+    ============================================== -->
+    <section class="topbar">
+        <div class="topbar-container">
+            <div class="topbar-item">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Envíos a todo el Valle Medio</span>
+            </div>
+            <div class="topbar-item">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Compra 100% segura</span>
+            </div>
+            <div class="topbar-item">
+                <i class="fa-solid fa-wrench"></i>
+                <span>Armado gratuito</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==============================================
+           ENCABEZADO → IGUAL AL RESTO DEL SITIO
+    ============================================== -->
+    <header class="header-principal">
+        <div class="header-top">
+            <div class="header-top-container">
+                <!-- ✅ LOGO -->
+                <div class="logo">
+                    <a href="/index.html" class="logo-link">
+                        <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
+                    </a>
+                </div>
+                <!-- ✅ BUSCADOR CENTRADO -->
+                <div class="header-center">
+                    <div class="search-bar">
+                        <input type="text" id="buscador-productos" class="search-input" placeholder="¿Qué estás buscando?" onkeyup="aplicarFiltros()">
+                        <button type="button" class="search-btn" aria-label="Buscar" title="Buscar" onclick="aplicarFiltros()">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- ✅ ICONOS DE NAVEGACIÓN -->
+                <div class="iconos-nav">
+                    <span class="guest-label">Compra como invitado</span>
+                    <a href="/favoritos.html" class="header-btn favoritos-activo" title="Mis Favoritos" aria-label="Mis Favoritos">
+                        <i class="fa-solid fa-heart"></i>
+                        <span>Favoritos</span>
+                        <div class="fav-count" id="favCount"></div>
+                    </a>
+                    <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" title="Carrito de compras" aria-label="Carrito de compras">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <div class="cart-count" id="headerCartCount"></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==============================================
+                    MENÚ PRINCIPAL
+    ============================================== -->
+    <nav class="navbar">
+        <div class="navbar-container menu-pc">
+            <a href="/index.html" class="nav-item">Inicio</a>
+            <a href="/nosotros.html" class="nav-item">Nosotros</a>
+            <a href="/pages/living.html" class="nav-item">Living</a>
+            <a href="/pages/dormitorios.html" class="nav-item">Dormitorios</a>
+            <a href="/pages/comedor.html" class="nav-item">Comedor</a>
+            <a href="/pages/oficina.html" class="nav-item">Oficina</a>
+            <a href="/pages/ofertas.html" class="nav-item">Ofertas</a>
+            <a href="/favoritos.html" class="nav-item active">Favoritos</a>
+            <a href="/contacto.html" class="nav-item">Contacto</a>
+            <div class="redes-contenedor">
+                <a href="https://www.facebook.com/maxi.muebles.498598" target="_blank" rel="noopener noreferrer" class="btn-red btn-facebook" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/maximuebleschch/" target="_blank" rel="noopener noreferrer" class="btn-red btn-instagram" aria-label="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <div class="wp-boton-final">
+                    <a href="#" class="boton-wp" aria-label="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <div class="lista-wp">
+                        <a href="https://wa.me/5492946516236" target="_blank" rel="noopener noreferrer">MaxiMuebles</a>
+                        <a href="https://wa.me/5492984564761" target="_blank" rel="noopener noreferrer">Juan</a>
+                        <a href="https://wa.me/5492984311890" target="_blank" rel="noopener noreferrer">Gonzalo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- ==============================================
+               SECCIÓN 1: TUS FAVORITOS (DEL CLIENTE)
+        ============================================== -->
+        <section class="featured-offers">
+            <div class="featured-header">
+                <h2><i class="fa-solid fa-heart" style="color:#ff4d6d;"></i> Mis Favoritos</h2>
+                <p class="subtitulo-ofertas">Los productos que guardaste para después</p>
+            </div>
+            <div class="products-grid" id="favoritos-grid">
+                <p class="mensaje-vacio">Todavía no guardaste ningún producto como favorito. <br>💡 Hacé clic en el corazón en cualquier producto para agregarlo.</p>
+            </div>
+        </section>
+
+        <!-- ==============================================
+               SECCIÓN 2: LOS MÁS VENDIDOS (DE TODOS)
+        ============================================== -->
+        <section class="featured-offers seccion-mas-vendidos">
+            <div class="featured-header">
+                <h2><i class="fa-solid fa-fire-flame-curved" style="color:#ff9f1c;"></i> Los Más Vendidos</h2>
+                <p class="subtitulo-ofertas">Los productos elegidos por nuestros clientes — se actualizan automáticamente con cada compra</p>
+            </div>
+            <div class="products-grid" id="mas-vendidos-grid">
+                <p class="mensaje-cargando">Cargando productos más vendidos...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==============================================
+                    PIE DE PÁGINA
+    ============================================== -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-logo-area">
+                <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="footer-logo">
+                <p class="footer-slogan">Tu tienda de muebles de confianza</p>
+            </div>
+            <div class="footer-links-simples">
+                <a href="/nosotros.html">Nosotros</a>
+                <a href="/ayuda.html">Ayuda</a>
+                <a href="/contacto.html">Contacto</a>
+                <a href="/terminos.html">Términos</a>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 Maximuebles. Todos los derechos reservados.
+            </div>
+        </div>
+    </footer>
+
+    <!-- ✅ SCRIPTS EN ORDEN CORRECTO -->
+    <script src="/js/api.js"></script>
+    <script src="/js/carrito.js?v=10"></script>
+    <script src="/js/favoritos.js"></script>
+</body>
+</html>
