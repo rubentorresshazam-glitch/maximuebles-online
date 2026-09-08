@@ -2,6 +2,7 @@
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
 // ✅ SE GENERA AUTOMÁTICAMENTE EN PDF
 // ✅ ESTRUCTURA DE CONEXIÓN A AFIP/ARCA INCLUIDA
+// ✅ RUTA INTELIGENTE: funciona en TU PC y en RENDER
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -9,12 +10,16 @@ const PDFDocument = require('pdfkit');
 const crypto = require('crypto');
 
 // ✅ DATOS DE LA EMPRESA — SE LEEN DESDE LAS VARIABLES DE RENDER
-const CUIT_EMPRESA = process.env.AFIP_CUIT || "30715002724";
+const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
 const ENTORNO = process.env.AFIP_ENTORNO || "homologacion";
 
-// ✅ RUTA DE TU CARPETA DE FACTURAS
-const CARPETA_FACTURAS = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
+// ==================================================
+// ✅ RUTA INTELIGENTE: TU CARPETA EN PC / TEMP EN RENDER
+// ==================================================
+const CARPETA_FACTURAS = process.env.NODE_ENV === 'production'
+  ? path.join(require('os').tmpdir(), 'facturas-generadas') // ✅ En Render: carpeta temporal
+  : path.join(__dirname, '../../facturacionadmin/facturas-generadas'); // ✅ En TU PC: tu carpeta de siempre
 
 // ✅ Crear carpeta si no existe
 if (!fs.existsSync(CARPETA_FACTURAS)) {
@@ -28,7 +33,6 @@ if (!fs.existsSync(CARPETA_FACTURAS)) {
 
 // ✅ CONTADOR DE NÚMEROS DE FACTURA
 const ARCHIVO_CONTADOR = path.join(CARPETA_FACTURAS, 'ultimo-numero.txt');
-
 function obtenerUltimoNumero() {
   try {
     if (fs.existsSync(ARCHIVO_CONTADOR)) {
@@ -39,7 +43,6 @@ function obtenerUltimoNumero() {
   }
   return 1000;
 }
-
 function guardarUltimoNumero(n) {
   try {
     fs.writeFileSync(ARCHIVO_CONTADOR, String(n), 'utf8');
@@ -47,7 +50,6 @@ function guardarUltimoNumero(n) {
     console.log('⚠️ No se pudo guardar número de factura:', err.message);
   }
 }
-
 function generarNumeroFactura() {
   const ult = obtenerUltimoNumero() + 1;
   guardarUltimoNumero(ult);
@@ -131,12 +133,6 @@ async function enviarFacturaAARCA(datos) {
       return false;
     }
 
-    // ==================================================
-    // 🔒 CONEXIÓN A AFIP — ESTRUCTURA LISTA PARA COMPLETAR
-    // Por ahora se genera CAE de prueba. Cuando quieras
-    // la conexión real, te la armo paso a paso.
-    // ==================================================
-
     // ✅ SIMULACIÓN DE RESPUESTA DE AFIP (mientras completamos la conexión real)
     const caeSimulado = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
     const fechaVenc = new Date();
@@ -145,7 +141,7 @@ async function enviarFacturaAARCA(datos) {
     console.log(`✅ FACTURA N° ${numero} — PROCESADA ✅`);
     console.log(`📋 CAE (prueba): ${caeSimulado}`);
     console.log(`📅 Vencimiento CAE: ${fechaVenc.toLocaleDateString('es-AR')}`);
-    console.log(`🌐 Entorno: ${ENTORNO} | CUIT: ${CUIT_EMPRESA} | Pto Venta: ${PUNTO_VENTA}`);
+    console.log(`🌐 Entorno AFIP: ${ENTORNO} | CUIT: ${CUIT_EMPRESA} | Pto Venta: ${PUNTO_VENTA}`);
 
     return {
       exito: true,
@@ -156,7 +152,7 @@ async function enviarFacturaAARCA(datos) {
 
   } catch (error) {
     console.log(`⚠️ Error en proceso de facturación: ${error.message}`);
-    return false; // ❌ NO rompe el pedido aunque falle AFIP
+    return false;
   }
 }
 
@@ -188,7 +184,7 @@ async function enviarCorreoConFactura(datos) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`💰 TOTAL: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`);
     console.log(`🌐 Entorno AFIP: ${ENTORNO}`);
-    console.log(`📂 PDF guardado en: facturacionadmin/facturas-generadas/Factura-${numero}.pdf`);
+    console.log(`📂 PDF guardado en: ${CARPETA_FACTURAS}`);
     console.log('==================================================');
 
     return numero;
