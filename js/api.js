@@ -120,3 +120,41 @@ window.vaciarCarrito = function() {
 // ✅ AL CARGAR CUALQUIER PÁGINA → ACTUALIZAR CONTADOR
 // ==================================================
 document.addEventListener('DOMContentLoaded', actualizarContadorCarrito);
+
+// ✅ FAVORITOS — Compartido en toda la tienda
+let favoritos = JSON.parse(localStorage.getItem('favoritos') || '[]');
+
+function alternarFavorito(id, boton) {
+    const existe = favoritos.indexOf(id);
+    if (existe >= 0) {
+        favoritos.splice(existe, 1);
+        boton.classList.remove('activo');
+    } else {
+        favoritos.push(id);
+        boton.classList.add('activo');
+    }
+    localStorage.setItem('favoritos', JSON.stringify(favoritos));
+    actualizarContadorFavoritos();
+}
+
+function actualizarContadorFavoritos() {
+    const contador = document.getElementById('favCount');
+    if (contador) {
+        contador.textContent = favoritos.length || '';
+        contador.style.display = favoritos.length > 0 ? 'flex' : 'none';
+    }
+}
+
+// ✅ Marcar corazones activos al cargar cualquier página
+function marcarFavoritosEnTarjetas() {
+    document.querySelectorAll('.btn-corazon-favorito').forEach(boton => {
+        const id = parseInt(boton.dataset.id);
+        if (favoritos.includes(id)) {
+            boton.classList.add('activo');
+        }
+    });
+    actualizarContadorFavoritos();
+}
+
+// Ejecutar cuando se cargue cualquier página
+document.addEventListener('DOMContentLoaded', marcarFavoritosEnTarjetas);
