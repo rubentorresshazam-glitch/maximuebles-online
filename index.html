@@ -343,14 +343,14 @@
         }
         </script> 
 
-    <!-- 🔒 BOTÓN FACTURACIÓN → SOLO LO VOS VOS, NADIE MÁS -->
+<!-- 🔒 BOTÓN FACTURACIÓN → SOLO VOS LO VES -->
 <script>
-// ✅ SOLO VOS LO VES → LOS CLIENTES NUNCA
-if (window.location.hostname === 'localhost' || 
-    window.location.search.includes('admin=maximuebles')) {
-    document.getElementById("boton-facturacion").style.display = "inline-flex";
-    console.log("🔒 Modo Administrador activo");
-}
+    // ✅ PONE true PARA VERLO SIEMPRE
+    const SOY_ADMINISTRADOR = true; // ← ACÁ EN true
+    if (SOY_ADMINISTRADOR) {
+        document.getElementById("boton-facturacion").style.display = "inline-flex";
+    }
+</script>
 </script>
 </body>
 </html>
