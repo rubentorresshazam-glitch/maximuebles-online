@@ -37,6 +37,28 @@
             border-radius: 16px;
             display: block;
         }
+        /* ✅ ESTILO DEL BOTÓN DE FACTURACIÓN */
+        .btn-facturacion {
+            background: linear-gradient(135deg, #22b548, #1a8a36);
+            color: white !important;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-left: 12px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(34, 181, 72, 0.25);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-facturacion:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 181, 72, 0.35);
+        }
+        .btn-facturacion i {
+            font-size: 16px;
+        }
     </style>
     <!-- ✅ DATOS ESTRUCTURADOS → Google los lee y destaca -->
     <script type="application/ld+json">
@@ -85,21 +107,18 @@
             </div>
         </div>
     </section>
-
     <!-- ==============================================
          ENCABEZADO → LOGO | BUSCADOR CENTRADO | ICONOS
       ============================================== -->
     <header class="header-principal">
         <div class="header-top">
             <div class="header-top-container">
-
                 <!-- ✅ IZQUIERDA: LOGO -->
                 <div class="logo">
                     <a href="/index.html" class="logo-link">
                         <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
                     </a>
                 </div>
-
                 <!-- ✅ CENTRO: BUSCADOR → TU CÓDIGO ORIGINAL -->
                 <div class="header-center">
                     <div class="search-bar">
@@ -109,28 +128,31 @@
                         </button>
                     </div>
                 </div>
-
-             <!-- ✅ DERECHA: FAVORITOS + CARRITO -->
-                    <div class="iconos-nav">
-                        <span class="guest-label">Compra como invitado</span>
-                        <!-- ❤️ Ícono Favoritos → AL HACER CLIC VA A favoritos.html -->
-                        <a href="/favoritos.html" class="header-btn" title="Ver mis Favoritos" aria-label="Mis Favoritos">
-                            <i class="fa-solid fa-heart"></i>
-                            <span>Favoritos</span>
-                            <div class="fav-count" id="favCount"></div>
-                        </a>
-                    <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" title="Carrito de compras" aria-label="Carrito de compras">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        <div class="cart-count" id="headerCartCount"></div>
-                    </a>
+                 <!-- ✅ DERECHA: FAVORITOS + CARRITO + FACTURACIÓN -->
+                        <div class="iconos-nav">
+                            <span class="guest-label">Compra como invitado</span>
+                            <!-- ❤️ Ícono Favoritos -->
+                            <a href="/favoritos.html" class="header-btn" title="Ver mis Favoritos" aria-label="Mis Favoritos">
+                                <i class="fa-solid fa-heart"></i>
+                                <span>Favoritos</span>
+                                <div class="fav-count" id="favCount"></div>
+                            </a>
+                            🛒 Carrito
+                            <a href="/mi-cuenta/carrito.html" class="header-btn cart-btn" title="Carrito de compras" aria-label="Carrito de compras">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                <div class="cart-count" id="headerCartCount"></div>
+                            </a>
+                            <!-- 🔒 BOTÓN FACTURACIÓN → SOLO VOS LO VES -->
+                            <a id="boton-facturacion" href="/facturacionadmin/facturacion.html" class="btn-facturacion" style="display: none;" title="Solo administración" aria-label="Facturación">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <span>Facturación</span>
+                            </a>
+                        </div>
                 </div>
-
             </div>
-        </div>
     </header>
-
     <!-- ==============================================
-                MENÚ PRINCIPAL
+                    MENÚ PRINCIPAL
      ============================================== -->
     <nav class="navbar">
         <div class="navbar-container menu-pc">
@@ -162,9 +184,8 @@
             </div>
         </div>
     </nav>
-
     <!-- ==============================================
-                BANNER PRINCIPAL
+                    BANNER PRINCIPAL
      ============================================== -->
     <section class="hero">
         <div class="hero-inner">
@@ -196,7 +217,6 @@
             </div>
         </div>
     </section>
-
     <main>
         <!-- BENEFICIOS -->
         <section class="benefits">
@@ -207,7 +227,6 @@
                 <div class="benefit-item"><i class="fa-solid fa-wrench"></i><h3>Armado gratuito</h3><p>En compras seleccionadas</p></div>
             </div>
         </section>
-
         <!-- CATEGORÍAS -->
         <section class="categories">
             <div class="categories-grid">
@@ -217,7 +236,6 @@
                 <a href="/pages/oficina.html" class="category-card"><div class="category-image-container"><img src="/assets/categories/oficina.jpg" alt="Muebles de Oficina y trabajo - MaxiMuebles" class="category-full-image" loading="lazy"></div><div class="category-overlay"><h3>Oficina</h3></div></a>
             </div>
         </section>
-
         <!-- PRODUCTOS EN OFERTA -->
         <section class="featured-offers">
             <div class="featured-container">
@@ -230,8 +248,8 @@
                 </div>
             </div>
         </section>
-      
-                   <!-- ==================================================
+       
+                    <!-- ==================================================
              🗺️ MAPA INTERACTIVO · TARJETAS ALINEADAS AL DISEÑO
              ================================================== -->
         <section class="seccion-mapa">
@@ -239,7 +257,6 @@
                 <h2>Nuestros locales físicos</h2>
                 <p class="subtitulo-mapa">Encontranos en el Valle Medio de Río Negro — desde Chimpay hasta Pomona</p>
             </div>
-
             <!-- BUSCADOR DE DIRECCIONES -->
             <div class="buscador-mapa">
                 <input type="text" id="buscar-direccion" placeholder="Escribí una dirección o localidad..." class="input-buscar">
@@ -247,7 +264,6 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </div>
-
                         <!-- ✅ MAPA CON TU LOCAL YA MARCADO → FUNCIONA DE UNA -->
             <div class="contenedor-mapa" tabindex="0" role="region" aria-label="Mapa de ubicación de MaxiMuebles">
                 <iframe 
@@ -264,7 +280,6 @@
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; street-view-viewer">
                 </iframe>
             </div>
-
             <!-- TARJETAS DE DIRECCIÓN Y HORARIO -->
             <div class="info-locales">
                 <div class="tarjeta-local">
@@ -300,12 +315,10 @@
             </div>
         </div>
     </footer>
-
     <!-- ✅ SCRIPTS EN ORDEN CORRECTO -->
     <script src="/js/api.js"></script>
     <script src="/js/carrito.js?v=10"></script>
     <script src="/js/index.js"></script>
-
     <!-- Banner automático -->
     <script>
         const fotosBanner = document.querySelectorAll('.hero-image');
@@ -321,8 +334,7 @@
         setInterval(cambiarImagenBanner, 5000);
     </script>
  
- 
-<!-- SCRIPT DEL BUSCADOR -->
+ <!-- SCRIPT DEL BUSCADOR DE MAPA -->
         <script>
         function buscarEnMapa() {
             const direccion = document.getElementById('buscar-direccion').value.trim();
@@ -331,5 +343,16 @@
             mapa.src = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion + ", Valle Medio, Río Negro") + "&output=embed";
         }
         </script> 
+
+    <!-- 🔒 BOTÓN FACTURACIÓN → SOLO VISIBLE PARA VOS -->
+    <script>
+        // ✅ PONE "true" PARA VER EL BOTÓN DE FACTURACIÓN
+        const SOY_ADMINISTRADOR = false; // ← CAMBIÁ A true PARA VERLO
+
+        if (SOY_ADMINISTRADOR === true) {
+            document.getElementById("boton-facturacion").style.display = "inline-flex";
+            console.log("🔒 Modo Administrador activo → Botón Facturación visible");
+        }
+    </script>
 </body>
 </html>
