@@ -1,17 +1,11 @@
 const { Pool } = require('pg');
 
-const conexion = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USUARIO,
-  password: process.env.DB_CONTRASENA,
-  database: process.env.DB_NOMBRE,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 60000
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // ✅ Evita errores de SSL
+  max: 10, // ✅ Mantiene conexiones abiertas
+  idleTimeoutMillis: 30000, // ✅ No las cierra tan rápido
+  connectionTimeoutMillis: 5000 // ✅ Tiempo máximo de espera
 });
 
-conexion.on('error', (err) => {
-  console.log('⚠️ Error conexión Neon:', err.message);
-});
-
-module.exports = conexion;
+module.exports = pool;
