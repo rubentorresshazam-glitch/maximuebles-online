@@ -2,7 +2,7 @@
 .env
 .env.local
 
-# 📂 Certificados oficiales de AFIP — NUNCA subir
+# 📂 Certificados de AFIP — NUNCA subir
 backend/server/certificados/
 *.cer
 *.key
@@ -14,9 +14,5 @@ node_modules/
 *.log
 solicitud-certificado.csr
 
-# ======================================
-# ❌ NO SUBIR ESTA CARPETA A GITHUB
-# ======================================
-facturacionadmin/facturas-generadas/
-facturacionadmin/*.txt
-.env
+# ✅ facturacionadmin SÍ se sube → NO va acá
+# ❌ NO agregues facturacionadmin en esta lista
