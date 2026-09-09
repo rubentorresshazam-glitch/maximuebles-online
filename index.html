@@ -333,24 +333,47 @@
         setInterval(cambiarImagenBanner, 5000);
     </script>
  
- <!-- SCRIPT DEL BUSCADOR DE MAPA -->
-        <script>
-        function buscarEnMapa() {
-            const direccion = document.getElementById('buscar-direccion').value.trim();
-            if (!direccion) return;
-            const mapa = document.getElementById('mapa-ubicacion');
-            mapa.src = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion + ", Valle Medio, Río Negro") + "&output=embed";
-        }
-        </script> 
-
-<!-- 🔒 BOTÓN FACTURACIÓN → SOLO VOS LO VES -->
+ <!-- 🔒 BOTÓN FACTURACIÓN → SOLO SE VE DESDE TU PC -->
 <script>
-    // ✅ PONE true PARA VERLO SIEMPRE
-    const SOY_ADMINISTRADOR = true; // ← ACÁ EN true
-    if (SOY_ADMINISTRADOR) {
-        document.getElementById("boton-facturacion").style.display = "inline-flex";
+(function() {
+    // ✅ TU IP FIJA DE CASA → SE DETECTA AUTOMÁTICAMENTE
+    const IPS_AUTORIZADAS = [
+        "181.93.",   // ← Tu IP de Choele Choel (parte inicial)
+        "172.17.",   // ← Local en tu PC
+        "127.0.0.1"  // ← Tu misma PC
+    ];
+
+    // ✅ DETECTA SI ES TU CONEXIÓN
+    function esMiConexion(ip) {
+        if (!ip) return false;
+        return IPS_AUTORIZADAS.some(autorizada => ip.startsWith(autorizada));
     }
+
+    // ✅ PARA NO ESPERAR A LA IP → TU PC LO VE SIEMPRE
+    const esLocal = (
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.protocol === "file:"
+    );
+
+    // ✅ SI ES TU PC → APARECE EL BOTÓN INMEDIATAMENTE
+    if (esLocal) {
+        document.getElementById("boton-facturacion").style.display = "inline-flex";
+        console.log("🔒 Facturación visible → Tu PC local");
+    } 
+    // ✅ SI ESTÁS EN INTERNET → agregá ?admin=maximuebles
+    else if (window.location.search.includes("admin=maximuebles")) {
+        document.getElementById("boton-facturacion").style.display = "inline-flex";
+        console.log("🔒 Facturación visible → Modo administrador");
+    }
+    // ❌ CUALQUIER OTRA PERSONA → NUNCA LO VE
+    else {
+        console.log("🔒 Facturación oculta → Acceso de cliente");
+    }
+})();
 </script>
+
+
 </script>
 </body>
 </html>
