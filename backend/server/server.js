@@ -26,18 +26,13 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 // ==================================================
 const app = express();
 
-// 🔒 PROTEGER facturacionadmin → PERMITIR TODOS LOS ARCHIVOS NECESARIOS
-app.use('/facturacionadmin', (req, res, siguiente) => {
-  // ✅ ARCHIVOS EXACTOS DE TU CARPETA
-  if (req.path === '/facturacion.html' ||
-      req.path === '/facturacion.css' ||
-      req.path === '/facturacion.js' ||
-      req.path.startsWith('/facturas-generadas/')) {
-    return siguiente();
-  }
-  // ❌ TODO LO DEMÁS → BLOQUEADO
+// 🔒 PROTEGER SOLO LA CARPETA DE FACTURAS GENERADADAS (donde están los PDF)
+// ✅ EL RESTO DE LA CARPETA facturacionadmin SE PUEDE LEER LIBREMENTE
+app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
+
+// ✅ NO HAY BLOQUEO EN EL RESTO → facturacion.html, .css y .js SE CARGAN SOLOS
 // ==================================================
 // CONFIGURACIÓN
 // ==================================================
