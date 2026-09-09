@@ -54,8 +54,11 @@ exports.crearPedido = async (req, res) => {
         domicilio: domicilio_comprador,
         productos,
         total
-      }).then(async (numeroFactura) => {
+      }).then(async (respuestaFactura) => {
+        // ✅ CORREGIDO: ahora recibimos OBJETO, no solo número
+        const numeroFactura = respuestaFactura?.exito ? respuestaFactura.numero : 'SIN-FACTURA';
         console.log(`✅ Factura N° ${numeroFactura} — WhatsApp: ${whatsapp}`);
+
         try {
           await db.query(
             `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE id = $2`,
@@ -156,15 +159,20 @@ exports.actualizarFactura = async (req, res) => {
 // ✅ GENERAR FACTURA PDF Y DEVOLVER ENLACE DE DESCARGA
 exports.generarFacturaPDF = async (req, res) => {
   try {
-    const { enviarCorreoConFactura } = require('../config/afip-facturacion');
-    const numeroFactura = await enviarCorreoConFactura(req.body);
+    const resultado = await enviarCorreoConFactura(req.body);
     
+    if (!resultado.exito) {
+      return res.status(400).json({ ok: false, mensaje: "No se pudo generar la factura" });
+    }
+
     res.json({ 
       ok: true, 
       mensaje: "Factura generada con éxito",
       datos: {
-        numero: numeroFactura,
-        url: `/facturacionadmin/facturas-generadas/Factura-${numeroFactura}.pdf`
+        numero: resultado.numero,
+        cae: resultado.cae,
+        vencimiento: resultado.vencimiento,
+        url: `/facturacionadmin/facturas-generadas/Factura-${resultado.numero}.pdf`
       }
     });
   } catch (error) {
