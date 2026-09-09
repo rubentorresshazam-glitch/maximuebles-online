@@ -1,7 +1,7 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
 // Conectado con: Neon PostgreSQL · Mercado Pago
-// ✅ CARPETA DE FACTURACIÓN PROTEGIDA
+// ✅ CARPETA DE FACTURACIÓN PROTEGIDA + RUTA PÚBLICA
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -21,15 +21,19 @@ const mpClient = new MercadoPagoConfig({
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 
-// ==================================================
-// ✅ PROTEGER CARPETA DE FACTURACIÓN → SOLO ADENTRO DEL SERVIDOR
-// ==================================================
 const app = express();
 
-// 🔒 SOLO PROTEGEMOS LAS FACTURAS PDF
+// ==================================================
+// ✅ RUTA PÚBLICA PARA VER FACTURAS → ESTO ES LO QUE FALTABA
+// ==================================================
+const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
+app.use('/facturas', express.static(carpetaFacturas)); // ✅ PÚBLICA
+
+// 🔒 PROTEGER CARPETA REAL → NADIE LA TOCA DIRECTAMENTE
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
+
 // ==================================================
 // CONFIGURACIÓN
 // ==================================================
@@ -57,13 +61,13 @@ const contactoRutas = require('./routes/contacto.routes');
 app.use('/api/contacto', contactoRutas);
 
 // ==================================================
-// 💳 MERCADO PAGO — AHORA LEE WHATSAPP
+// 💳 MERCADO PAGO
 // ==================================================
 app.post('/api/crear-preferencia-pago', async (req, res) => {
   try {
     const { productos, total, datosComprador } = req.body;
     const sesion_id = req.query.sesion_id || 'invitado';
-
+    
     const items = productos.map(item => ({
       id: String(item.id),
       title: item.nombre,
@@ -77,7 +81,6 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
         items,
         payer: {
           name: datosComprador?.nombre || 'Invitado',
-          // ✅ WHATSAPP EN LUGAR DE CORREO
           email: datosComprador?.whatsapp || 'cliente@maximuebles.com'
         },
         back_urls: {
@@ -138,4 +141,5 @@ app.listen(PUERTO, () => {
   console.log(`🗄️  DB: ${process.env.DB_HOST ? '✅' : '❌'}`);
   console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
   console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
+  console.log(`📄 Ruta de facturas: /facturas/`);
 });
