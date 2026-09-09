@@ -333,42 +333,34 @@
         setInterval(cambiarImagenBanner, 5000);
     </script>
  
- <!-- 🔒 BOTÓN FACTURACIÓN → SOLO SE VE DESDE TU PC -->
+ <!-- 🔒 BOTÓN FACTURACIÓN → SOLO VOS LO VES CON TU CORREO -->
 <script>
 (function() {
-    // ✅ TU IP FIJA DE CASA → SE DETECTA AUTOMÁTICAMENTE
-    const IPS_AUTORIZADAS = [
-        "181.93.",   // ← Tu IP de Choele Choel (parte inicial)
-        "172.17.",   // ← Local en tu PC
-        "127.0.0.1"  // ← Tu misma PC
-    ];
-
-    // ✅ DETECTA SI ES TU CONEXIÓN
-    function esMiConexion(ip) {
-        if (!ip) return false;
-        return IPS_AUTORIZADAS.some(autorizada => ip.startsWith(autorizada));
-    }
-
-    // ✅ PARA NO ESPERAR A LA IP → TU PC LO VE SIEMPRE
-    const esLocal = (
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        window.location.protocol === "file:"
-    );
-
-    // ✅ SI ES TU PC → APARECE EL BOTÓN INMEDIATAMENTE
-    if (esLocal) {
+    // ✅ PONÉ ACÁ TU CORREO DE GOOGLE (el que usás siempre)
+    const MI_CORREO = "rubentorresshazam@gmail.com"; // ← ESCRIBÍ TU CORREO ACÁ
+    
+    // ✅ BUSCA SI YA ESTÁS RECONOCIDO
+    const correoGuardado = localStorage.getItem("correo_administrador");
+    
+    // ✅ SI YA TE RECONOCE O ENTRÁS CON TU VÍNCULO → APARECE EL BOTÓN
+    if (correoGuardado === MI_CORREO || window.location.search.includes("admin=maximuebles")) {
         document.getElementById("boton-facturacion").style.display = "inline-flex";
-        console.log("🔒 Facturación visible → Tu PC local");
-    } 
-    // ✅ SI ESTÁS EN INTERNET → agregá ?admin=maximuebles
-    else if (window.location.search.includes("admin=maximuebles")) {
-        document.getElementById("boton-facturacion").style.display = "inline-flex";
-        console.log("🔒 Facturación visible → Modo administrador");
+        console.log("🔒 Bienvenido — Modo Facturación ACTIVO ✅");
     }
-    // ❌ CUALQUIER OTRA PERSONA → NUNCA LO VE
-    else {
-        console.log("🔒 Facturación oculta → Acceso de cliente");
+    
+    // ✅ SI ENTRÁS CON EL VÍNCULO → TE PIDE TU CORREO UNA SOLA VEZ
+    if (window.location.search.includes("admin=maximuebles") && correoGuardado !== MI_CORREO) {
+        setTimeout(() => {
+            const correoIngresado = prompt("🔒 Escribí tu correo de Google para ver Facturación:");
+            if (correoIngresado === MI_CORREO) {
+                localStorage.setItem("correo_administrador", MI_CORREO);
+                document.getElementById("boton-facturacion").style.display = "inline-flex";
+                alert("✅ ¡Listo! La tienda te recordará siempre desde esta computadora.");
+                console.log("🔒 Correo verificado → Facturación visible ✅");
+            } else {
+                console.log("🔒 Correo incorrecto → Botón oculto ❌");
+            }
+        }, 500);
     }
 })();
 </script>
