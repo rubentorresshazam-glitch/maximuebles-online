@@ -26,8 +26,13 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 // ==================================================
 const app = express();
 
-// 🔒 BLOQUEAR ACCESO DESDE EL NAVEGADOR A facturacionadmin
-app.use('/facturacionadmin', (req, res) => {
+// 🔒 PROTEGER CARPETA DE FACTURACIÓN → SOLO facturacion.html ES ACCESIBLE
+app.use('/facturacionadmin', (req, res, siguiente) => {
+  // ✅ PERMITIR SOLO facturacion.html
+  if (req.path === '/facturacion.html' || req.path === '/facturacion.html/') {
+    return siguiente(); // ✅ DEJAR PASAR
+  }
+  // ❌ TODO LO DEMÁS → BLOQUEADO
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
 
