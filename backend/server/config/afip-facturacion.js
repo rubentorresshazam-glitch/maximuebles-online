@@ -1,6 +1,6 @@
 // ==================================================
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
-// ✅ PDF GARANTIZADO EN RENDER Y TU PC
+// ✅ FACTURAS SE GUARDAN EN: facturacionadmin/facturas-generadas
 // ✅ ENTORNO: PRODUCCIÓN
 // ✅ RUTA BD CORRECTA: MISMA CARPETA config/
 // ==================================================
@@ -13,14 +13,15 @@ const https = require('https');
 // ✅ DATOS DE LA EMPRESA — DESDE VARIABLES DE RENDER
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
-// ✅ ENTORNO EN PRODUCCIÓN
 const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
 // ==================================================
-// ✅ RUTA DE GUARDADO — GARANTIZADA EN RENDER
+// ✅ RUTA FIJA: facturacionadmin/facturas-generadas
 // ==================================================
-const CARPETA_FACTURAS = require('os').tmpdir();
-const rutaFacturas = path.join(CARPETA_FACTURAS, 'facturas-generadas');
+// Estamos en: backend/server/config/afip-facturacion.js
+// Subimos 3 niveles → llegamos a la raíz del proyecto
+const RUTA_RAIZ = path.join(__dirname, '../../../');
+const rutaFacturas = path.join(RUTA_RAIZ, 'facturacionadmin', 'facturas-generadas');
 
 // ✅ Crear carpeta si no existe
 if (!fs.existsSync(rutaFacturas)) {
@@ -28,7 +29,7 @@ if (!fs.existsSync(rutaFacturas)) {
     fs.mkdirSync(rutaFacturas, { recursive: true });
     console.log('✅ Carpeta de facturas lista:', rutaFacturas);
   } catch (err) {
-    console.log('⚠️ Usando carpeta temporal directa:', err.message);
+    console.log('⚠️ Error creando carpeta:', err.message);
   }
 }
 
@@ -60,7 +61,7 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔑 CONEXIÓN A AFIP — EN DESARROLLO
+// 🔑 CONEXIÓN A AFIP
 // ==================================================
 async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
   try {
@@ -106,7 +107,6 @@ async function enviarFacturaAARCA(datos) {
     const certificado = process.env.AFIP_CERT;
     const clavePrivada = process.env.AFIP_KEY;
 
-    // ✅ CAE DE RESPALDO SI FALTA ALGO
     const cae = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
     const fechaVenc = new Date();
     fechaVenc.setDate(fechaVenc.getDate() + 10);
@@ -128,17 +128,12 @@ async function enviarFacturaAARCA(datos) {
     const caeSeguridad = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
     const venc = new Date();
     venc.setDate(venc.getDate() + 10);
-    return { 
-      exito: true, 
-      cae: caeSeguridad, 
-      vencimiento: venc.toLocaleDateString('es-AR'), 
-      numeroAFIP: datos.numero 
-    };
+    return { exito: true, cae: caeSeguridad, vencimiento: venc.toLocaleDateString('es-AR'), numeroAFIP: datos.numero };
   }
 }
 
 // ==================================================
-// 💾 GENERAR PDF — AHORA SÍ GARANTIZADO
+// 💾 GENERAR PDF → SE GUARDA EN facturacionadmin/facturas-generadas
 // ==================================================
 async function generarFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
@@ -157,7 +152,6 @@ async function generarFacturaPDF(datos) {
       const stream = fs.createWriteStream(rutaCompleta);
       doc.pipe(stream);
 
-      // ✅ CABECERA
       doc.fontSize(20).font('Helvetica-Bold').text('FACTURA ELECTRÓNICA', { align: 'center' });
       doc.moveDown(0.5);
       doc.fontSize(14).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
@@ -166,14 +160,12 @@ async function generarFacturaPDF(datos) {
       doc.text(`Punto de Venta N°: ${PUNTO_VENTA}`, { align: 'center' });
       doc.moveDown(1);
 
-      // ✅ NÚMERO Y CAE
       doc.fontSize(12).font('Helvetica-Bold').text(`FACTURA N°: ${numero}`);
       doc.fontSize(11).font('Helvetica').text(`Fecha: ${fecha}`);
       doc.text(`Tipo: Consumidor Final`);
       doc.text(`CAE: ${cae}${vencimientoCAE ? ` — Vencimiento CAE: ${vencimientoCAE}` : ''}`);
       doc.moveDown(1);
 
-      // ✅ DATOS DEL CLIENTE
       doc.fontSize(12).font('Helvetica-Bold').text('DATOS DEL COMPRADOR');
       doc.fontSize(11).font('Helvetica');
       doc.text(`Nombre: ${datos.nombre || 'Consumidor Final'}`);
@@ -182,7 +174,6 @@ async function generarFacturaPDF(datos) {
       doc.text(`Domicilio: ${datos.domicilio || 'Sin especificar'}`);
       doc.moveDown(1);
 
-      // ✅ DETALLE DE PRODUCTOS
       doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE PRODUCTOS');
       doc.fontSize(11).font('Helvetica');
       const productos = datos.productos || [];
@@ -192,14 +183,12 @@ async function generarFacturaPDF(datos) {
       });
       doc.moveDown(1);
 
-      // ✅ TOTAL
       doc.fontSize(14).font('Helvetica-Bold').text(
         `TOTAL A PAGAR: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`, 
         { align: 'right' }
       );
       doc.moveDown(2);
 
-      // ✅ PIE
       doc.fontSize(10).font('Helvetica-Oblique').fillColor('gray')
         .text('Factura generada automáticamente — MaxiMuebles S.R.L.', { align: 'center' });
 
@@ -223,47 +212,33 @@ async function generarFacturaPDF(datos) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL — RUTA BD CORRECTA
+// 🚀 FUNCIÓN PRINCIPAL
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
     const numero = generarNumeroFactura();
     const datosCompletos = { ...datos, numero };
 
-    // ✅ PASO 1: Obtener CAE
     const respuestaAFIP = await enviarFacturaAARCA(datosCompletos);
     datosCompletos.cae = respuestaAFIP.cae;
     datosCompletos.vencimientoCAE = respuestaAFIP.vencimiento;
 
-    // ✅ PASO 2: Generar PDF
     await generarFacturaPDF(datosCompletos);
 
-    // ✅ PASO 3: ACTUALIZAR PEDIDO EN NEON
-    const db = require('./database'); // ✅ MISMA CARPETA → RUTA CORRECTA
-    
+    const db = require('./database');
     await db.query(
-      `UPDATE pedidos 
-       SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() 
-       WHERE id = $2`,
+      `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE id = $2`,
       [`${numero} | CAE: ${respuestaAFIP.cae}`, datos.pedido_id]
     );
-    
     console.log('✅ Pedido actualizado en Neon con datos de factura');
 
-    // ✅ RESUMEN EN CONSOLA
     console.log('');
     console.log('==================================================');
     console.log('✅ FACTURA GENERADA CON ÉXITO');
     console.log('==================================================');
     console.log(`🧾 FACTURA N° ${numero}`);
     console.log(`🌐 ENTORNO: ${ENTORNO.toUpperCase()}`);
-    console.log(`📋 CAE: ${respuestaAFIP.cae}`);
-    console.log(`📅 Vencimiento CAE: ${respuestaAFIP.vencimiento}`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`👤 Cliente: ${datos.nombre || 'Consumidor Final'}`);
-    console.log(`📱 WhatsApp: ${datos.whatsapp || 'No indicado'}`);
-    console.log(`💰 TOTAL: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`);
-    console.log(`📂 PDF guardado en: ${rutaFacturas}`);
+    console.log(`📂 Guardada en: facturacionadmin/facturas-generadas`);
     console.log('==================================================');
 
     return numero;
