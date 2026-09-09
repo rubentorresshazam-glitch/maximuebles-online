@@ -28,17 +28,16 @@ const app = express();
 
 // 🔒 PROTEGER facturacionadmin → PERMITIR TODOS LOS ARCHIVOS NECESARIOS
 app.use('/facturacionadmin', (req, res, siguiente) => {
-  // ✅ DEJAR PASAR: página, estilos, scripts y todo lo que necesite cargar
-  if (req.path.endsWith('.html') || 
-      req.path.endsWith('.css') || 
-      req.path.endsWith('.js') ||
+  // ✅ ARCHIVOS EXACTOS DE TU CARPETA
+  if (req.path === '/facturacion.html' ||
+      req.path === '/facturacion.css' ||
+      req.path === '/facturacion.js' ||
       req.path.startsWith('/facturas-generadas/')) {
-    return siguiente(); // ✅ TODO CARGA SIN PROBLEMAS
+    return siguiente();
   }
-  // ❌ CUALQUIER OTRA COSA → BLOQUEADO
+  // ❌ TODO LO DEMÁS → BLOQUEADO
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
-
 // ==================================================
 // CONFIGURACIÓN
 // ==================================================
