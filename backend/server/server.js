@@ -26,8 +26,7 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 // ==================================================
 const app = express();
 
-// 🔒 SOLO PROTEGEMOS LOS ARCHIVOS PRIVADOS (facturas PDF)
-// ✅ TODO LO DEMÁS SE CARGA SIN PROBLEMAS
+// 🔒 SOLO PROTEGEMOS LAS FACTURAS PDF
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
