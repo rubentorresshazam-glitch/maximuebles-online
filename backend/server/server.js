@@ -26,10 +26,12 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 // ==================================================
 const app = express();
 
-// 🔒 PROTEGER CARPETA DE FACTURACIÓN → SOLO facturacion.html ES ACCESIBLE
+// 🔒 PROTEGER CARPETA FACTURACIONADMIN → PERMITIR HTML, CSS y JS
 app.use('/facturacionadmin', (req, res, siguiente) => {
-  // ✅ PERMITIR SOLO facturacion.html
-  if (req.path === '/facturacion.html' || req.path === '/facturacion.html/') {
+  // ✅ DEJAR LEER SOLO ESTOS ARCHIVOS
+  if (req.path === '/facturacion.html' || 
+      req.path === '/facturacion.css' || 
+      req.path === '/facturacion.js') {
     return siguiente(); // ✅ DEJAR PASAR
   }
   // ❌ TODO LO DEMÁS → BLOQUEADO
