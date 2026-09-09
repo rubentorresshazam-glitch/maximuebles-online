@@ -343,15 +343,14 @@
         }
         </script> 
 
-    <!-- 🔒 BOTÓN FACTURACIÓN → SOLO VISIBLE PARA VOS -->
-    <script>
-        // ✅ PONE "true" PARA VER EL BOTÓN DE FACTURACIÓN
-        const SOY_ADMINISTRADOR = false; // ← CAMBIÁ A true PARA VERLO
-
-        if (SOY_ADMINISTRADOR === true) {
-            document.getElementById("boton-facturacion").style.display = "inline-flex";
-            console.log("🔒 Modo Administrador activo → Botón Facturación visible");
-        }
-    </script>
+    <!-- 🔒 BOTÓN FACTURACIÓN → SOLO LO VOS VOS, NADIE MÁS -->
+<script>
+// ✅ SOLO VOS LO VES → LOS CLIENTES NUNCA
+if (window.location.hostname === 'localhost' || 
+    window.location.search.includes('admin=maximuebles')) {
+    document.getElementById("boton-facturacion").style.display = "inline-flex";
+    console.log("🔒 Modo Administrador activo");
+}
+</script>
 </body>
 </html>
