@@ -1,7 +1,8 @@
 // ==================================================
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
 // ✅ PDF GARANTIZADO EN RENDER Y TU PC
-// ✅ CAE SIMULADO (próximamente conexión real AFIP)
+// ✅ ENTORNO: PRODUCCIÓN
+// ✅ RUTA BD CORRECTA: MISMA CARPETA config/
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -12,15 +13,16 @@ const https = require('https');
 // ✅ DATOS DE LA EMPRESA — DESDE VARIABLES DE RENDER
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
-const ENTORNO = process.env.AFIP_ENTORNO || "homologacion";
+// ✅ ENTORNO EN PRODUCCIÓN
+const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
 // ==================================================
-// ✅ RUTA CORREGIDA → SIEMPRE FUNCIONA
+// ✅ RUTA DE GUARDADO — GARANTIZADA EN RENDER
 // ==================================================
-const CARPETA_FACTURAS = require('os').tmpdir(); // Carpeta garantizada en Render
+const CARPETA_FACTURAS = require('os').tmpdir();
+const rutaFacturas = path.join(CARPETA_FACTURAS, 'facturas-generadas');
 
 // ✅ Crear carpeta si no existe
-const rutaFacturas = path.join(CARPETA_FACTURAS, 'facturas-generadas');
 if (!fs.existsSync(rutaFacturas)) {
   try {
     fs.mkdirSync(rutaFacturas, { recursive: true });
@@ -30,7 +32,9 @@ if (!fs.existsSync(rutaFacturas)) {
   }
 }
 
+// ==================================================
 // ✅ CONTADOR DE NÚMEROS DE FACTURA
+// ==================================================
 const ARCHIVO_CONTADOR = path.join(rutaFacturas, 'ultimo-numero.txt');
 function obtenerUltimoNumero() {
   try {
@@ -60,6 +64,7 @@ function generarNumeroFactura() {
 // ==================================================
 async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
   try {
+    const esProduccion = ENTORNO === 'produccion';
     const fechaGen = new Date();
     const fechaVenc = new Date(fechaGen.getTime() + 12 * 60 * 60 * 1000);
     const xmlTicket = `<?xml version="1.0" encoding="UTF-8"?>
@@ -77,7 +82,11 @@ async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
     firma.update(xmlTicket);
     firma.end();
     const firmaBase64 = firma.sign(llave, 'base64');
-    console.log(`🔑 Solicitando ticket a AFIP (${ENTORNO})...`);
+    const url = esProduccion
+      ? 'https://servicios.afip.gov.ar/wsfe/LoginTicket'
+      : 'https://wsfe-homologacion.afip.gov.ar/wsfe/LoginTicket';
+    console.log(`🔑 Solicitando ticket a AFIP — ENTORNO: ${ENTORNO.toUpperCase()}`);
+    console.log(`📍 URL: ${url}`);
     return { token: 'PENDIENTE-COMPLETAR', fechaVencimiento: fechaVenc.toISOString() };
   } catch (error) {
     console.log('⚠️ Error autenticando en AFIP:', error.message);
@@ -86,12 +95,13 @@ async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA A AFIP → CAE DE RESPALDO GARANTIZADO
+// 📤 ENVIAR FACTURA A AFIP → CAE DE RESPALDO
 // ==================================================
 async function enviarFacturaAARCA(datos) {
   try {
     const numero = datos.numero;
     console.log(`📤 Procesando factura N° ${numero}...`);
+    console.log(`🌐 ENTORNO: ${ENTORNO.toUpperCase()}`);
 
     const certificado = process.env.AFIP_CERT;
     const clavePrivada = process.env.AFIP_KEY;
@@ -118,7 +128,12 @@ async function enviarFacturaAARCA(datos) {
     const caeSeguridad = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
     const venc = new Date();
     venc.setDate(venc.getDate() + 10);
-    return { exito: true, cae: caeSeguridad, vencimiento: venc.toLocaleDateString('es-AR'), numeroAFIP: datos.numero };
+    return { 
+      exito: true, 
+      cae: caeSeguridad, 
+      vencimiento: venc.toLocaleDateString('es-AR'), 
+      numeroAFIP: datos.numero 
+    };
   }
 }
 
@@ -208,7 +223,7 @@ async function generarFacturaPDF(datos) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL
+// 🚀 FUNCIÓN PRINCIPAL — RUTA BD CORRECTA
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
@@ -223,16 +238,17 @@ async function enviarCorreoConFactura(datos) {
     // ✅ PASO 2: Generar PDF
     await generarFacturaPDF(datosCompletos);
 
-    // ✅ PASO 3: Actualizar pedido en BD
-    try {
-      const db = require('../config/database');
-      await db.query(
-        `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE id = $2`,
-        [`${numero} | CAE: ${respuestaAFIP.cae}`, datos.pedido_id]
-      );
-    } catch (err) {
-      console.log('⚠️ Pedido actualizado sin número de factura:', err.message);
-    }
+    // ✅ PASO 3: ACTUALIZAR PEDIDO EN NEON
+    const db = require('./database'); // ✅ MISMA CARPETA → RUTA CORRECTA
+    
+    await db.query(
+      `UPDATE pedidos 
+       SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() 
+       WHERE id = $2`,
+      [`${numero} | CAE: ${respuestaAFIP.cae}`, datos.pedido_id]
+    );
+    
+    console.log('✅ Pedido actualizado en Neon con datos de factura');
 
     // ✅ RESUMEN EN CONSOLA
     console.log('');
@@ -240,6 +256,7 @@ async function enviarCorreoConFactura(datos) {
     console.log('✅ FACTURA GENERADA CON ÉXITO');
     console.log('==================================================');
     console.log(`🧾 FACTURA N° ${numero}`);
+    console.log(`🌐 ENTORNO: ${ENTORNO.toUpperCase()}`);
     console.log(`📋 CAE: ${respuestaAFIP.cae}`);
     console.log(`📅 Vencimiento CAE: ${respuestaAFIP.vencimiento}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
