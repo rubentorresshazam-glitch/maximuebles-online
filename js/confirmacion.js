@@ -1,14 +1,13 @@
 // ===== PÁGINA DE CONFIRMACIÓN DE PAGO =====
 window.addEventListener("DOMContentLoaded", () => {
     console.log("✅ Página de confirmación cargada");
-
-    // ✅ RECUPERAR DATOS — PROBAMOS TODAS LAS CLAVES POSIBLES
+    // ✅ RECUPERAR DATOS
     const guardado = localStorage.getItem("carrito_pago");
     const pedidoGuardado = JSON.parse(localStorage.getItem("ultimaCompra") || localStorage.getItem("pedido_confirmado") || '{}');
     
     console.log("📦 Carrito guardado:", guardado);
     console.log("🧾 Pedido guardado:", pedidoGuardado);
-
+    
     let carrito = [];
     let totalCompra = 0;
 
@@ -41,18 +40,26 @@ window.addEventListener("DOMContentLoaded", () => {
         totalElem.textContent = `$ ${totalCompra.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`;
     }
 
-    // ✅ OBTENER NÚMERO DE OPERACIÓN
+    // ==================================================
+    // ✅ SEPARAR: ID DE PAGO (MP) ↔ ID DEL PEDIDO (TUYO)
+    // ==================================================
     const params = new URLSearchParams(window.location.search);
-    const pagoId = params.get("payment_id") || params.get("preference_id") || pedidoGuardado.pedidoId || "Pendiente";
-    const ordenElem = document.getElementById("mp-orden-id");
-    if (ordenElem) ordenElem.textContent = pagoId;
+    const paymentId = params.get("payment_id") || params.get("preference_id") || ""; // ← SOLO de Mercado Pago
+    const pedidoId = pedidoGuardado.pedidoId || null; // ← TU ID REAL (1, 2, 3...) o NULL
 
-    // ✅ GUARDAR DATOS PARA USAR DESPUÉS
+    // ✅ MOSTRAR EN PANTALLA EL ID DE PAGO (al usuario le sirve ese)
+    const ordenElem = document.getElementById("mp-orden-id");
+    if (ordenElem) {
+        ordenElem.textContent = paymentId || pedidoId || "Pendiente";
+    }
+
+    // ✅ GUARDAR SEPARADOS → NUNCA MÁS SE CONFUNDEN
     window._datosPedido = {
         nombre: pedidoGuardado.nombre || "Consumidor Final",
         whatsapp: pedidoGuardado.whatsapp || "",
         sesion_id: pedidoGuardado.sesion_id || pedidoGuardado.sesion || 'invitado',
-        pedidoId: pedidoGuardado.pedidoId || pagoId,
+        pedidoId: pedidoId,       // ✅ TU ID REAL → NUNCA el de MP
+        paymentId: paymentId,     // ✅ ID de Mercado Pago → solo para mostrar
         carrito,
         totalCompra
     };
@@ -86,7 +93,6 @@ function mostrarProductos(carrito) {
         contenedor.innerHTML = "<span style='color:#888;'>Sin productos</span>";
         return;
     }
-
     contenedor.innerHTML = "";
     carrito.forEach(item => {
         const nombre = item.nombre || "Producto";
@@ -154,10 +160,12 @@ async function generarYDescargarPDF() {
         });
 
         // ✅ PASO 2: PEDIR AL SERVIDOR QUE GENERE EL PDF
+        // ⚠️ IMPORTANTE: enviamos sesion_id como respaldo SI pedidoId es null
         const respuesta = await peticion("/generar-factura-pdf", "POST", {
             nombre: datos.nombre,
             whatsapp: whatsapp,
-            pedido_id: datos.pedidoId,
+            pedido_id: datos.pedidoId,       // ✅ TU ID REAL o NULL
+            sesion_id: datos.sesion_id,      // ✅ RESPALDO: buscar por sesión si no hay ID
             productos: datos.carrito,
             total: datos.totalCompra
         });

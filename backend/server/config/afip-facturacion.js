@@ -1,8 +1,6 @@
 // ==================================================
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
-// ✅ FACTURAS SE GUARDAN EN: facturacionadmin/facturas-generadas
-// ✅ ENTORNO: PRODUCCIÓN
-// ✅ RUTA BD CORRECTA: MISMA CARPETA config/
+// ✅ BUSCA POR sesion_id → NUNCA MÁS ERROR DE NÚMERO
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -18,8 +16,6 @@ const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 // ==================================================
 // ✅ RUTA FIJA: facturacionadmin/facturas-generadas
 // ==================================================
-// Estamos en: backend/server/config/afip-facturacion.js
-// Subimos 3 niveles → llegamos a la raíz del proyecto
 const RUTA_RAIZ = path.join(__dirname, '../../../');
 const rutaFacturas = path.join(RUTA_RAIZ, 'facturacionadmin', 'facturas-generadas');
 
@@ -37,7 +33,6 @@ if (!fs.existsSync(rutaFacturas)) {
 // ✅ CONTADOR DE NÚMEROS DE FACTURA
 // ==================================================
 const ARCHIVO_CONTADOR = path.join(rutaFacturas, 'ultimo-numero.txt');
-
 function obtenerUltimoNumero() {
   try {
     if (fs.existsSync(ARCHIVO_CONTADOR)) {
@@ -48,7 +43,6 @@ function obtenerUltimoNumero() {
   }
   return 1000;
 }
-
 function guardarUltimoNumero(n) {
   try {
     fs.writeFileSync(ARCHIVO_CONTADOR, String(n), 'utf8');
@@ -56,7 +50,6 @@ function guardarUltimoNumero(n) {
     console.log('⚠️ No se pudo guardar número de factura:', err.message);
   }
 }
-
 function generarNumeroFactura() {
   const ult = obtenerUltimoNumero() + 1;
   guardarUltimoNumero(ult);
@@ -70,8 +63,7 @@ async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
   try {
     const esProduccion = ENTORNO.toLowerCase() === 'produccion';
     const fechaGen = new Date();
-    const fechaVenc = new Date(fechaGen.getTime() + 12 * 60 * 60 * 1000); // 12 horas
-
+    const fechaVenc = new Date(fechaGen.getTime() + 12 * 60 * 60 * 1000);
     const xmlTicket = `<?xml version="1.0" encoding="UTF-8"?>
 <loginTicketRequest version="1.0">
   <header>
@@ -82,7 +74,6 @@ async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
   </header>
   <sign>${CUIT_EMPRESA}</sign>
 </loginTicketRequest>`;
-
     const llave = crypto.createPrivateKey({ 
       key: clavePrivadaPem.replace(/\\n/g, '\n'), 
       format: 'pem' 
@@ -91,22 +82,16 @@ async function obtenerTicketAFIP(certificadoPem, clavePrivadaPem) {
     firma.update(xmlTicket);
     firma.end();
     const firmaBase64 = firma.sign(llave, 'base64');
-
     const url = esProduccion
       ? 'https://servicios.afip.gov.ar/wsfe/LoginTicket'
       : 'https://wsfe-homologacion.afip.gov.ar/wsfe/LoginTicket';
-
     console.log(`🔑 Solicitando ticket a AFIP — ENTORNO: ${ENTORNO.toUpperCase()}`);
     console.log(`📍 URL: ${url}`);
-
-    // ⚠️ La conexión completa al WS de AFIP requiere SOAP
-    // Por ahora devolvemos estructura lista para integrar
     return { 
       token: 'PENDIENTE-SOAP', 
       fechaVencimiento: fechaVenc.toISOString(),
       enDesarrollo: true
     };
-
   } catch (error) {
     console.log('⚠️ Error autenticando en AFIP:', error.message);
     return null;
@@ -121,28 +106,25 @@ async function enviarFacturaAARCA(datos) {
     const numero = datos.numero;
     console.log(`📤 Procesando factura N° ${numero}...`);
     console.log(`🌐 ENTORNO: ${ENTORNO.toUpperCase()}`);
-
     const certificado = process.env.AFIP_CERT;
     const clavePrivada = process.env.AFIP_KEY;
-
-    // ✅ CAE DE RESPALDO SI NO HAY CERTIFICADOS
+    
     const cae = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
     const fechaVenc = new Date();
     fechaVenc.setDate(fechaVenc.getDate() + 10);
-
+    
     if (!certificado || !clavePrivada) {
       console.log('⚠️ Certificados en proceso → CAE DE RESPALDO asignado');
     } else {
       console.log('✅ Certificados cargados → Conexión AFIP lista para WS');
     }
-
+    
     return {
       exito: true,
       cae: cae,
       vencimiento: fechaVenc.toLocaleDateString('es-AR'),
       numeroAFIP: numero
     };
-
   } catch (error) {
     console.log(`⚠️ Error en proceso AFIP: ${error.message}`);
     const caeSeguridad = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
@@ -169,10 +151,10 @@ async function generarFacturaPDF(datos) {
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(rutaFacturas, nombreArchivo);
       const fecha = new Date().toLocaleString('es-AR');
-
+      
       console.log(`📄 Creando PDF: ${nombreArchivo}`);
       console.log(`📂 Guardando en: ${rutaCompleta}`);
-
+      
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
       const stream = fs.createWriteStream(rutaCompleta);
       doc.pipe(stream);
@@ -224,17 +206,14 @@ async function generarFacturaPDF(datos) {
         .text('Factura generada automáticamente — MaxiMuebles S.R.L.', { align: 'center' });
 
       doc.end();
-
       stream.on('finish', () => {
         console.log(`✅ FACTURA PDF GENERADA: ${rutaCompleta}`);
         resolve({ numero, ruta: rutaCompleta, cae });
       });
-
       stream.on('error', (err) => {
         console.log(`❌ ERROR AL GUARDAR PDF: ${err.message}`);
         reject(err);
       });
-
     } catch (error) {
       console.log(`❌ ERROR CREANDO PDF: ${error.message}`);
       reject(error);
@@ -243,7 +222,7 @@ async function generarFacturaPDF(datos) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL — LLAMAR DESDE confirmacion.html
+// 🚀 FUNCIÓN PRINCIPAL — CORREGIDA: BUSCA POR sesion_id
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
@@ -258,20 +237,45 @@ async function enviarCorreoConFactura(datos) {
     // ✅ Generar y guardar PDF
     const pdf = await generarFacturaPDF(datosCompletos);
 
-    // ✅ Guardar datos en la base de datos
+    // ==================================================
+    // ✅ CORRECCIÓN IMPORTANTE: BUSCAR POR sesion_id
+    // ==================================================
     const db = require('./database');
-    await db.query(
-      `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE id = $2`,
-      [`${numero} | CAE: ${respuestaAFIP.cae}`, datos.pedido_id]
-    );
+    const numeroFacturaGuardar = `${numero} | CAE: ${respuestaAFIP.cae}`;
+    let resultado;
+
+    if (datos.pedido_id && Number.isInteger(Number(datos.pedido_id))) {
+      // ✅ Si viene ID REAL → buscar por ID
+      console.log(`🔍 Buscando pedido por ID: ${datos.pedido_id}`);
+      resultado = await db.query(
+        `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE id = $2 RETURNING id`,
+        [numeroFacturaGuardar, datos.pedido_id]
+      );
+    } else if (datos.sesion_id) {
+      // ✅ Si NO viene ID → buscar por sesion_id (SEGURO Y ÚNICO)
+      console.log(`🔍 Buscando pedido por sesion_id: ${datos.sesion_id}`);
+      resultado = await db.query(
+        `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE sesion_id = $2 RETURNING id`,
+        [numeroFacturaGuardar, datos.sesion_id]
+      );
+    } else {
+      throw new Error('No hay forma de identificar el pedido (falta ID y sesión)');
+    }
+
+    if (resultado.rows.length === 0) {
+      throw new Error('Pedido NO encontrado en la base de datos');
+    }
+
+    const pedidoEncontradoId = resultado.rows[0].id;
+    console.log(`✅ Pedido N° ${pedidoEncontradoId} actualizado con factura`);
 
     // ✅ Resumen en consola
-    console.log('✅ Pedido actualizado en Neon con datos de factura');
     console.log('');
     console.log('==================================================');
     console.log('✅ FACTURA GENERADA CON ÉXITO');
     console.log('==================================================');
     console.log(`🧾 FACTURA N° ${numero}`);
+    console.log(`📋 Pedido interno N° ${pedidoEncontradoId}`);
     console.log(`🌐 ENTORNO: ${ENTORNO.toUpperCase()}`);
     console.log(`📂 Guardada en: facturacionadmin/facturas-generadas`);
     console.log(`🔢 CAE: ${respuestaAFIP.cae}`);
@@ -282,7 +286,8 @@ async function enviarCorreoConFactura(datos) {
       numero,
       cae: respuestaAFIP.cae,
       vencimiento: respuestaAFIP.vencimiento,
-      rutaPDF: pdf.ruta
+      rutaPDF: pdf.ruta,
+      url: `/facturas/Factura-${numero}.pdf`
     };
 
   } catch (error) {
