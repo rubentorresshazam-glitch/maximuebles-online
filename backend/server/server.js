@@ -1,6 +1,7 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
 // Conectado con: Neon PostgreSQL · Mercado Pago
+// ✅ CARPETA DE FACTURACIÓN PROTEGIDA
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -21,9 +22,18 @@ const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 
 // ==================================================
-// CONFIGURACIÓN
+// ✅ PROTEGER CARPETA DE FACTURACIÓN → SOLO ADENTRO DEL SERVIDOR
 // ==================================================
 const app = express();
+
+// 🔒 BLOQUEAR ACCESO DESDE EL NAVEGADOR A facturacionadmin
+app.use('/facturacionadmin', (req, res) => {
+  res.status(403).send('🔒 Acceso restringido — Solo administración');
+});
+
+// ==================================================
+// CONFIGURACIÓN
+// ==================================================
 const PUERTO = process.env.PORT || 10000;
 const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com";
 
@@ -68,7 +78,7 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
         items,
         payer: {
           name: datosComprador?.nombre || 'Invitado',
-          // ✅ WHATSAPP EN LUGAR DE CORREO en MP
+          // ✅ WHATSAPP EN LUGAR DE CORREO
           email: datosComprador?.whatsapp || 'cliente@maximuebles.com'
         },
         back_urls: {
@@ -83,7 +93,6 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
     });
 
     res.json({ ok: true, mensaje: 'Preferencia creada', datos: respuesta });
-
   } catch (error) {
     console.error('❌ Error MP:', error.message);
     res.json({ ok: false, mensaje: error.message });
@@ -104,18 +113,6 @@ app.get('/api/estado', (req, res) => {
 });
 
 // ==================================================
-// ✅ INICIAR
-// ==================================================
-app.listen(PUERTO, () => {
-  console.log('='.repeat(60));
-  console.log(`✅ SERVIDOR DE ${NOMBRE_EMPRESA} — EN LÍNEA`);
-  console.log('='.repeat(60));
-  console.log(`📍 Puerto: ${PUERTO}`);
-  console.log(`🗄️  DB: ${process.env.DB_HOST ? '✅' : '❌'}`);
-  console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
-});
-
-// ==================================================
 // ✅ CACHÉ Y URLS LIMPIAS
 // ==================================================
 app.use((req, res, siguiente) => {
@@ -130,3 +127,16 @@ const unDia = 86400000, unaSemana = unDia * 7;
 app.use('/assets', express.static(path.join(__dirname, '../../assets'), { maxAge: unaSemana }));
 app.use('/css', express.static(path.join(__dirname, '../../css'), { maxAge: unDia * 3 }));
 app.use('/js', express.static(path.join(__dirname, '../../js'), { maxAge: unDia * 3 }));
+
+// ==================================================
+// ✅ INICIAR SERVIDOR
+// ==================================================
+app.listen(PUERTO, () => {
+  console.log('='.repeat(60));
+  console.log(`✅ SERVIDOR DE ${NOMBRE_EMPRESA} — EN LÍNEA`);
+  console.log('='.repeat(60));
+  console.log(`📍 Puerto: ${PUERTO}`);
+  console.log(`🗄️  DB: ${process.env.DB_HOST ? '✅' : '❌'}`);
+  console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
+  console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
+});
