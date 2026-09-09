@@ -1,7 +1,6 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// Conectado con: Neon PostgreSQL · Mercado Pago
-// ✅ CARPETA DE FACTURACIÓN PROTEGIDA + RUTA PÚBLICA
+// ✅ NEON DESPIERTO + FACTURAS PÚBLICAS + MERCADO PAGO
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -24,7 +23,19 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 const app = express();
 
 // ==================================================
-// ✅ RUTA PÚBLICA PARA VER FACTURAS → ESTO ES LO QUE FALTABA
+// ✅ TRUCO: MANTENER NEON DESPIERTO — CADA 3 MINUTOS
+// ==================================================
+setInterval(async () => {
+  try {
+    await db.query('SELECT 1');
+    console.log('✅ Neon activo — Base de datos despierta');
+  } catch (e) {
+    console.log('⚠️ Neon durmiendo, despertando...');
+  }
+}, 180000); // 👉 3 minutos = 180.000 milisegundos
+
+// ==================================================
+// ✅ RUTA PÚBLICA PARA VER Y DESCARGAR FACTURAS
 // ==================================================
 const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
 app.use('/facturas', express.static(carpetaFacturas)); // ✅ PÚBLICA
@@ -142,4 +153,5 @@ app.listen(PUERTO, () => {
   console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
   console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
   console.log(`📄 Ruta de facturas: /facturas/`);
+  console.log(`🧠 Neon: ¡Manteniéndola despierta cada 3 min!`);
 });
