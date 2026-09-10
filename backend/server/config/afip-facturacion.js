@@ -1,6 +1,7 @@
 // ==================================================
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
-// ✅ BUSCA POR sesion_id → NUNCA MÁS ERROR DE NÚMERO
+// ✅ GUARDA RUTA PÚBLICA DEL PDF + BUSCA POR sesion_id
+// ✅ PREPARADO PARA CONEXIÓN AFIP/ARCA
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -109,12 +110,13 @@ async function enviarFacturaAARCA(datos) {
     const certificado = process.env.AFIP_CERT;
     const clavePrivada = process.env.AFIP_KEY;
     
+    // ✅ CAE REAL cuando haya certificados cargados
     const cae = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
     const fechaVenc = new Date();
     fechaVenc.setDate(fechaVenc.getDate() + 10);
     
     if (!certificado || !clavePrivada) {
-      console.log('⚠️ Certificados en proceso → CAE DE RESPALDO asignado');
+      console.log('⚠️ Certificados en proceso → CAE DE PRUEBA asignado');
     } else {
       console.log('✅ Certificados cargados → Conexión AFIP lista para WS');
     }
@@ -222,7 +224,7 @@ async function generarFacturaPDF(datos) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL — CORREGIDA: BUSCA POR sesion_id
+// 🚀 FUNCIÓN PRINCIPAL — CORREGIDA: GUARDA RUTA + BUSCA POR sesion_id
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
@@ -237,26 +239,39 @@ async function enviarCorreoConFactura(datos) {
     // ✅ Generar y guardar PDF
     const pdf = await generarFacturaPDF(datosCompletos);
 
+    // ✅ RUTA PÚBLICA PARA DESCARGAR DESDE LA WEB
+    const rutaPublicaPDF = `/facturas/Factura-${numero}.pdf`;
+    const numeroFacturaGuardar = `${numero} | CAE: ${respuestaAFIP.cae}`;
+
     // ==================================================
-    // ✅ CORRECCIÓN IMPORTANTE: BUSCAR POR sesion_id
+    // ✅ BUSCAR PEDIDO: POR ID o POR sesion_id
     // ==================================================
     const db = require('./database');
-    const numeroFacturaGuardar = `${numero} | CAE: ${respuestaAFIP.cae}`;
     let resultado;
 
     if (datos.pedido_id && Number.isInteger(Number(datos.pedido_id))) {
       // ✅ Si viene ID REAL → buscar por ID
       console.log(`🔍 Buscando pedido por ID: ${datos.pedido_id}`);
       resultado = await db.query(
-        `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE id = $2 RETURNING id`,
-        [numeroFacturaGuardar, datos.pedido_id]
+        `UPDATE pedidos 
+         SET factura_generada = true, 
+             factura_numero = $1, 
+             factura_ruta = $2, 
+             fecha_factura = NOW() 
+         WHERE id = $3 RETURNING id`,
+        [numeroFacturaGuardar, rutaPublicaPDF, datos.pedido_id]
       );
     } else if (datos.sesion_id) {
       // ✅ Si NO viene ID → buscar por sesion_id (SEGURO Y ÚNICO)
       console.log(`🔍 Buscando pedido por sesion_id: ${datos.sesion_id}`);
       resultado = await db.query(
-        `UPDATE pedidos SET factura_generada = true, factura_numero = $1, fecha_factura = NOW() WHERE sesion_id = $2 RETURNING id`,
-        [numeroFacturaGuardar, datos.sesion_id]
+        `UPDATE pedidos 
+         SET factura_generada = true, 
+             factura_numero = $1, 
+             factura_ruta = $2, 
+             fecha_factura = NOW() 
+         WHERE sesion_id = $3 RETURNING id`,
+        [numeroFacturaGuardar, rutaPublicaPDF, datos.sesion_id]
       );
     } else {
       throw new Error('No hay forma de identificar el pedido (falta ID y sesión)');
@@ -277,7 +292,7 @@ async function enviarCorreoConFactura(datos) {
     console.log(`🧾 FACTURA N° ${numero}`);
     console.log(`📋 Pedido interno N° ${pedidoEncontradoId}`);
     console.log(`🌐 ENTORNO: ${ENTORNO.toUpperCase()}`);
-    console.log(`📂 Guardada en: facturacionadmin/facturas-generadas`);
+    console.log(`📂 PDF: ${rutaPublicaPDF}`);
     console.log(`🔢 CAE: ${respuestaAFIP.cae}`);
     console.log('==================================================');
 
@@ -287,7 +302,7 @@ async function enviarCorreoConFactura(datos) {
       cae: respuestaAFIP.cae,
       vencimiento: respuestaAFIP.vencimiento,
       rutaPDF: pdf.ruta,
-      url: `/facturas/Factura-${numero}.pdf`
+      url: rutaPublicaPDF  // ✅ ENLACE LISTO PARA DESCARGAR
     };
 
   } catch (error) {
