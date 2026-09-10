@@ -1,13 +1,14 @@
 // ===== PÁGINA DE CONFIRMACIÓN DE PAGO =====
 window.addEventListener("DOMContentLoaded", () => {
     console.log("✅ Página de confirmación cargada");
+
     // ✅ RECUPERAR DATOS
     const guardado = localStorage.getItem("carrito_pago");
     const pedidoGuardado = JSON.parse(localStorage.getItem("ultimaCompra") || localStorage.getItem("pedido_confirmado") || '{}');
-    
+
     console.log("📦 Carrito guardado:", guardado);
     console.log("🧾 Pedido guardado:", pedidoGuardado);
-    
+
     let carrito = [];
     let totalCompra = 0;
 
@@ -46,6 +47,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const paymentId = params.get("payment_id") || params.get("preference_id") || ""; // ← SOLO de Mercado Pago
     const pedidoId = pedidoGuardado.pedidoId || null; // ← TU ID REAL (1, 2, 3...) o NULL
+    const sesionId = pedidoGuardado.sesion_id || pedidoGuardado.sesion || 'invitado'; // ✅ SIEMPRE tenemos sesión
 
     // ✅ MOSTRAR EN PANTALLA EL ID DE PAGO (al usuario le sirve ese)
     const ordenElem = document.getElementById("mp-orden-id");
@@ -57,13 +59,14 @@ window.addEventListener("DOMContentLoaded", () => {
     window._datosPedido = {
         nombre: pedidoGuardado.nombre || "Consumidor Final",
         whatsapp: pedidoGuardado.whatsapp || "",
-        sesion_id: pedidoGuardado.sesion_id || pedidoGuardado.sesion || 'invitado',
-        pedidoId: pedidoId,       // ✅ TU ID REAL → NUNCA el de MP
-        paymentId: paymentId,     // ✅ ID de Mercado Pago → solo para mostrar
+        sesion_id: sesionId,              // ✅ SIEMPRE disponible
+        pedidoId: pedidoId,               // ✅ TU ID REAL o NULL
+        paymentId: paymentId,             // ✅ ID de Mercado Pago → solo para mostrar
+        dni: pedidoGuardado.dni_comprador || null,
+        domicilio: pedidoGuardado.domicilio_comprador || null,
         carrito,
         totalCompra
     };
-
     console.log("✅ Datos listos:", window._datosPedido);
 
     // ✅ PRE-LLENAR WHATSAPP SI YA ESTÁ GUARDADO
@@ -160,12 +163,14 @@ async function generarYDescargarPDF() {
         });
 
         // ✅ PASO 2: PEDIR AL SERVIDOR QUE GENERE EL PDF
-        // ⚠️ IMPORTANTE: enviamos sesion_id como respaldo SI pedidoId es null
+        // ⚠️ ENVIAMOS AMBOS: el servidor elige cuál usar
         const respuesta = await peticion("/generar-factura-pdf", "POST", {
             nombre: datos.nombre,
             whatsapp: whatsapp,
-            pedido_id: datos.pedidoId,       // ✅ TU ID REAL o NULL
-            sesion_id: datos.sesion_id,      // ✅ RESPALDO: buscar por sesión si no hay ID
+            pedido_id: datos.pedidoId,        // ✅ TU ID REAL o NULL
+            sesion_id: datos.sesion_id,       // ✅ SIEMPRE presente → respaldo seguro
+            dni: datos.dni,
+            domicilio: datos.domicilio,
             productos: datos.carrito,
             total: datos.totalCompra
         });
@@ -176,7 +181,7 @@ async function generarYDescargarPDF() {
             // ✅ MOSTRAR DATOS DE LA FACTURA
             mensaje.textContent = "✅ ¡Factura lista! Descargando...";
             
-            // ✅ ABRIR PDF EN NUEVA PESTAÑA
+            // ✅ ABRIR PDF EN NUEVA PESTAÑA → usa la ruta pública del servidor
             if (respuesta.datos.url) {
                 window.open(respuesta.datos.url, '_blank');
             }
@@ -190,6 +195,7 @@ async function generarYDescargarPDF() {
         } else {
             throw new Error(respuesta.mensaje || "No se pudo generar la factura");
         }
+
     } catch (error) {
         console.error("❌ Error:", error);
         mensaje.style.color = "red";
