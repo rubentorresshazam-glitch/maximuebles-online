@@ -311,4 +311,4 @@ async function enviarCorreoConFactura(datos) {
   }
 }
 
-module.exports = { enviarCorreoConFactura };s
+module.exports = { enviarCorreoConFactura };
