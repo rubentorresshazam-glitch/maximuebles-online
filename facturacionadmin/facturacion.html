@@ -95,6 +95,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- Tarjeta: Detalle de Operación + BOTONES -->
             <div id="panel-detalle" class="panel-detalle tarjeta oculto">
                 <div class="tarjeta-encabezado">
@@ -107,7 +108,7 @@
                     <div class="contenido-factura" id="contenido-detalle"></div>
                 </div>
 
-                <!-- ✅ SOLO ESTOS 4 BOTONES — ELIMINAMOS LOS OTROS DUPLICADOS -->
+                <!-- ✅ BOTONES CORREGIDOS -->
                 <div class="tarjeta-pie acciones-factura">
                     <button onclick="abrirFacturaParaImprimir()" class="btn-accion btn-imprimir">
                         <i class="fa-solid fa-file-invoice"></i> Abrir e Imprimir Factura
@@ -123,6 +124,9 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </main>
+
     <!-- Pie de página -->
     <footer class="footer">
         <p>&copy; 2026 MAXIMUEBLES S.R.L | CUIT: 30-71500272-4 | Punto de Venta N° 00010</p>
@@ -131,7 +135,7 @@
     <!-- ✅ Archivo JS con las funciones -->
     <script src="facturacion.js"></script>
 
-    <!-- ✅ FUNCIONES PARA ABRIR FACTURA Y REMITO -->
+    <!-- ✅ FUNCIONES CORREGIDAS: Pasar SOLO el número LIMPIO -->
     <script>
         let compraSeleccionada = null;
 
@@ -139,46 +143,41 @@
             compraSeleccionada = compra;
         }
 
-        // ✅ Abrir Factura → factura-imprimible.html
+        // ✅ ABRIR FACTURA → SOLO pasa el número limpio
         function abrirFacturaParaImprimir() {
             if (!compraSeleccionada) {
-                alert('Primero seleccioná una compra');
+                alert('⚠️ Primero seleccioná una compra de la lista');
                 return;
             }
-            const datos = {
-                nroFactura: `${compraSeleccionada.puntoVenta || '00010'}-${compraSeleccionada.numero || '00000001'}`,
-                nombre: compraSeleccionada.nombre,
-                dni: compraSeleccionada.dni || '—',
-                direccion: compraSeleccionada.direccion || '—',
-                localidad: compraSeleccionada.localidad || 'Valle Medio, Río Negro',
-                condicion: compraSeleccionada.condicionVenta || 'Contado',
-                total: compraSeleccionada.total,
-                cae: compraSeleccionada.cae || '',
-                vtoCAE: compraSeleccionada.vtoCAE || '',
-                productos: encodeURIComponent(JSON.stringify(compraSeleccionada.productos || []))
-            };
-            const params = new URLSearchParams(datos);
-            // ✅ SIN barra → MISMA carpeta → NO se repite
-            window.open(`factura-imprimible.html?${params.toString()}`, '_blank');
+
+            // ✅ LIMPIAR EL NÚMERO: quitar "| CAE: ..." si lo tiene
+            let nroLimpio = compraSeleccionada.factura_numero || '';
+            if (nroLimpio.includes('|')) {
+                nroLimpio = nroLimpio.split('|')[0].trim();
+            }
+
+            console.log("🧾 Abriendo factura N°:", nroLimpio);
+
+            // ✅ ABRIR en MISMA carpeta → sin barra al principio
+            window.open(`factura-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
         }
 
-        // ✅ Abrir Remito → remito-imprimible.html
+        // ✅ ABRIR REMITO → MISMA LÓGICA
         function abrirRemitoParaImprimir() {
             if (!compraSeleccionada) {
-                alert('Primero seleccioná una compra');
+                alert('⚠️ Primero seleccioná una compra de la lista');
                 return;
             }
-            const datos = {
-                nroRemito: `${compraSeleccionada.puntoVenta || '00010'}-${compraSeleccionada.numero || '00000001'}`,
-                nombre: compraSeleccionada.nombre,
-                direccion: compraSeleccionada.direccion || '—',
-                localidad: compraSeleccionada.localidad || 'Valle Medio, Río Negro',
-                telefono: compraSeleccionada.telefono || '',
-                productos: encodeURIComponent(JSON.stringify(compraSeleccionada.productos || []))
-            };
-            const params = new URLSearchParams(datos);
-            // ✅ SIN barra → MISMA carpeta → NO se repite
-            window.open(`remito-imprimible.html?${params.toString()}`, '_blank');
+
+            // ✅ Usamos el mismo número de factura para el remito
+            let nroLimpio = compraSeleccionada.factura_numero || '';
+            if (nroLimpio.includes('|')) {
+                nroLimpio = nroLimpio.split('|')[0].trim();
+            }
+
+            console.log("📄 Abriendo remito N°:", nroLimpio);
+
+            window.open(`remito-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
         }
     </script>
 </body>
