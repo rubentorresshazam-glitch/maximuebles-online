@@ -3,7 +3,6 @@
    Inspirado en diseño profesional · MaxiMuebles
    Paleta: Negro Profundo · Verde Premium · Blanco Puro
    ================================================== */
-
 /* ---------- VARIABLES — IDENTIDAD MAXIMUEBLES ---------- */
 :root {
     --v1: #22B548;   /* Verde principal */
@@ -19,6 +18,8 @@
     --b2: #E8E8E8;   /* Blanco suave */
     --b3: #B0B0B0;   /* Gris claro */
     --b4: #707070;   /* Gris oscuro */
+    --whatsapp: #25D366; /* WhatsApp verde */
+    --whatsapp-oscuro: #128C7E;
     --borde-verde: 1px solid rgba(34, 181, 72, 0.2);
     --borde-verde-fuerte: 1px solid rgba(34, 181, 72, 0.35);
     --sombra-verde: 0 4px 24px rgba(34, 181, 72, 0.12);
@@ -418,14 +419,26 @@ body {
     transform: translateY(-1px);
 }
 
+/* ✅ BOTÓN IMPRIMIR → VERDE MAXIMUEBLES */
 .btn-imprimir {
     border-left: 3px solid var(--v3);
 }
 
-.btn-correo {
-    border-left: 3px solid #60A5FA;
+/* ✅ BOTÓN WHATSAPP → COLORES OFICIALES DE WHATSAPP */
+.btn-whatsapp {
+    border-left: 3px solid var(--whatsapp);
+    background: linear-gradient(90deg, rgba(37, 211, 102, 0.12), rgba(18, 140, 126, 0.08));
+    color: var(--whatsapp);
 }
 
+.btn-whatsapp:hover {
+    background: linear-gradient(90deg, rgba(37, 211, 102, 0.20), rgba(18, 140, 126, 0.12));
+    border-color: var(--whatsapp);
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.15);
+}
+
+/* ✅ BOTÓN ARCA/AFIP → AMARILLO */
 .btn-afip {
     border-left: 3px solid #FBBF24;
 }

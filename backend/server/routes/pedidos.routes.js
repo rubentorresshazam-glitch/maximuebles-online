@@ -11,11 +11,11 @@ const pedidoController = require('../controllers/pedidos.controller');
 // ✅ Crear pedido → POST /api/pedidos
 router.post('/', pedidoController.crearPedido);
 
-// ✅ Ver todos los pedidos (Panel administrativo) → GET /api/pedidos
+// ✅ Ver TODOS los pedidos (Panel administrativo) → GET /api/pedidos
 router.get('/', pedidoController.listarPedidos);
 
-// ✅ Ver pedidos CON FACTURA → para facturacion.html
-router.get('/con-factura', pedidoController.listarPedidos);
+// ✅ Ver SOLO pedidos CON FACTURA → para facturacion.html ✅ CORREGIDO
+router.get('/con-factura', pedidoController.listarConFactura);
 
 // ✅ Ver mis pedidos como cliente → GET /api/pedidos/mis-pedidos
 router.get('/mis-pedidos', pedidoController.verPedidoCliente);

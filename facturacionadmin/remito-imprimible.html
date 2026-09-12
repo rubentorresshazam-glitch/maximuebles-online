@@ -18,6 +18,7 @@
         <div class="logo-superior">
             <img src="/assets/logos/logomaxibuebles.png" alt="Logo MaxiMuebles" class="logo-empresa">
         </div>
+
         <!-- FILA PRINCIPAL: EMPRESA + REMITO X + DATOS -->
         <div class="fila-encabezado-remito">
             <div class="col-empresa">
@@ -39,6 +40,7 @@
                 <p>Fecha: <span id="fecha-emision"></span></p>
             </div>
         </div>
+
         <!-- DATOS DEL COMPRADOR + RECIBE + HORARIO -->
         <div class="cuadro-datos-cliente">
             <div class="fila-datos">
@@ -48,19 +50,20 @@
                 <span>Domicilio: <span id="cliente-direccion"></span></span>
             </div>
             <div class="fila-datos">
-                <span>Localidad: <span id="cliente-localidad"></span></span>
+                <span>Localidad: Valle Medio, Río Negro</span>
             </div>
             <div class="fila-datos">
-                <span>Teléfono: <span id="cliente-telefono"></span></span>
+                <span>Teléfono / WhatsApp: <span id="cliente-telefono"></span></span>
             </div>
             <div class="fila-datos">
-                <span>Recibe: <span id="cliente-recibe"></span></span>
+                <span>Recibe: <span id="cliente-recibe">El mismo comprador</span></span>
             </div>
             <div class="fila-datos">
-                <span>Horario: <span id="cliente-horario"></span></span>
+                <span>Horario de entrega: <span id="cliente-horario">A convenir</span></span>
             </div>
         </div>
-        <!-- TABLA EXACTA: CANTIDAD - CÓDIGO ARTÍCULO - ENVASE - DESCRIPCIÓN -->
+
+        <!-- TABLA: CANTIDAD - CÓDIGO - ENVASE - DESCRIPCIÓN -->
         <table class="tabla-productos-remito">
             <thead>
                 <tr>
@@ -74,10 +77,12 @@
                 <!-- SE LLENA AUTOMÁTICAMENTE -->
             </tbody>
         </table>
+
         <p class="leyenda-final">*** DOCUMENTO NO VÁLIDO COMO FACTURA ***</p>
+
         <div class="recibido-conforme">
             <p>Recibí conforme:</p>
-            <br>
+            <br><br>
             <p>_______________________________</p>
             <p>Firma y aclaración</p>
         </div>
@@ -87,12 +92,11 @@
         window.addEventListener('DOMContentLoaded', async () => {
             // ✅ LEER SOLO EL NÚMERO DESDE LA URL
             const p = new URLSearchParams(window.location.search);
-            const nroRemito = p.get('nro'); // ← SOLO esto recibimos ✅
-
-            console.log("🔍 Buscando remito/factura N°:", nroRemito);
+            const nroRemito = p.get('nro');
+            console.log("🔍 Buscando remito N°:", nroRemito);
 
             if (!nroRemito) {
-                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Número de remito no especificado</h2><p>Volvé al panel de facturación y seleccioná una compra.</p></div>`;
+                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Número no especificado</h2><p>Volvé al panel y seleccioná una compra.</p></div>`;
                 return;
             }
 
@@ -105,48 +109,40 @@
                     throw new Error("No se pudieron cargar los datos");
                 }
 
-                // ✅ BUSCAR LA FACTURA QUE COINCIDA
+                // ✅ BUSCAR COINCIDENCIA — acepta número limpio o con CAE
                 const factura = datos.datos.find(pedido => {
                     if (!pedido.factura_numero) return false;
                     const soloNumero = pedido.factura_numero.split('|')[0].trim();
-                    return soloNumero === nroRemito || pedido.factura_numero.startsWith(nroRemito);
+                    return soloNumero === nroRemito.trim() || pedido.factura_numero.startsWith(nroRemito.trim());
                 });
 
                 if (!factura) {
-                    document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Remito NO encontrado</h2><p>Busqué: <strong>${nroRemito}</strong></p><p>Verificá que el número sea correcto.</p></div>`;
+                    document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Remito NO encontrado</h2><p>Busqué: <strong>${nroRemito}</strong></p></div>`;
                     console.error("❌ No encontré:", nroRemito);
                     return;
                 }
 
-                console.log("✅ Datos cargados para remito:", factura);
+                console.log("✅ Remito cargado:", factura);
 
                 // ✅ SEPARAR PUNTO DE VENTA Y NÚMERO
-                let numeroLimpio = nroRemito;
-                if (numeroLimpio.includes('|')) {
-                    numeroLimpio = numeroLimpio.split('|')[0].trim();
-                }
+                const numeroLimpio = nroRemito.includes('|') ? nroRemito.split('|')[0].trim() : nroRemito;
                 const [puntoVenta, nroComprobante] = numeroLimpio.split('-');
 
-                // ✅ FECHA REAL DE LA COMPRA
+                // ✅ FECHA
                 const fechaCompra = factura.fecha_factura || factura.fecha || new Date();
                 const fechaFormateada = new Date(fechaCompra).toLocaleDateString('es-AR', {
                     day: '2-digit', month: '2-digit', year: 'numeric'
                 });
 
-                // ✅ LLENAR DATOS DEL ENCABEZADO
+                // ✅ LLENAR DATOS DE ENCABEZADO
                 document.getElementById('punto-venta').textContent = puntoVenta || '00010';
                 document.getElementById('nro-remito').textContent = nroComprobante || '00000001';
                 document.getElementById('fecha-emision').textContent = fechaFormateada;
 
-                // ✅ LLENAR DATOS DEL CLIENTE
+                // ✅ DATOS DEL CLIENTE
                 document.getElementById('cliente-nombre').textContent = factura.nombre || 'Consumidor Final';
                 document.getElementById('cliente-direccion').textContent = factura.direccion || '—';
-                document.getElementById('cliente-localidad').textContent = 'Valle Medio, Río Negro';
                 document.getElementById('cliente-telefono').textContent = factura.whatsapp || factura.telefono || '—';
-
-                // ✅ DATOS DE ENTREGA (valores por defecto que se pueden guardar después)
-                document.getElementById('cliente-recibe').textContent = 'El mismo comprador';
-                document.getElementById('cliente-horario').textContent = 'A convenir';
 
                 // ✅ LLENAR TABLA DE PRODUCTOS
                 const cuerpoTabla = document.getElementById('cuerpo-tabla');
@@ -173,7 +169,7 @@
 
             } catch (error) {
                 console.error("❌ Error cargando remito:", error);
-                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Error al cargar</h2><p>${error.message}</p></div>`;
+                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Error</h2><p>${error.message}</p></div>`;
             }
         });
     </script>

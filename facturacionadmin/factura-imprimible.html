@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Factura B - MaxiMuebles</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <!-- ✅ MISMA CARPETA → ruta corregida -->
     <link rel="stylesheet" href="facturacion.css">
 </head>
 <body>
@@ -36,7 +37,7 @@
                 <p>Punto de Venta: <span id="punto-venta"></span></p>
                 <p>Comprobante N°: <span id="nro-comprobante"></span></p>
                 <p>Fecha de Emisión: <span id="fecha-emision"></span></p>
-                <p>CUIT: 30715002724</p>
+                <p>CUIT: 30-71500272-4</p>
                 <p>Ingresos Brutos: 46101497</p>
                 <p>Inicio de Actividades: 01/09/2015</p>
             </div>
@@ -52,8 +53,8 @@
                 <span>Domicilio: <span id="comprador-direccion"></span></span>
             </div>
             <div class="fila-comprador">
-                <span>Localidad: <span id="comprador-localidad"></span></span>
-                <span>Condición de venta: <span id="condicion-venta"></span></span>
+                <span>Localidad: Valle Medio, Río Negro</span>
+                <span>Condición de venta: Contado</span>
             </div>
         </div>
         <!-- TABLA PRODUCTOS -->
@@ -82,7 +83,7 @@
             </tr>
             <tr>
                 <td class="eti">Importe Otros Tributos: $</td>
-                <td id="otros-tributos"></td>
+                <td id="otros-tributos">0,00</td>
             </tr>
             <tr>
                 <td class="eti">Importe Total: $</td>
@@ -92,7 +93,7 @@
         <p class="leyenda">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</p>
         <table class="tabla-iva">
             <tr>
-                <td class="eti">IVA Contenido: $</td>
+                <td class="eti">IVA Contenido (21%): $</td>
                 <td id="iva"></td>
             </tr>
         </table>
@@ -104,96 +105,85 @@
             <div class="arca-datos">
                 <div class="arca-titulo">ARCA</div>
                 <p>Comprobante Autorizado</p>
-                <p>Pág. 1/1 &nbsp;&nbsp; CAE N°: <span id="cae"></span></p>
-                <p>Fecha de Vto. de CAE: <span id="vto-cae"></span></p>
+                <p>Pág. 1/1 &nbsp;&nbsp; CAE N°: <span id="cae">En proceso</span></p>
+                <p>Fecha de Vto. de CAE: <span id="vto-cae">—</span></p>
                 <p class="pie-chico">Esta Agencia no se responsabiliza por los datos ingresados en el detalle de la operación.</p>
             </div>
         </div>
     </div>
 
     <script>
-        // ✅ FUNCIÓN FORMATO MONEDA
+        // ✅ FORMATO MONEDA ARGENTINA
         function moneda(n) {
             return Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 });
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // ✅ LEER SOLO EL NÚMERO DE FACTURA DESDE LA URL
+            // ✅ LEER SOLO EL NÚMERO DESDE LA URL
             const p = new URLSearchParams(window.location.search);
-            const nroFactura = p.get('nro'); // ← SOLO esto recibimos ✅
+            const nroFactura = p.get('nro');
 
             console.log("🔍 Buscando factura N°:", nroFactura);
 
             if (!nroFactura) {
-                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Número de factura no especificado</h2><p>Volvé al panel de facturación y seleccioná una compra.</p></div>`;
+                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Número de factura no especificado</h2><p>Volvé al panel y seleccioná una compra.</p></div>`;
                 return;
             }
 
             try {
-                // ✅ TRAER TODAS LAS FACTURAS DESDE LA BASE
+                // ✅ TRAER LISTA DESDE LA BASE
                 const respuesta = await fetch('/api/pedidos/con-factura');
                 const datos = await respuesta.json();
 
                 if (!datos.ok || !datos.datos) {
-                    throw new Error("No se pudieron cargar las facturas");
+                    throw new Error("No se pudieron cargar los datos");
                 }
 
-                // ✅ BUSCAR LA FACTURA QUE COINCIDA
+                // ✅ BUSCAR COINCIDENCIA — acepta número limpio o con CAE
                 const factura = datos.datos.find(pedido => {
                     if (!pedido.factura_numero) return false;
-                    // El número puede venir así: "00010-00000001 | CAE: 123456789"
                     const soloNumero = pedido.factura_numero.split('|')[0].trim();
-                    return soloNumero === nroFactura || pedido.factura_numero.startsWith(nroFactura);
+                    return soloNumero === nroFactura.trim() || pedido.factura_numero.startsWith(nroFactura.trim());
                 });
 
                 if (!factura) {
-                    document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Factura NO encontrada</h2><p>Busqué: <strong>${nroFactura}</strong></p><p>Verificá que el número sea correcto.</p></div>`;
-                    console.error("❌ No encontré factura:", nroFactura);
+                    document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Factura NO encontrada</h2><p>Busqué: <strong>${nroFactura}</strong></p></div>`;
+                    console.error("❌ No encontré:", nroFactura);
                     return;
                 }
 
                 console.log("✅ Factura encontrada:", factura);
 
-                // ✅ SEPARAR NÚMERO Y CAE
-                let numeroLimpio = nroFactura;
-                let caeTexto = "En proceso";
-                let vtoCAE = "";
-                if (factura.factura_numero.includes("| CAE:")) {
-                    const partes = factura.factura_numero.split("| CAE:");
-                    numeroLimpio = partes[0].trim();
-                    caeTexto = partes[1].trim();
-                }
-
                 // ✅ SEPARAR PUNTO DE VENTA Y NÚMERO
+                let numeroLimpio = factura.factura_numero.split('|')[0].trim();
                 const [puntoVenta, nroComprobante] = numeroLimpio.split('-');
 
-                // ✅ LLENAR FECHA DE EMISIÓN
+                // ✅ FECHA
                 const fechaEmision = factura.fecha_factura || factura.fecha || new Date();
                 const fechaFormateada = new Date(fechaEmision).toLocaleDateString('es-AR', {
                     day: '2-digit', month: '2-digit', year: 'numeric'
                 });
 
-                // ✅ LLENAR TODOS LOS CAMPOS
+                // ✅ LLENAR DATOS DE ENCABEZADO
                 document.getElementById('punto-venta').textContent = puntoVenta || '00010';
                 document.getElementById('nro-comprobante').textContent = nroComprobante || '00000001';
                 document.getElementById('fecha-emision').textContent = fechaFormateada;
 
-                // ✅ DATOS DEL COMPRADOR
+                // ✅ DATOS DEL CLIENTE
                 document.getElementById('comprador-nombre').textContent = factura.nombre || 'Consumidor Final';
                 document.getElementById('comprador-dni').textContent = factura.dni_comprador || '—';
                 document.getElementById('comprador-direccion').textContent = factura.direccion || '—';
-                document.getElementById('comprador-localidad').textContent = 'Valle Medio, Río Negro';
-                document.getElementById('condicion-venta').textContent = 'Contado';
 
-                // ✅ CAE Y VENCIMIENTO
-                document.getElementById('cae').textContent = caeTexto;
-                document.getElementById('vto-cae').textContent = vtoCAE || '—';
+                // ✅ CAE SI ESTÁ EN EL NÚMERO
+                if (factura.factura_numero.includes('| CAE:')) {
+                    const partes = factura.factura_numero.split('| CAE:');
+                    document.getElementById('cae').textContent = partes[1].trim().split('|')[0] || '—';
+                }
 
-                // ✅ TOTALES E IMPUESTOS
+                // ✅ TOTALES E IVA (21%)
                 const total = Number(factura.total || 0);
                 const iva = total * 0.21;
                 document.getElementById('subtotal').textContent = moneda(total);
-                document.getElementById('otros-tributos').textContent = moneda(0);
                 document.getElementById('importe-total').textContent = moneda(total);
                 document.getElementById('iva').textContent = moneda(iva);
 
@@ -210,14 +200,17 @@
 
                 cuerpoTabla.innerHTML = '';
                 productos.forEach(producto => {
-                    const subtotal = Number(producto.precio) * Number(producto.cantidad);
+                    const precio = Number(producto.precio || 0);
+                    const cant = Number(producto.cantidad || 1);
+                    const subtotal = precio * cant;
+
                     const fila = document.createElement('tr');
                     fila.innerHTML = `
                         <td class="cod"></td>
                         <td class="descr">${producto.nombre || 'Producto'}</td>
-                        <td class="cant">${producto.cantidad || 1}</td>
+                        <td class="cant">${cant}</td>
                         <td class="um">unidades</td>
-                        <td class="pu">${moneda(producto.precio)}</td>
+                        <td class="pu">${moneda(precio)}</td>
                         <td class="bon">0,00</td>
                         <td class="ib">0,00</td>
                         <td class="sub">${moneda(subtotal)}</td>
@@ -227,7 +220,7 @@
 
             } catch (error) {
                 console.error("❌ Error cargando factura:", error);
-                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Error al cargar</h2><p>${error.message}</p></div>`;
+                document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Error</h2><p>${error.message}</p></div>`;
             }
         });
     </script>

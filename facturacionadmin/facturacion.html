@@ -108,7 +108,7 @@
                     <div class="contenido-factura" id="contenido-detalle"></div>
                 </div>
 
-                <!-- ✅ BOTONES CORREGIDOS -->
+                <!-- ✅ BOTONES CORREGIDOS → WHATSAPP en lugar de correo -->
                 <div class="tarjeta-pie acciones-factura">
                     <button onclick="abrirFacturaParaImprimir()" class="btn-accion btn-imprimir">
                         <i class="fa-solid fa-file-invoice"></i> Abrir e Imprimir Factura
@@ -116,8 +116,8 @@
                     <button onclick="abrirRemitoParaImprimir()" class="btn-accion btn-imprimir">
                         <i class="fa-solid fa-file-contract"></i> Abrir e Imprimir Remito
                     </button>
-                    <button onclick="enviarFacturaCorreo()" class="btn-accion btn-correo">
-                        <i class="fa-solid fa-envelope"></i> Enviar por correo
+                    <button onclick="enviarPorWhatsApp()" class="btn-accion btn-whatsapp">
+                        <i class="fa-brands fa-whatsapp"></i> Enviar por WhatsApp
                     </button>
                     <button onclick="transmitirARCA()" class="btn-accion btn-afip">
                         <i class="fa-solid fa-database"></i> Transmitir a ARCA
@@ -135,7 +135,7 @@
     <!-- ✅ Archivo JS con las funciones -->
     <script src="facturacion.js"></script>
 
-    <!-- ✅ FUNCIONES CORREGIDAS: Pasar SOLO el número LIMPIO -->
+    <!-- ✅ FUNCIONES CORREGIDAS: Pasar SOLO el número LIMPIO + WhatsApp -->
     <script>
         let compraSeleccionada = null;
 
@@ -149,15 +149,12 @@
                 alert('⚠️ Primero seleccioná una compra de la lista');
                 return;
             }
-
             // ✅ LIMPIAR EL NÚMERO: quitar "| CAE: ..." si lo tiene
             let nroLimpio = compraSeleccionada.factura_numero || '';
             if (nroLimpio.includes('|')) {
                 nroLimpio = nroLimpio.split('|')[0].trim();
             }
-
             console.log("🧾 Abriendo factura N°:", nroLimpio);
-
             // ✅ ABRIR en MISMA carpeta → sin barra al principio
             window.open(`factura-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
         }
@@ -168,16 +165,68 @@
                 alert('⚠️ Primero seleccioná una compra de la lista');
                 return;
             }
-
             // ✅ Usamos el mismo número de factura para el remito
             let nroLimpio = compraSeleccionada.factura_numero || '';
             if (nroLimpio.includes('|')) {
                 nroLimpio = nroLimpio.split('|')[0].trim();
             }
-
             console.log("📄 Abriendo remito N°:", nroLimpio);
-
             window.open(`remito-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
+        }
+
+        // ✅ ENVIAR FACTURA POR WHATSAPP → USA EL NÚMERO GUARDADO EN LA BASE
+        function enviarPorWhatsApp() {
+            if (!compraSeleccionada) {
+                alert("⚠️ Primero seleccioná una compra");
+                return;
+            }
+
+            // ✅ OBTENER EL NÚMERO DE WHATSAPP GUARDADO
+            let numero = compraSeleccionada.whatsapp || compraSeleccionada.telefono;
+            if (!numero) {
+                alert("⚠️ Este cliente no tiene número de WhatsApp registrado");
+                return;
+            }
+
+            // ✅ LIMPIAR EL NÚMERO → SOLO DÍGITOS
+            numero = numero.replace(/\D/g, ''); // Quita todo lo que no sea número
+            
+            // ✅ Si empieza con 0 → sacarlo
+            if (numero.startsWith('0')) numero = numero.slice(1);
+            
+            // ✅ Si tiene 10 dígitos y no empieza con 9 → agregarlo
+            if (numero.length === 10 && numero[0] !== '9') {
+                numero = '9' + numero;
+            }
+            
+            // ✅ Agregar código de Argentina si falta
+            if (!numero.startsWith('54')) {
+                numero = '54' + numero;
+            }
+
+            // ✅ LIMPIAR NÚMERO DE FACTURA
+            let nroFacturaLimpio = compraSeleccionada.factura_numero || '';
+            if (nroFacturaLimpio.includes('|')) {
+                nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
+            }
+
+            // ✅ MENSAJE QUE SE ENVÍA
+            const mensaje = `🧾 *Factura MAXIMUEBLES S.R.L.*
+
+Hola ${compraSeleccionada.nombre}! ✅
+
+Te adjunto tu factura:
+📄 *N°:* ${nroFacturaLimpio}
+💰 *Total:* $ ${Number(compraSeleccionada.total).toLocaleString('es-AR')}
+
+Gracias por tu compra! 🛋️
+MaxiMuebles — Valle Medio, Río Negro`;
+
+            // ✅ ABRIR WHATSAPP
+            const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+            
+            console.log("📱 Enviando a WhatsApp:", numero);
         }
     </script>
 </body>

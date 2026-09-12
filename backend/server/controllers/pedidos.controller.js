@@ -48,10 +48,9 @@ exports.crearPedido = async (req, res) => {
 
     // ✅ FACTURA — SE GENERA EN SEGUNDO PLANO
     if (factura) {
-      // ⚠️ NO HACER UPDATE ACÁ → afip-facturacion.js YA LO HACE
       enviarCorreoConFactura({
         pedido_id: pedidoId,
-        sesion_id: sesionIdReal,  // ✅ IMPORTANTE: pasar sesion_id
+        sesion_id: sesionIdReal,
         nombre,
         whatsapp,
         dni: dni_comprador,
@@ -65,6 +64,7 @@ exports.crearPedido = async (req, res) => {
         console.log('⚠️ Factura no se pudo generar (pedido guardado OK):', err.message);
       });
     }
+
   } catch (error) {
     console.error('❌ ERROR AL GUARDAR PEDIDO:', error.message);
     res.status(500).json({ 
@@ -74,18 +74,35 @@ exports.crearPedido = async (req, res) => {
   }
 };
 
-// ✅ Listar todos los pedidos — CORREGIDO: incluye ruta de factura
+// ✅ Listar TODOS los pedidos — INCLUYE factura_numero
 exports.listarPedidos = async (req, res) => {
   try {
     const pedidos = await db.query(
       `SELECT id, nombre, whatsapp, telefono, direccion, total, estado, fecha, sesion_id,
-              quiero_factura, factura_generada, factura_numero, factura_ruta
+              quiero_factura, factura_generada, factura_numero, factura_ruta, dni_comprador
        FROM pedidos ORDER BY fecha DESC`
     );
     res.json({ ok: true, datos: pedidos.rows });
   } catch (error) {
     console.error('❌ Error al listar pedidos:', error.message);
     res.status(500).json({ ok: false, mensaje: 'Error al cargar pedidos' });
+  }
+};
+
+// ✅ LISTAR SOLO PEDIDOS CON FACTURA → LO USA EL PANEL DE FACTURACIÓN
+exports.listarConFactura = async (req, res) => {
+  try {
+    const pedidos = await db.query(
+      `SELECT id, nombre, whatsapp, telefono, direccion, total, fecha,
+              factura_numero, fecha_factura, productos, dni_comprador
+       FROM pedidos 
+       WHERE factura_numero IS NOT NULL 
+       ORDER BY fecha DESC`
+    );
+    res.json({ ok: true, datos: pedidos.rows });
+  } catch (error) {
+    console.error('❌ Error cargando facturas:', error.message);
+    res.status(500).json({ ok: false, mensaje: 'Error al cargar facturas' });
   }
 };
 
@@ -157,7 +174,7 @@ exports.generarFacturaPDF = async (req, res) => {
     if (!resultado.exito) {
       return res.status(400).json({ ok: false, mensaje: "No se pudo generar la factura" });
     }
-    // ✅ URL PÚBLICA CORRECTA
+
     res.json({ 
       ok: true, 
       mensaje: "Factura generada con éxito",
@@ -165,7 +182,7 @@ exports.generarFacturaPDF = async (req, res) => {
         numero: resultado.numero,
         cae: resultado.cae,
         vencimiento: resultado.vencimiento,
-        url: resultado.url  // ✅ Ruta pública desde afip-facturacion.js
+        url: resultado.url
       }
     });
   } catch (error) {
