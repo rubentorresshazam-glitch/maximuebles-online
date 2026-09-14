@@ -465,448 +465,290 @@ body {
 
 
 /* ==================================================
-   🧾 FACTURACIÓN — ESTILO PREMIUM · MAXIMUEBLES
-   Ajustado según diseño de impresión oficial
+   🧾 ESTILOS DE IMPRESIÓN — FACTURA B Y REMITO
+   ✅ Logo grande centrado arriba de todo
+   ✅ Formato A4 VERTICAL FIJO → NUNCA SE GIRA
+   ✅ No se desordena al imprimir
    ================================================== */
 
-/* ---------- VARIABLES ---------- */
-:root {
-    --v1: #22B548;
-    --v2: #1A8A36;
-    --v3: #4CD952;
-    --v4: #76FF7C;
-    --n1: #050505;
-    --n2: #111111;
-    --n3: #222222;
-    --borde-verde: 2px solid var(--v1);
-    --redondo: 10px;
-    --redondo-chico: 6px;
-}
-
-/* ---------- RESET GENERAL ---------- */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-}
-
-body {
-    background: #f0f0f0;
-    color: #222;
-}
-
-/* ==================================================
-   🖨️ BOTÓN DE IMPRESIÓN
-   ================================================== */
+/* ---------- BOTÓN IMPRIMIR ---------- */
 .boton-imprimir {
     text-align: right;
-    padding: 16px 24px;
-    background: var(--n2);
-    border-bottom: var(--borde-verde);
+    padding: 12px 15px;
+    background: #fff;
+    border-bottom: 2px solid #22B548;
     position: sticky;
     top: 0;
     z-index: 10;
 }
 
 .boton-imprimir button {
-    background: linear-gradient(90deg, var(--v2), var(--v1));
+    background: linear-gradient(90deg, #1A8A36, #22B548);
     color: white;
     border: none;
-    padding: 10px 22px;
-    border-radius: var(--redondo-chico);
+    padding: 10px 20px;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 4px 12px rgba(34, 181, 72, 0.2);
-    transition: all 0.25s ease;
 }
 
-.boton-imprimir button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(34, 181, 72, 0.3);
-}
-
-/* ==================================================
-   🧾 HOJA DE FACTURA
-   ================================================== */
+/* ---------- HOJA A4 VERTICAL ---------- */
 .hoja-factura {
-    max-width: 900px;
-    margin: 0 auto 40px;
-    padding: 30px 40px;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 12mm 15mm;
+    margin: 0 auto 20px;
     background: white;
-    color: #111;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    color: #000;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* ---------- LOGO — CENTRADO, ARRIBA DE TODO, MÁS GRANDE ---------- */
+/* ---------- LOGO — GRANDE, CENTRADO, ARRIBA DE TODO ---------- */
 .logo-superior {
     text-align: center;
-    margin-bottom: 16px;
-    padding-bottom: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
 }
 
 .logo-superior .logo-empresa {
-    max-height: 160px;
+    max-height: 150px;
     width: auto;
     object-fit: contain;
 }
 
-/* ---------- FILA ENCABEZADO FACTURA ---------- */
+/* ---------- ENCABEZADO FACTURA ---------- */
 .fila-encabezado {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
+    justify-content: space-between;
     align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    width: 100%;
 }
 
 .datos-empresa {
-    flex: 1.4;
-    min-width: 220px;
-}
-
-.datos-empresa p {
-    font-size: 13px;
-    line-height: 1.55;
-    color: #222;
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #000;
 }
 
 .caja-factura {
-    flex: 0.7;
-    min-width: 120px;
+    width: 100px;
     text-align: center;
     border: 2px solid #22B548;
-    padding: 10px 6px;
-    background: rgba(34, 181, 72, 0.06);
+    padding: 6px;
 }
 
-.codigo-caja {
-    font-size: 11px;
-    color: #444;
-}
-
-.letra-factura {
-    font-size: 40px;
-    font-weight: 900;
-    color: #22B548;
-    line-height: 1;
-}
-
-.texto-factura {
-    font-size: 14px;
-    font-weight: 700;
-    color: #222;
-}
+.codigo-caja { font-size: 11px; color: #000; }
+.letra-factura { font-size: 36px; font-weight: 900; color: #22B548; }
+.texto-factura { font-size: 13px; font-weight: bold; color: #000; }
 
 .datos-fiscales-der {
     flex: 1;
-    min-width: 200px;
     text-align: right;
-}
-
-.datos-fiscales-der p {
-    font-size: 13px;
-    line-height: 1.55;
-    color: #222;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #000;
 }
 
 /* ---------- CUADRO COMPRADOR ---------- */
 .cuadro-comprador {
-    border: 1px solid #aaa;
-    padding: 12px 16px;
-    margin-bottom: 18px;
+    border: 1px solid #000;
+    padding: 8px 10px;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #000;
 }
 
 .fila-comprador {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 3px 0;
-    font-size: 13px;
 }
 
-.fila-comprador span {
-    color: #222;
-}
-
-/* ---------- TABLA PRODUCTOS FACTURA ---------- */
+/* ---------- TABLA PRODUCTOS ---------- */
 .tabla-prod {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 8px;
-}
-
-.tabla-prod th {
-    border: 1px solid #aaa;
-    padding: 7px 5px;
+    margin: 10px 0;
     font-size: 12px;
-    text-align: center;
-    font-weight: 700;
-    color: #222;
-    background: #f8f8f8;
 }
 
-.tabla-prod td {
-    border: 1px solid #aaa;
-    padding: 7px 5px;
-    font-size: 13px;
-    color: #222;
+.tabla-prod th, .tabla-prod td {
+    border: 1px solid #000;
+    padding: 6px 5px;
+    color: #000;
 }
 
-.tabla-prod .cod { width: 10%; text-align: center; }
-.tabla-prod .descr { width: 40%; text-align: left; }
-.tabla-prod .cant { width: 8%; text-align: center; }
-.tabla-prod .um { width: 10%; text-align: center; }
-.tabla-prod .pu { width: 12%; text-align: right; }
-.tabla-prod .bon { width: 8%; text-align: center; }
-.tabla-prod .ib { width: 12%; text-align: right; }
-.tabla-prod .sub { width: 12%; text-align: right; font-weight: 600; }
+.tabla-prod th { background: #f5f5f5; }
 
-/* ---------- TABLA TOTALES FACTURA ---------- */
+/* ---------- TOTALES ---------- */
 .tabla-totales, .tabla-iva {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 4px;
+    font-size: 12px;
+    margin: 4px 0;
 }
 
 .tabla-totales td, .tabla-iva td {
-    padding: 6px 10px;
-    font-size: 13px;
+    padding: 5px 8px;
     border-bottom: 1px solid #ccc;
+    text-align: right;
+    color: #000;
 }
 
 .tabla-totales .eti, .tabla-iva .eti {
-    text-align: right;
-    font-weight: 600;
-    width: 75%;
+    text-align: left;
+    font-weight: bold;
 }
 
 .leyenda {
-    font-size: 11px;
-    color: #555;
-    margin: 4px 0 8px;
+    font-size: 10px;
+    margin: 6px 0;
+    color: #333;
 }
 
-.tabla-iva {
-    border: 1px solid #aaa;
-    margin-top: 6px;
-}
-
-/* ---------- PIE ARCA / CAE ---------- */
+/* ---------- PIE FACTURA ---------- */
 .pie-factura {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 16px;
-    padding-top: 12px;
+    margin-top: 15px;
+    padding-top: 10px;
     border-top: 1px solid #ccc;
+    font-size: 11px;
+    color: #000;
 }
 
 .qr-cuadro {
-    border: 1px solid #ccc;
-    padding: 10px 8px;
+    border: 1px solid #000;
+    padding: 8px;
     text-align: center;
-    font-size: 11px;
-    color: #444;
-    min-width: 85px;
+    width: 70px;
 }
 
 .arca-datos {
     text-align: right;
-    font-size: 12px;
     line-height: 1.5;
-    color: #222;
+    color: #000;
 }
 
 .arca-titulo {
-    font-weight: 800;
-    font-size: 14px;
+    font-weight: bold;
     color: #22B548;
+    font-size: 13px;
 }
 
-.pie-chico {
-    font-size: 10px;
-    color: #777;
-    margin-top: 4px;
-}
+.pie-chico { font-size: 9px; color: #555; margin-top: 4px; }
 
-/* ==================================================
-   📄 REMITO DE REPARTO
-   ================================================== */
+/* ---------- REMITO ---------- */
 .fila-encabezado-remito {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
+    justify-content: space-between;
     align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    width: 100%;
 }
 
 .col-empresa {
-    flex: 1.4;
-    min-width: 220px;
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #000;
 }
 
 .col-empresa .nombre-empresa {
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: bold;
     color: #22B548;
-    margin-bottom: 4px;
-}
-
-.col-empresa p {
-    font-size: 13px;
-    line-height: 1.55;
-    color: #222;
 }
 
 .col-cuadro-remito {
-    flex: 0.7;
-    min-width: 120px;
+    width: 100px;
     text-align: center;
-}
-
-.cuadro-remito-x {
     border: 2px solid #22B548;
-    padding: 8px 4px;
-    background: rgba(34, 181, 72, 0.06);
-    display: inline-block;
-    min-width: 100px;
+    padding: 6px;
 }
 
-.texto-arriba {
-    font-size: 11px;
-    font-weight: 600;
-    color: #444;
-    line-height: 1.2;
-}
-
-.letra-x {
-    font-size: 34px;
-    font-weight: 900;
-    color: #22B548;
-    line-height: 1;
-}
-
-.codigo {
-    font-size: 11px;
-    color: #444;
-    margin-top: 2px;
-}
+.texto-arriba { font-size: 11px; color: #000; }
+.letra-x { font-size: 36px; font-weight: 900; color: #22B548; }
+.codigo { font-size: 11px; color: #000; }
 
 .col-derecha-datos {
     flex: 1;
-    min-width: 200px;
     text-align: right;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #000;
 }
 
-.col-derecha-datos p {
-    font-size: 13px;
-    line-height: 1.55;
-    color: #222;
-}
-
-/* ---------- DATOS CLIENTE REMITO ---------- */
 .cuadro-datos-cliente {
-    border: 1px solid #aaa;
-    padding: 12px 16px;
-    margin-bottom: 18px;
+    border: 1px solid #000;
+    padding: 8px 10px;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #000;
 }
 
-.fila-datos {
-    padding: 4px 0;
-    font-size: 13px;
-    border-bottom: 1px dashed #ddd;
-}
+.fila-datos { padding: 3px 0; }
 
-.fila-datos:last-child {
-    border-bottom: none;
-}
-
-/* ---------- TABLA PRODUCTOS REMITO ---------- */
 .tabla-productos-remito {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 16px;
-}
-
-.tabla-productos-remito th {
-    border: 1px solid #aaa;
-    padding: 7px 6px;
+    margin: 10px 0;
     font-size: 12px;
-    text-align: left;
-    font-weight: 700;
-    color: #222;
-    background: #f8f8f8;
 }
 
-.tabla-productos-remito td {
-    border: 1px solid #aaa;
-    padding: 7px 6px;
-    font-size: 13px;
-    color: #222;
+.tabla-productos-remito th, .tabla-productos-remito td {
+    border: 1px solid #000;
+    padding: 6px 5px;
+    color: #000;
 }
 
-.tabla-productos-remito th:first-child,
-.tabla-productos-remito td:first-child {
-    width: 10%;
-    text-align: center;
-}
-
-.tabla-productos-remito th:nth-child(2),
-.tabla-productos-remito td:nth-child(2) {
-    width: 15%;
-}
-
-.tabla-productos-remito th:nth-child(3),
-.tabla-productos-remito td:nth-child(3) {
-    width: 12%;
-    text-align: center;
-}
-
-.tabla-productos-remito th:last-child,
-.tabla-productos-remito td:last-child {
-    width: 63%;
-}
+.tabla-productos-remito th { background: #f5f5f5; }
 
 .leyenda-final {
     text-align: center;
-    font-size: 12px;
-    color: #d00;
-    font-weight: 600;
-    margin: 12px 0;
+    font-size: 11px;
+    color: red;
+    margin: 10px 0;
+    font-weight: bold;
 }
 
 .recibido-conforme {
     margin-top: 30px;
-    text-align: left;
-    font-size: 13px;
-    color: #333;
-}
-
-.recibido-conforme p {
-    margin: 6px 0;
+    font-size: 12px;
+    color: #000;
 }
 
 /* ==================================================
-   🖨️ AL IMPRIMIR — OCULTAR BOTÓN
+   🖨️ IMPRESIÓN — A4 VERTICAL BLOQUEADO → NUNCA SE GIRA
    ================================================== */
 @media print {
-    .boton-imprimir { display: none !important; }
-    .hoja-factura { box-shadow: none; margin: 0; padding: 20px; }
-    body { background: white; }
-}
+    @page {
+        size: A4 portrait !important;  /* ← SIEMPRE VERTICAL, NO SE PUEDE GIRAR */
+        margin: 0;
+    }
 
-/* ==================================================
-   📱 ADAPTACIÓN PANTALLAS CHICAS
-   ================================================== */
-@media (max-width: 768px) {
-    .fila-encabezado, .fila-encabezado-remito { flex-direction: column; }
-    .datos-fiscales-der, .col-derecha-datos { text-align: left; margin-top: 8px; }
-    .hoja-factura { padding: 15px 10px; }
-    .logo-superior .logo-empresa { max-height: 120px; }
+    body {
+        background: white !important;
+        padding: 0 !important;
+    }
+
+    .boton-imprimir { display: none !important; }
+
+    .hoja-factura {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 12mm 15mm !important;
+        box-shadow: none !important;
+    }
 }
