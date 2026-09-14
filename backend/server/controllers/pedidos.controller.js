@@ -74,7 +74,7 @@ exports.crearPedido = async (req, res) => {
   }
 };
 
-// ✅ Listar TODOS los pedidos — INCLUYE factura_numero
+// ✅ Listar TODOS los pedidos — INCLUYE factura_numero Y sesion_id
 exports.listarPedidos = async (req, res) => {
   try {
     const pedidos = await db.query(
@@ -89,11 +89,11 @@ exports.listarPedidos = async (req, res) => {
   }
 };
 
-// ✅ LISTAR SOLO PEDIDOS CON FACTURA → LO USA EL PANEL DE FACTURACIÓN
+// ✅ LISTAR SOLO PEDIDOS CON FACTURA → INCLUYE sesion_id ✅ CORREGIDO
 exports.listarConFactura = async (req, res) => {
   try {
     const pedidos = await db.query(
-      `SELECT id, nombre, whatsapp, telefono, direccion, total, fecha,
+      `SELECT id, nombre, whatsapp, telefono, direccion, total, fecha, sesion_id,
               factura_numero, fecha_factura, productos, dni_comprador
        FROM pedidos 
        WHERE factura_numero IS NOT NULL 
@@ -174,7 +174,6 @@ exports.generarFacturaPDF = async (req, res) => {
     if (!resultado.exito) {
       return res.status(400).json({ ok: false, mensaje: "No se pudo generar la factura" });
     }
-
     res.json({ 
       ok: true, 
       mensaje: "Factura generada con éxito",
