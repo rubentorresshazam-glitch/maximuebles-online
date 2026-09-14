@@ -1,7 +1,7 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ NEON DESPIERTO + FACTURAS PÚBLICAS + MERCADO PAGO
-// ✅ RUTA CORTA /facturas/ PARA DESCARGAR PDF
+// ✅ NEON DESPIERTO + RUTA SEGURA DE FACTURAS + MERCADO PAGO
+// ✅ CARPETA PROTEGIDA + DESCARGA POR sesion_id 🔒
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -36,14 +36,66 @@ setInterval(async () => {
 }, 180000); // 👉 3 minutos = 180.000 milisegundos
 
 // ==================================================
-// ✅ RUTA PÚBLICA /facturas/ → DESCARGAR PDF SIN PROHIBICIÓN
+// 🔒 CARPETA DE FACTURAS — BLOQUEADA SIEMPRE
 // ==================================================
 const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
-app.use('/facturas', express.static(carpetaFacturas)); // ✅ PÚBLICA y CORTA
-
-// 🔒 PROTEGER CARPETA REAL → NADIE ENTRA DIRECTO
+// ❌ NO exponemos la carpeta públicamente → la protegemos
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
+});
+
+// ==================================================
+// ✅ RUTA SEGURA DE DESCARGA → POR sesion_id 🔒
+// ==================================================
+app.get('/api/descargar-mi-factura/:sesionId', async (req, res) => {
+  try {
+    const { sesionId } = req.params;
+    console.log("📥 Solicitud de descarga para sesion_id:", sesionId);
+
+    // ✅ BUSCA EL PEDIDO EN LA BASE POR sesion_id
+    const resultado = await db.query(
+      'SELECT factura_numero FROM pedidos WHERE sesion_id = $1 LIMIT 1',
+      [sesionId]
+    );
+
+    if (resultado.rows.length === 0) {
+      console.log("❌ Pedido no encontrado:", sesionId);
+      return res.status(404).send('❌ Pedido no encontrado');
+    }
+
+    const nroFactura = resultado.rows[0].factura_numero;
+    console.log("🧾 Factura encontrada:", nroFactura);
+
+    if (!nroFactura || nroFactura === 'Pendiente') {
+      return res.status(404).send('⚠️ Factura aún no generada');
+    }
+
+    // ✅ LIMPIAMOS EL NÚMERO POR SI TRAE CAE
+    let nroLimpio = nroFactura;
+    if (nroFactura.includes('|')) {
+      nroLimpio = nroFactura.split('|')[0].trim();
+    }
+
+    // ✅ ARMAMOS EL NOMBRE EXACTO DEL ARCHIVO
+    const nombreArchivo = `Factura-${nroLimpio}.pdf`;
+    const rutaCompleta = path.join(carpetaFacturas, nombreArchivo);
+
+    console.log("📄 Buscando archivo:", rutaCompleta);
+
+    // ✅ ENTREGA EL ARCHIVO AL CLIENTE
+    res.download(rutaCompleta, nombreArchivo, (err) => {
+      if (err) {
+        console.log('❌ PDF no encontrado:', nombreArchivo, err.message);
+        res.status(404).send('❌ Factura no encontrada en el servidor');
+      } else {
+        console.log("✅ Descarga entregada:", nombreArchivo);
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error descargando factura:', error.message);
+    res.status(500).send('❌ Error del servidor');
+  }
 });
 
 // ==================================================
@@ -153,6 +205,6 @@ app.listen(PUERTO, () => {
   console.log(`🗄️  DB: ${process.env.DB_HOST ? '✅' : '❌'}`);
   console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
   console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
-  console.log(`📄 Ruta pública de facturas: /facturas/`);
+  console.log(`🔑 Descarga segura: /api/descargar-mi-factura/`);
   console.log(`🧠 Neon: ¡Manteniéndola despierta cada 3 min!`);
 });

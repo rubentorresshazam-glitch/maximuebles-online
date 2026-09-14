@@ -1,7 +1,7 @@
 // ==================================================
 // GESTIÓN DE FACTURACIÓN · MAXIMUEBLES
 // ✅ CONECTADO A LA BASE DE DATOS → TRAE FACTURAS REALES
-// ✅ Envío automático por WhatsApp con enlace PDF CORTO Y FUNCIONAL
+// ✅ ENLACE SEGURO POR sesion_id → SOLO DESCARGA LA SUYA 🔒
 // ==================================================
 let compraSeleccionada = null;
 let listaCompras = [];
@@ -228,8 +228,8 @@ function abrirRemitoParaImprimir() {
 }
 
 // ==================================================
-// 📱 ENVIAR FACTURA POR WHATSAPP AL CLIENTE ✅
-// ✅ ENLACE PÚBLICO /facturas/ → YA NO ES PROHIBIDO
+// 📱 ENVIAR FACTURA POR WHATSAPP AL CLIENTE 🔒 SEGURO
+// ✅ ENLACE POR sesion_id → NADIE VE LA AJENA
 // ==================================================
 function enviarPorWhatsApp() {
   if (!compraSeleccionada) {
@@ -260,9 +260,9 @@ function enviarPorWhatsApp() {
     nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
   }
 
-  // ✅ ENLACE PÚBLICO Y CORTO → LOS CLIENTES PUEDEN DESCARGARLO ✅
-  const nombreArchivo = `Factura-${nroFacturaLimpio}.pdf`;
-  const enlacePDF = `https://maximuebles-online.onrender.com/facturas/${encodeURIComponent(nombreArchivo)}`;
+  // ✅ ENLACE SEGURO POR sesion_id → NO SE ADIVINA 🔒
+  const sesionId = compraSeleccionada.sesion_id || 'sin-sesion';
+  const enlacePDF = `https://maximuebles-online.onrender.com/api/descargar-mi-factura/${encodeURIComponent(sesionId)}`;
 
   // ✅ MENSAJE COMPLETO CON ENLACE
   const mensaje = `🧾 *Factura MAXIMUEBLES S.R.L.*
@@ -282,7 +282,8 @@ MaxiMuebles — Valle Medio, Río Negro`;
   console.log("✅ WhatsApp abierto para:", compraSeleccionada.nombre);
   console.log("📱 Número:", numero);
   console.log("🧾 Factura:", nroFacturaLimpio);
-  console.log("📥 Enlace de descarga:", enlacePDF);
+  console.log("🔑 sesion_id:", sesionId);
+  console.log("📥 Enlace seguro:", enlacePDF);
 }
 
 // ==================================================
