@@ -1,23 +1,21 @@
 // ==================================================
 // GESTIÓN DE FACTURACIÓN · MAXIMUEBLES
 // ✅ CONECTADO A LA BASE DE DATOS → TRAE FACTURAS REALES
-// ✅ Números de factura desde el servidor → SIN ERRORES
+// ✅ Envío automático por WhatsApp con enlace PDF
 // ==================================================
-
 let compraSeleccionada = null;
-let listaCompras = []; // Guardamos todas las compras cargadas
+let listaCompras = [];
 
 // ✅ Al cargar la página → TRAER DESDE LA BASE
 window.addEventListener("load", () => {
   cargarListaCompras();
 });
 
-// ✅ CARGAR COMPRAS DESDE LA BASE DE DATOS (NO del localStorage)
+// ✅ CARGAR COMPRAS DESDE LA BASE DE DATOS
 async function cargarListaCompras() {
   const listaDiv = document.getElementById("lista-compras");
   const contador = document.getElementById("contador-registros");
 
-  // Mostrar cargando
   listaDiv.innerHTML = `
     <div class="estado-vacio">
       <i class="fa-solid fa-spinner fa-spin icono-vacio"></i>
@@ -25,7 +23,6 @@ async function cargarListaCompras() {
     </div>`;
 
   try {
-    // ✅ TRAER SOLO PEDIDOS CON FACTURA DESDE LA API
     const respuesta = await fetch('/api/pedidos/con-factura');
     const datos = await respuesta.json();
 
@@ -33,7 +30,6 @@ async function cargarListaCompras() {
       throw new Error("No se pudieron cargar las facturas");
     }
 
-    // ✅ GUARDAR TODAS LAS COMPRAS
     listaCompras = datos.datos;
     console.log("✅ Facturas cargadas:", listaCompras.length);
 
@@ -47,13 +43,11 @@ async function cargarListaCompras() {
         compra.factura_numero?.toLowerCase().includes(textoBusqueda) ||
         String(compra.id).toLowerCase().includes(textoBusqueda);
 
-      // Convertir fecha de la base al formato YYYY-MM-DD para comparar
       let fechaCompra = "";
       if (compra.fecha) {
         fechaCompra = new Date(compra.fecha).toISOString().split('T')[0];
       }
       const coincideFecha = !fechaFiltro || fechaCompra === fechaFiltro;
-
       return coincideTexto && coincideFecha;
     });
 
@@ -78,14 +72,12 @@ async function cargarListaCompras() {
       const item = document.createElement("div");
       item.className = "item-compra";
 
-      // ✅ LIMPIAR NÚMERO DE FACTURA PARA MOSTRAR
       let nroFacturaLimpio = compra.factura_numero || "Pendiente";
       if (nroFacturaLimpio.includes('|')) {
         nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
       }
 
-      // ✅ Formatear fecha
-      const fechaCompra = compra.fecha 
+      const fechaCompra = compra.fecha
         ? new Date(compra.fecha).toLocaleString("es-AR", {
             day: "2-digit", month: "2-digit", year: "numeric",
             hour: "2-digit", minute: "2-digit"
@@ -119,24 +111,23 @@ async function cargarListaCompras() {
   }
 }
 
-// ✅ VER DETALLE DE UNA COMPRA (por ID real de la base)
+// ✅ VER DETALLE DE UNA COMPRA
 function verDetalleFactura(compraId) {
   const compra = listaCompras.find(c => c.id === compraId);
   if (!compra) return alert("❌ Compra no encontrada");
-
-  compraSeleccionada = compra; // ✅ Guardamos la compra completa
+  compraSeleccionada = compra;
 
   // ✅ PARSEAR PRODUCTOS
   let productos = [];
   try {
-    productos = typeof compra.productos === "string" 
-      ? JSON.parse(compra.productos) 
+    productos = typeof compra.productos === "string"
+      ? JSON.parse(compra.productos)
       : compra.productos;
   } catch {
     productos = [];
   }
 
-  // ✅ LIMPIAR NÚMERO DE FACTURA
+  // ✅ LIMPIAR NÚMERO DE FACTURA Y CAE
   let nroFacturaLimpio = compra.factura_numero || "Pendiente";
   let caeTexto = "En proceso";
   if (compra.factura_numero && compra.factura_numero.includes('| CAE:')) {
@@ -145,8 +136,7 @@ function verDetalleFactura(compraId) {
     caeTexto = partes[1].trim();
   }
 
-  // ✅ Formatear fecha
-  const fechaCompra = compra.fecha 
+  const fechaCompra = compra.fecha
     ? new Date(compra.fecha).toLocaleString("es-AR")
     : "Sin fecha";
 
@@ -193,61 +183,109 @@ function verDetalleFactura(compraId) {
     </table>
   `;
 
-  // ✅ MOSTRAR PANEL
   document.getElementById("panel-detalle").classList.remove("oculto");
   document.getElementById("panel-detalle").scrollIntoView({ behavior: "smooth" });
 }
 
 // ==================================================
-// 🧾 ABRIR FACTURA → SOLO PASA EL NÚMERO LIMPIO ✅
+// 🧾 ABRIR FACTURA
 // ==================================================
 function abrirFacturaParaImprimir() {
   if (!compraSeleccionada) {
     alert('⚠️ Primero seleccioná una compra de la lista');
     return;
   }
-
-  // ✅ LIMPIAR EL NÚMERO DE FACTURA
   let nroLimpio = compraSeleccionada.factura_numero || '';
   if (nroLimpio.includes('|')) {
     nroLimpio = nroLimpio.split('|')[0].trim();
   }
-
   if (!nroLimpio || nroLimpio === "Pendiente") {
     alert("⚠️ Esta compra todavía no tiene factura generada");
     return;
   }
-
   console.log("🧾 Abriendo factura N°:", nroLimpio);
-
-  // ✅ MISMA CARPETA → RUTA CORRECTA
   window.open(`factura-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
 }
 
 // ==================================================
-// 🚚 ABRIR REMITO → MISMA LÓGICA ✅
+// 🚚 ABRIR REMITO
 // ==================================================
 function abrirRemitoParaImprimir() {
   if (!compraSeleccionada) {
     alert('⚠️ Primero seleccioná una compra de la lista');
     return;
   }
-
-  // ✅ LIMPIAR EL NÚMERO
   let nroLimpio = compraSeleccionada.factura_numero || '';
   if (nroLimpio.includes('|')) {
     nroLimpio = nroLimpio.split('|')[0].trim();
   }
-
   if (!nroLimpio || nroLimpio === "Pendiente") {
     alert("⚠️ Esta compra todavía no tiene factura generada");
     return;
   }
-
   console.log("📄 Abriendo remito N°:", nroLimpio);
-
-  // ✅ MISMA CARPETA → RUTA CORRECTA
   window.open(`remito-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
+}
+
+// ==================================================
+// 📱 ENVIAR FACTURA POR WHATSAPP AL CLIENTE ✅
+// ==================================================
+function enviarPorWhatsApp() {
+  if (!compraSeleccionada) {
+    alert("⚠️ Primero seleccioná una compra de la lista");
+    return;
+  }
+
+  // ✅ OBTENER NÚMERO DEL CLIENTE
+  let numero = compraSeleccionada.whatsapp || compraSeleccionada.telefono;
+  if (!numero) {
+    alert("⚠️ Este cliente no tiene número de WhatsApp registrado");
+    return;
+  }
+
+  // ✅ FORMATEAR NÚMERO A ESTÁNDAR ARGENTINA
+  numero = numero.replace(/\D/g, '');
+  if (numero.startsWith('0')) numero = numero.slice(1);
+  if (numero.length === 10 && numero[0] !== '9') {
+    numero = '9' + numero;
+  }
+  if (!numero.startsWith('54')) {
+    numero = '54' + numero;
+  }
+
+  // ✅ LIMPIAR NÚMERO DE FACTURA
+  let nroFacturaLimpio = compraSeleccionada.factura_numero || '';
+  if (nroFacturaLimpio.includes('|')) {
+    nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
+  }
+
+  // ✅ ENLACE DIRECTO AL PDF
+  const rutaPDF = compraSeleccionada.factura_ruta ||
+                  `/facturacionadmin/facturas-generadas/Factura-${nroFacturaLimpio}.pdf`;
+  const enlacePDF = `https://maximuebles-online.onrender.com${rutaPDF}`;
+
+  // ✅ MENSAJE COMPLETO CON ENLACE
+  const mensaje = `🧾 *Factura MAXIMUEBLES S.R.L.*
+
+Hola ${compraSeleccionada.nombre}! ✅ Gracias por tu compra.
+
+Te adjunto tu factura electrónica:
+📄 *Factura N°:* ${nroFacturaLimpio}
+💰 *Total:* $ ${Number(compraSeleccionada.total).toLocaleString('es-AR')}
+
+📥 *Descargar factura en PDF:*
+${enlacePDF}
+
+Gracias por confiar en nosotros! 🛋️
+MaxiMuebles — Valle Medio, Río Negro`;
+
+  // ✅ ABRIR WHATSAPP LISTO PARA ENVIAR
+  const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+
+  console.log("✅ WhatsApp abierto para:", compraSeleccionada.nombre);
+  console.log("📱 Número:", numero);
+  console.log("🧾 Factura:", nroFacturaLimpio);
 }
 
 // ==================================================
@@ -271,12 +309,11 @@ async function enviarFacturaCorreo() {
 
 async function transmitirARCA() {
   if (!compraSeleccionada) return alert("⚠️ Seleccioná una compra primero");
-  
+
   let nroLimpio = compraSeleccionada.factura_numero || '';
   if (nroLimpio.includes('|')) {
     nroLimpio = nroLimpio.split('|')[0].trim();
   }
-
   alert(`📡 Transmitiendo factura ${nroLimpio} a ARCA...`);
   console.log("Factura:", compraSeleccionada);
   alert("✅ Factura registrada en ARCA correctamente");
