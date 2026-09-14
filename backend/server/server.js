@@ -1,6 +1,7 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
 // ✅ NEON DESPIERTO + FACTURAS PÚBLICAS + MERCADO PAGO
+// ✅ RUTA CORTA /facturas/ PARA DESCARGAR PDF
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -35,18 +36,18 @@ setInterval(async () => {
 }, 180000); // 👉 3 minutos = 180.000 milisegundos
 
 // ==================================================
-// ✅ RUTA PÚBLICA PARA VER Y DESCARGAR FACTURAS
+// ✅ RUTA PÚBLICA /facturas/ → DESCARGAR PDF SIN PROHIBICIÓN
 // ==================================================
 const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
-app.use('/facturas', express.static(carpetaFacturas)); // ✅ PÚBLICA
+app.use('/facturas', express.static(carpetaFacturas)); // ✅ PÚBLICA y CORTA
 
-// 🔒 PROTEGER CARPETA REAL → NADIE LA TOCA DIRECTAMENTE
+// 🔒 PROTEGER CARPETA REAL → NADIE ENTRA DIRECTO
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
 
 // ==================================================
-// CONFIGURACIÓN
+// CONFIGURACIÓN GENERAL
 // ==================================================
 const PUERTO = process.env.PORT || 10000;
 const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com";
@@ -57,7 +58,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../../')));
 
 // ==================================================
-// ✅ RUTAS
+// ✅ RUTAS DE LA TIENDA
 // ==================================================
 const productosRutas = require('./routes/productos.routes');
 app.use('/api/productos', productosRutas);
@@ -126,7 +127,7 @@ app.get('/api/estado', (req, res) => {
 });
 
 // ==================================================
-// ✅ CACHÉ Y URLS LIMPIAS
+// ✅ CACHÉ Y URLS AMIGABLES SIN .HTML
 // ==================================================
 app.use((req, res, siguiente) => {
   const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
@@ -152,6 +153,6 @@ app.listen(PUERTO, () => {
   console.log(`🗄️  DB: ${process.env.DB_HOST ? '✅' : '❌'}`);
   console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
   console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
-  console.log(`📄 Ruta de facturas: /facturas/`);
+  console.log(`📄 Ruta pública de facturas: /facturas/`);
   console.log(`🧠 Neon: ¡Manteniéndola despierta cada 3 min!`);
 });
