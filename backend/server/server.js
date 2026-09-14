@@ -2,6 +2,7 @@
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
 // ✅ NEON DESPIERTO + RUTA SEGURA DE FACTURAS + MERCADO PAGO
 // ✅ CARPETA PROTEGIDA + DESCARGA POR sesion_id 🔒
+// ✅ RUTA FLEXIBLE → acepta cualquier caracter del código
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -46,11 +47,13 @@ app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
 
 // ==================================================
 // ✅ RUTA SEGURA DE DESCARGA → POR sesion_id 🔒
+// ✅ VERSIÓN FLEXIBLE → acepta cualquier caracter
 // ==================================================
-app.get('/api/descargar-mi-factura/:sesionId', async (req, res) => {
+app.get('/api/descargar-mi-factura/*', async (req, res) => {
   try {
-    const { sesionId } = req.params;
-    console.log("📥 Solicitud de descarga para sesion_id:", sesionId);
+    const rutaCompleta = req.params[0];
+    const sesionId = decodeURIComponent(rutaCompleta);
+    console.log("📥 sesion_id recibido:", sesionId);
 
     // ✅ BUSCA EL PEDIDO EN LA BASE POR sesion_id
     const resultado = await db.query(
@@ -59,8 +62,8 @@ app.get('/api/descargar-mi-factura/:sesionId', async (req, res) => {
     );
 
     if (resultado.rows.length === 0) {
-      console.log("❌ Pedido no encontrado:", sesionId);
-      return res.status(404).send('❌ Pedido no encontrado');
+      console.log("❌ Pedido NO encontrado en la BD. sesion_id buscado:", sesionId);
+      return res.status(404).send('❌ Pedido no encontrado — Verificá que el pedido tenga sesion_id guardado');
     }
 
     const nroFactura = resultado.rows[0].factura_numero;
@@ -78,12 +81,12 @@ app.get('/api/descargar-mi-factura/:sesionId', async (req, res) => {
 
     // ✅ ARMAMOS EL NOMBRE EXACTO DEL ARCHIVO
     const nombreArchivo = `Factura-${nroLimpio}.pdf`;
-    const rutaCompleta = path.join(carpetaFacturas, nombreArchivo);
+    const rutaCompletaArchivo = path.join(carpetaFacturas, nombreArchivo);
 
-    console.log("📄 Buscando archivo:", rutaCompleta);
+    console.log("📄 Buscando archivo:", rutaCompletaArchivo);
 
     // ✅ ENTREGA EL ARCHIVO AL CLIENTE
-    res.download(rutaCompleta, nombreArchivo, (err) => {
+    res.download(rutaCompletaArchivo, nombreArchivo, (err) => {
       if (err) {
         console.log('❌ PDF no encontrado:', nombreArchivo, err.message);
         res.status(404).send('❌ Factura no encontrada en el servidor');
