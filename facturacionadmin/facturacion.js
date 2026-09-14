@@ -1,7 +1,7 @@
 // ==================================================
 // GESTIÓN DE FACTURACIÓN · MAXIMUEBLES
 // ✅ CONECTADO A LA BASE DE DATOS → TRAE FACTURAS REALES
-// ✅ Envío automático por WhatsApp con enlace PDF
+// ✅ Envío automático por WhatsApp con enlace PDF CORTO Y FUNCIONAL
 // ==================================================
 let compraSeleccionada = null;
 let listaCompras = [];
@@ -229,6 +229,7 @@ function abrirRemitoParaImprimir() {
 
 // ==================================================
 // 📱 ENVIAR FACTURA POR WHATSAPP AL CLIENTE ✅
+// ✅ ENLACE PÚBLICO /facturas/ → YA NO ES PROHIBIDO
 // ==================================================
 function enviarPorWhatsApp() {
   if (!compraSeleccionada) {
@@ -259,23 +260,18 @@ function enviarPorWhatsApp() {
     nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
   }
 
-  // ✅ ENLACE DIRECTO AL PDF
-  const rutaPDF = compraSeleccionada.factura_ruta ||
-                  `/facturacionadmin/facturas-generadas/Factura-${nroFacturaLimpio}.pdf`;
-  const enlacePDF = `https://maximuebles-online.onrender.com${rutaPDF}`;
+  // ✅ ENLACE PÚBLICO Y CORTO → LOS CLIENTES PUEDEN DESCARGARLO ✅
+  const nombreArchivo = `Factura-${nroFacturaLimpio}.pdf`;
+  const enlacePDF = `https://maximuebles-online.onrender.com/facturas/${encodeURIComponent(nombreArchivo)}`;
 
   // ✅ MENSAJE COMPLETO CON ENLACE
   const mensaje = `🧾 *Factura MAXIMUEBLES S.R.L.*
-
 Hola ${compraSeleccionada.nombre}! ✅ Gracias por tu compra.
-
 Te adjunto tu factura electrónica:
 📄 *Factura N°:* ${nroFacturaLimpio}
 💰 *Total:* $ ${Number(compraSeleccionada.total).toLocaleString('es-AR')}
-
 📥 *Descargar factura en PDF:*
 ${enlacePDF}
-
 Gracias por confiar en nosotros! 🛋️
 MaxiMuebles — Valle Medio, Río Negro`;
 
@@ -286,6 +282,7 @@ MaxiMuebles — Valle Medio, Río Negro`;
   console.log("✅ WhatsApp abierto para:", compraSeleccionada.nombre);
   console.log("📱 Número:", numero);
   console.log("🧾 Factura:", nroFacturaLimpio);
+  console.log("📥 Enlace de descarga:", enlacePDF);
 }
 
 // ==================================================
@@ -309,7 +306,6 @@ async function enviarFacturaCorreo() {
 
 async function transmitirARCA() {
   if (!compraSeleccionada) return alert("⚠️ Seleccioná una compra primero");
-
   let nroLimpio = compraSeleccionada.factura_numero || '';
   if (nroLimpio.includes('|')) {
     nroLimpio = nroLimpio.split('|')[0].trim();
