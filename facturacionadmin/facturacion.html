@@ -6,59 +6,24 @@
     <title>Panel de Facturación | MaxiMuebles</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="facturacion.css">
-
 <style>
-/* ✅ LOGO TAMAÑO CORRECTO — NO SE SUPERPONE */
-.topbar img, .logo, .logo-empresa, img[alt*="MaxiMuebles"], img[src*="logo"] {
-  max-width: 140px !important;
-  width: 140px !important;
-  height: auto !important;
-  max-height: 60px !important;
-  object-fit: contain !important;
-  display: inline-block !important;
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  transform: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
+/* ✅ LOGO TAMAÑO Y POSICIÓN CORRECTOS */
 .logo-imagen {
-  max-width: 140px;
-  width: 140px;
-  height: auto;
-  max-height: 60px;
-  object-fit: contain;
-  display: block;
+    max-width: 140px;
+    width: 140px;
+    height: auto;
+    max-height: 60px;
+    object-fit: contain;
+    display: block;
 }
-
-/* ✅ EVITAR QUE LA BARRA SE ROMPA */
-.topbar {
-  min-height: 70px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 8px 20px !important;
-}
-
-/* ✅ ESTILOS MOVIDOS DESDE HTML INLINE */
+/* ✅ ENCABEZADO — LOGO A LA DERECHA */
 .header-top-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.header-top-container .logo-imagen {
-  max-width: 140px;
-  width: 140px;
-  height: auto;
-  max-height: 60px;
-  object-fit: contain;
-  display: block;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 8px 20px;
 }
 </style>
-
 </head>
 <body>
     <!-- Barra superior -->
@@ -79,16 +44,13 @@
         </div>
     </section>
 
-    <!-- Encabezado -->
-   <header class="header header-simple">
-    <div class="header-top-container">
-        <div class="logo">
-            <a href="/index.html" class="logo-link">
-                <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
-            </a>
-        </div>
-    </div>
-</header>
+    <!-- Encabezado con Logo a la Derecha -->
+    <header class="header header-simple">
+        <div class="header-top-container">
+            <div class="logo">
+                <a href="/index.html" class="logo-link">
+                    <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
+                </a>
             </div>
             <div class="header-right">
                 <a href="../index.html" class="btn-secundario">
@@ -160,8 +122,7 @@
                 <div class="tarjeta-cuerpo">
                     <div class="contenido-factura" id="contenido-detalle"></div>
                 </div>
-
-                <!-- ✅ BOTONES CORREGIDOS → WHATSAPP en lugar de correo -->
+                <!-- BOTONES DE ACCIÓN -->
                 <div class="tarjeta-pie acciones-factura">
                     <button onclick="abrirFacturaParaImprimir()" class="btn-accion btn-imprimir">
                         <i class="fa-solid fa-file-invoice"></i> Abrir e Imprimir Factura
@@ -185,10 +146,10 @@
         <p>&copy; 2026 MAXIMUEBLES S.R.L | CUIT: 30-71500272-4 | Punto de Venta N° 00010</p>
     </footer>
 
-    <!-- ✅ Archivo JS con las funciones -->
+    <!-- Archivo JS -->
     <script src="facturacion.js"></script>
 
-    <!-- ✅ FUNCIONES CORREGIDAS: Pasar SOLO el número LIMPIO + WhatsApp -->
+    <!-- FUNCIONES -->
     <script>
         let compraSeleccionada = null;
 
@@ -196,29 +157,26 @@
             compraSeleccionada = compra;
         }
 
-        // ✅ ABRIR FACTURA → SOLO pasa el número limpio
+        // ✅ ABRIR FACTURA
         function abrirFacturaParaImprimir() {
             if (!compraSeleccionada) {
                 alert('⚠️ Primero seleccioná una compra de la lista');
                 return;
             }
-            // ✅ LIMPIAR EL NÚMERO: quitar "| CAE: ..." si lo tiene
             let nroLimpio = compraSeleccionada.factura_numero || '';
             if (nroLimpio.includes('|')) {
                 nroLimpio = nroLimpio.split('|')[0].trim();
             }
             console.log("🧾 Abriendo factura N°:", nroLimpio);
-            // ✅ ABRIR en MISMA carpeta → sin barra al principio
             window.open(`factura-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
         }
 
-        // ✅ ABRIR REMITO → MISMA LÓGICA
+        // ✅ ABRIR REMITO
         function abrirRemitoParaImprimir() {
             if (!compraSeleccionada) {
                 alert('⚠️ Primero seleccioná una compra de la lista');
                 return;
             }
-            // ✅ Usamos el mismo número de factura para el remito
             let nroLimpio = compraSeleccionada.factura_numero || '';
             if (nroLimpio.includes('|')) {
                 nroLimpio = nroLimpio.split('|')[0].trim();
@@ -227,58 +185,38 @@
             window.open(`remito-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
         }
 
-        // ✅ ENVIAR FACTURA POR WHATSAPP → USA EL NÚMERO GUARDADO EN LA BASE
+        // ✅ ENVIAR POR WHATSAPP
         function enviarPorWhatsApp() {
             if (!compraSeleccionada) {
                 alert("⚠️ Primero seleccioná una compra");
                 return;
             }
-
-            // ✅ OBTENER EL NÚMERO DE WHATSAPP GUARDADO
             let numero = compraSeleccionada.whatsapp || compraSeleccionada.telefono;
             if (!numero) {
                 alert("⚠️ Este cliente no tiene número de WhatsApp registrado");
                 return;
             }
-
-            // ✅ LIMPIAR EL NÚMERO → SOLO DÍGITOS
-            numero = numero.replace(/\D/g, ''); // Quita todo lo que no sea número
-            
-            // ✅ Si empieza con 0 → sacarlo
+            numero = numero.replace(/\D/g, '');
             if (numero.startsWith('0')) numero = numero.slice(1);
-            
-            // ✅ Si tiene 10 dígitos y no empieza con 9 → agregarlo
             if (numero.length === 10 && numero[0] !== '9') {
                 numero = '9' + numero;
             }
-            
-            // ✅ Agregar código de Argentina si falta
             if (!numero.startsWith('54')) {
                 numero = '54' + numero;
             }
-
-            // ✅ LIMPIAR NÚMERO DE FACTURA
             let nroFacturaLimpio = compraSeleccionada.factura_numero || '';
             if (nroFacturaLimpio.includes('|')) {
                 nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
             }
-
-            // ✅ MENSAJE QUE SE ENVÍA
             const mensaje = `🧾 *Factura MAXIMUEBLES S.R.L.*
-
 Hola ${compraSeleccionada.nombre}! ✅
-
 Te adjunto tu factura:
 📄 *N°:* ${nroFacturaLimpio}
 💰 *Total:* $ ${Number(compraSeleccionada.total).toLocaleString('es-AR')}
-
 Gracias por tu compra! 🛋️
 MaxiMuebles — Valle Medio, Río Negro`;
-
-            // ✅ ABRIR WHATSAPP
             const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
             window.open(url, '_blank');
-            
             console.log("📱 Enviando a WhatsApp:", numero);
         }
     </script>
