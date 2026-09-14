@@ -33,7 +33,7 @@ function irPaso(n) {
   if (n === 4) cargarResumenFinal();
 }
 
-// ✅ CARGA EL CARRITO — desde localStorage
+// ✅ CARGA EL CARRITO — ENVÍO SIEMPRE GRATIS ✅
 async function cargarResumenCarrito() {
   totalCompra = 0;
   carrito = [];
@@ -57,10 +57,11 @@ async function cargarResumenCarrito() {
     totalCompra += subt;
     lista.innerHTML += `<p>${item.nombre || 'Producto'} × ${item.cantidad} = <strong>$ ${subt.toLocaleString("es-AR")}</strong></p>`;
   });
-  const envio = totalCompra > 50000 ? 0 : 4990;
-  totalCompra += envio;
-  document.getElementById("res_subtotal").textContent = `$ ${(totalCompra - envio).toLocaleString("es-AR")}`;
-  document.getElementById("res_envio").textContent = envio ? `$ ${envio.toLocaleString("es-AR")}` : "GRATIS";
+
+  // ✅ ENVÍO SIEMPRE GRATIS — SIN EXCEPCIÓN
+  const envio = 0;
+  document.getElementById("res_subtotal").textContent = `$ ${totalCompra.toLocaleString("es-AR")}`;
+  document.getElementById("res_envio").textContent = "GRATIS";
   document.getElementById("res_total").textContent = `$ ${totalCompra.toLocaleString("es-AR")}`;
 }
 
@@ -115,7 +116,7 @@ async function procesarPago() {
   // ✅ DATOS COMPLETOS: WHATSAPP + FACTURA
   const datosCompra = {
     nombre,
-    whatsapp, // ✅ EN LUGAR DE CORREO
+    whatsapp,
     telefono,
     direccion: direccionCompleta,
     productos: productosParaEnviar,
@@ -134,23 +135,25 @@ async function procesarPago() {
     // ✅ PASO 1: Guardar pedido en la base de datos
     const respPedido = await peticion("/pedidos", "POST", datosCompra);
     console.log("📦 Pedido guardado:", respPedido);
+
     if (!respPedido.ok) {
       alert(respPedido.mensaje || "No se pudo registrar tu pedido. Intentá nuevamente.");
       return;
     }
 
-    // ✅ PASO 2: Generar enlace de Mercado Pago → ENVÍA WHATSAPP
+    // ✅ PASO 2: Generar enlace de Mercado Pago
     const respPago = await peticion("/crear-preferencia-pago", "POST", {
       productos: carrito,
       total: totalCompra,
       sesion_id,
       datosComprador: {
         nombre,
-        whatsapp // ✅ MP recibe el WhatsApp
+        whatsapp
       }
     });
 
     console.log("💳 Respuesta Mercado Pago:", respPago);
+
     if (respPago.ok && respPago.datos && respPago.datos.init_point) {
       localStorage.removeItem("carrito");
       alert("✅ ¡Listo! A continuación serás redirigido a Mercado Pago para finalizar tu compra");
