@@ -465,7 +465,39 @@ body {
 
 
 /* ==================================================
-   🧾 ESTILOS — FACTURA IMPRIMIBLE
+   🧾 FACTURACIÓN — ESTILO PREMIUM · MAXIMUEBLES
+   Ajustado según diseño de impresión oficial
+   ================================================== */
+
+/* ---------- VARIABLES ---------- */
+:root {
+    --v1: #22B548;
+    --v2: #1A8A36;
+    --v3: #4CD952;
+    --v4: #76FF7C;
+    --n1: #050505;
+    --n2: #111111;
+    --n3: #222222;
+    --borde-verde: 2px solid var(--v1);
+    --redondo: 10px;
+    --redondo-chico: 6px;
+}
+
+/* ---------- RESET GENERAL ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+body {
+    background: #f0f0f0;
+    color: #222;
+}
+
+/* ==================================================
+   🖨️ BOTÓN DE IMPRESIÓN
    ================================================== */
 .boton-imprimir {
     text-align: right;
@@ -498,54 +530,57 @@ body {
     box-shadow: 0 6px 18px rgba(34, 181, 72, 0.3);
 }
 
+/* ==================================================
+   🧾 HOJA DE FACTURA
+   ================================================== */
 .hoja-factura {
     max-width: 900px;
     margin: 0 auto 40px;
-    padding: 40px 32px;
+    padding: 30px 40px;
     background: white;
     color: #111;
-    border-radius: var(--redondo);
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
 }
 
+/* ---------- LOGO — CENTRADO, ARRIBA DE TODO, MÁS GRANDE ---------- */
 .logo-superior {
     text-align: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #ddd;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
 }
 
 .logo-superior .logo-empresa {
-    max-height: 70px;
+    max-height: 160px;
     width: auto;
+    object-fit: contain;
 }
 
+/* ---------- FILA ENCABEZADO FACTURA ---------- */
 .fila-encabezado {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 20px;
     align-items: flex-start;
 }
 
 .datos-empresa {
-    flex: 1.2;
+    flex: 1.4;
     min-width: 220px;
 }
 
 .datos-empresa p {
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.55;
     color: #222;
 }
 
 .caja-factura {
-    flex: 0.8;
+    flex: 0.7;
     min-width: 120px;
     text-align: center;
     border: 2px solid #22B548;
-    border-radius: 8px;
-    padding: 12px 8px;
+    padding: 10px 6px;
     background: rgba(34, 181, 72, 0.06);
 }
 
@@ -555,7 +590,7 @@ body {
 }
 
 .letra-factura {
-    font-size: 42px;
+    font-size: 40px;
     font-weight: 900;
     color: #22B548;
     line-height: 1;
@@ -575,24 +610,23 @@ body {
 
 .datos-fiscales-der p {
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 1.55;
     color: #222;
 }
 
+/* ---------- CUADRO COMPRADOR ---------- */
 .cuadro-comprador {
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
-    background: #fafafa;
+    border: 1px solid #aaa;
+    padding: 12px 16px;
+    margin-bottom: 18px;
 }
 
 .fila-comprador {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 4px 0;
+    gap: 6px;
+    padding: 3px 0;
     font-size: 13px;
 }
 
@@ -600,25 +634,26 @@ body {
     color: #222;
 }
 
-.tabla-prod, .tabla-totales, .tabla-iva {
+/* ---------- TABLA PRODUCTOS FACTURA ---------- */
+.tabla-prod {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .tabla-prod th {
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    padding: 8px 6px;
+    border: 1px solid #aaa;
+    padding: 7px 5px;
     font-size: 12px;
     text-align: center;
     font-weight: 700;
     color: #222;
+    background: #f8f8f8;
 }
 
 .tabla-prod td {
-    border: 1px solid #ddd;
-    padding: 7px 6px;
+    border: 1px solid #aaa;
+    padding: 7px 5px;
     font-size: 13px;
     color: #222;
 }
@@ -632,58 +667,65 @@ body {
 .tabla-prod .ib { width: 12%; text-align: right; }
 .tabla-prod .sub { width: 12%; text-align: right; font-weight: 600; }
 
+/* ---------- TABLA TOTALES FACTURA ---------- */
+.tabla-totales, .tabla-iva {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 4px;
+}
+
 .tabla-totales td, .tabla-iva td {
-    padding: 7px 10px;
-    font-size: 14px;
-    border-bottom: 1px solid #ddd;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #ccc;
 }
 
 .tabla-totales .eti, .tabla-iva .eti {
     text-align: right;
     font-weight: 600;
-    width: 70%;
-}
-
-.tabla-iva {
-    background: rgba(34, 181, 72, 0.04);
-    border-radius: 6px;
+    width: 75%;
 }
 
 .leyenda {
     font-size: 11px;
-    color: #666;
-    margin: 6px 0;
+    color: #555;
+    margin: 4px 0 8px;
 }
 
+.tabla-iva {
+    border: 1px solid #aaa;
+    margin-top: 6px;
+}
+
+/* ---------- PIE ARCA / CAE ---------- */
 .pie-factura {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 24px;
-    padding-top: 16px;
+    margin-top: 16px;
+    padding-top: 12px;
     border-top: 1px solid #ccc;
 }
 
 .qr-cuadro {
     border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 12px 10px;
+    padding: 10px 8px;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
     color: #444;
-    min-width: 90px;
+    min-width: 85px;
 }
 
 .arca-datos {
     text-align: right;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.5;
     color: #222;
 }
 
 .arca-titulo {
     font-weight: 800;
-    font-size: 15px;
+    font-size: 14px;
     color: #22B548;
 }
 
@@ -694,23 +736,23 @@ body {
 }
 
 /* ==================================================
-   📄 ESTILOS — REMITO IMPRIMIBLE
+   📄 REMITO DE REPARTO
    ================================================== */
 .fila-encabezado-remito {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 24px;
-    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: flex-start;
 }
 
 .col-empresa {
-    flex: 1.2;
-    min-width: 200px;
+    flex: 1.4;
+    min-width: 220px;
 }
 
 .col-empresa .nombre-empresa {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 800;
     color: #22B548;
     margin-bottom: 4px;
@@ -718,23 +760,22 @@ body {
 
 .col-empresa p {
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 1.55;
     color: #222;
 }
 
 .col-cuadro-remito {
-    flex: 0.8;
+    flex: 0.7;
     min-width: 120px;
     text-align: center;
 }
 
 .cuadro-remito-x {
     border: 2px solid #22B548;
-    border-radius: 8px;
-    padding: 10px 6px;
+    padding: 8px 4px;
     background: rgba(34, 181, 72, 0.06);
     display: inline-block;
-    min-width: 110px;
+    min-width: 100px;
 }
 
 .texto-arriba {
@@ -745,7 +786,7 @@ body {
 }
 
 .letra-x {
-    font-size: 36px;
+    font-size: 34px;
     font-weight: 900;
     color: #22B548;
     line-height: 1;
@@ -759,53 +800,53 @@ body {
 
 .col-derecha-datos {
     flex: 1;
-    min-width: 160px;
+    min-width: 200px;
     text-align: right;
 }
 
 .col-derecha-datos p {
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 1.55;
     color: #222;
 }
 
+/* ---------- DATOS CLIENTE REMITO ---------- */
 .cuadro-datos-cliente {
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
-    background: #fafafa;
+    border: 1px solid #aaa;
+    padding: 12px 16px;
+    margin-bottom: 18px;
 }
 
 .fila-datos {
-    padding: 5px 0;
+    padding: 4px 0;
     font-size: 13px;
-    border-bottom: 1px dashed #eee;
+    border-bottom: 1px dashed #ddd;
 }
 
 .fila-datos:last-child {
     border-bottom: none;
 }
 
+/* ---------- TABLA PRODUCTOS REMITO ---------- */
 .tabla-productos-remito {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .tabla-productos-remito th {
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    padding: 9px 8px;
+    border: 1px solid #aaa;
+    padding: 7px 6px;
     font-size: 12px;
     text-align: left;
     font-weight: 700;
     color: #222;
+    background: #f8f8f8;
 }
 
 .tabla-productos-remito td {
-    border: 1px solid #ddd;
-    padding: 9px 8px;
+    border: 1px solid #aaa;
+    padding: 7px 6px;
     font-size: 13px;
     color: #222;
 }
@@ -837,31 +878,35 @@ body {
     font-size: 12px;
     color: #d00;
     font-weight: 600;
-    margin: 14px 0;
+    margin: 12px 0;
 }
 
 .recibido-conforme {
     margin-top: 30px;
-    text-align: center;
+    text-align: left;
     font-size: 13px;
     color: #333;
 }
 
+.recibido-conforme p {
+    margin: 6px 0;
+}
+
 /* ==================================================
-   🖨️ ESTILO AL IMPRIMIR — OCULTAR BOTÓN
+   🖨️ AL IMPRIMIR — OCULTAR BOTÓN
    ================================================== */
 @media print {
     .boton-imprimir { display: none !important; }
-    .hoja-factura { box-shadow: none; margin: 0; padding: 0; border-radius: 0; }
+    .hoja-factura { box-shadow: none; margin: 0; padding: 20px; }
     body { background: white; }
 }
 
 /* ==================================================
-   📱 RESPONSIVE — FACTURA Y REMITO
+   📱 ADAPTACIÓN PANTALLAS CHICAS
    ================================================== */
 @media (max-width: 768px) {
     .fila-encabezado, .fila-encabezado-remito { flex-direction: column; }
-    .datos-fiscales-der, .col-derecha-datos { text-align: left; margin-top: 10px; }
-    .tabla-prod th, .tabla-prod td { padding: 5px 3px; font-size: 11px; }
-    .hoja-factura { padding: 20px 12px; }
+    .datos-fiscales-der, .col-derecha-datos { text-align: left; margin-top: 8px; }
+    .hoja-factura { padding: 15px 10px; }
+    .logo-superior .logo-empresa { max-height: 120px; }
 }
