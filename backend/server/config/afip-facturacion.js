@@ -2,13 +2,19 @@
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
 // ✅ CONEXIÓN REAL AFIP/ARCA ACTIVADA ✅
 // ✅ GUARDA DNI + WHATSAPP + CAE OFICIAL
-// ✅ ENVÍA REALMENTE A AFIP → APARECE EN ARCA ✅
+// ✅ SOLUCIÓN ERROR SSL: "dh key too small" ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const crypto = require('crypto');
 const https = require('https');
+
+// ✅ SOLUCIÓN CLAVE: Aceptar claves de AFIP sin rechazar
+process.env.NODE_OPTIONS = '--tls-min-v1.0';
+https.globalAgent.options.secureProtocol = 'TLSv1_2_method';
+https.globalAgent.options.minVersion = 'TLSv1';
+https.globalAgent.options.ciphers = 'ALL:!DH:!EXPORT:!DES-CBC3-SHA';
 
 // ✅ DATOS DE LA EMPRESA — DESDE VARIABLES DE RENDER
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
@@ -103,6 +109,7 @@ async function obtenerTicketAFIP() {
     const firmaMatch = respuesta.respuesta.match(/<sign>([^<]+)<\/sign>/);
     
     if (!tokenMatch || !firmaMatch) {
+      console.log("❌ Respuesta completa de AFIP:", respuesta.respuesta);
       throw new Error("AFIP no devolvió token o firma");
     }
 
@@ -120,7 +127,7 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA REAL A AFIP/ARCA → OBTENER CAE OFICIAL ✅
+// 📤 ENVIAR FACTURA REAL A AFIP/ARCA → OBTENER CAE OFICIAL
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
