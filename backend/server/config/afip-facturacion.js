@@ -2,6 +2,7 @@
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
 // ✅ CONEXIÓN REAL AFIP/ARCA ACTIVADA ✅
 // ✅ GUARDA DNI + WHATSAPP + CAE OFICIAL
+// ✅ ENVÍA REALMENTE A AFIP → APARECE EN ARCA ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -42,6 +43,7 @@ if (!fs.existsSync(rutaFacturas)) {
 // ✅ CONTADOR DE NÚMEROS DE FACTURA
 // ==================================================
 const ARCHIVO_CONTADOR = path.join(rutaFacturas, 'ultimo-numero.txt');
+
 function obtenerUltimoNumero() {
   try {
     if (fs.existsSync(ARCHIVO_CONTADOR)) {
@@ -52,6 +54,7 @@ function obtenerUltimoNumero() {
   }
   return 1000;
 }
+
 function guardarUltimoNumero(n) {
   try {
     fs.writeFileSync(ARCHIVO_CONTADOR, String(n), 'utf8');
@@ -59,6 +62,7 @@ function guardarUltimoNumero(n) {
     console.log('⚠️ No se pudo guardar número de factura:', err.message);
   }
 }
+
 function generarNumeroFactura() {
   const ult = obtenerUltimoNumero() + 1;
   guardarUltimoNumero(ult);
@@ -70,7 +74,6 @@ function generarNumeroFactura() {
 // ==================================================
 async function obtenerTicketAFIP() {
   if (!AFIP_CARGADO) return null;
-
   try {
     const esProduccion = ENTORNO.toLowerCase() === 'produccion';
     const fechaGen = new Date();
@@ -88,14 +91,28 @@ async function obtenerTicketAFIP() {
 </loginTicketRequest>`;
 
     const url = esProduccion
-      ? 'https://servicios.afip.gov.ar/wsfe/LoginTicket'
-      : 'https://wsfe-homologacion.afip.gov.ar/wsfe/LoginTicket';
+      ? 'https://servicios1.afip.gov.ar/wsfe/LoginTicket'
+      : 'https://wswhomo.afip.gov.ar/wsfe/LoginTicket';
 
     console.log(`🔑 Solicitando ticket a AFIP — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
-
+    
     const respuesta = await hacerPeticionHTTPS(url, xmlTicket);
+    
+    // ✅ PARSEAR RESPUESTA XML DE AFIP
+    const tokenMatch = respuesta.respuesta.match(/<token>([^<]+)<\/token>/);
+    const firmaMatch = respuesta.respuesta.match(/<sign>([^<]+)<\/sign>/);
+    
+    if (!tokenMatch || !firmaMatch) {
+      throw new Error("AFIP no devolvió token o firma");
+    }
+
     console.log("✅ Ticket AFIP obtenido");
-    return { token: respuesta.token, firma: respuesta.firma, fechaVenc: fechaVenc };
+    return { 
+      token: tokenMatch[1], 
+      firma: firmaMatch[1], 
+      fechaVenc: fechaVenc 
+    };
+
   } catch (error) {
     console.log("❌ Error obteniendo ticket AFIP:", error.message);
     return null;
@@ -103,7 +120,7 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA REAL A AFIP/ARCA → OBTENER CAE OFICIAL
+// 📤 ENVIAR FACTURA REAL A AFIP/ARCA → OBTENER CAE OFICIAL ✅
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
@@ -113,33 +130,92 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
   if (AFIP_CARGADO && ticketAFIP) {
     try {
       console.log("🌐 ENVIANDO A AFIP REAL...");
-      
-      // 📋 Armar XML de factura para WSFE
+
       const puntoVenta = parseInt(PUNTO_VENTA);
       const tipoComprobante = 6; // 6 = Factura B
-      const fechaComprobante = new Date().toISOString().split('T')[0].replace(/-/g, '-');
+      const fechaComprobante = new Date().toISOString().split('T')[0];
       const importeTotal = Number(datos.total).toFixed(2);
-      
-      // ✅ Enviar factura real a AFIP
-      const cae = await solicitarCAE_AFIP(ticketAFIP, {
-        puntoVenta,
-        tipoComprobante,
-        fecha: fechaComprobante,
-        importeTotal,
-        numero: numero.split('-')[1]
-      });
+      const importeNeto = Number(datos.total / 1.21).toFixed(2);
+      const iva = Number(datos.total - importeNeto).toFixed(2);
 
-      const fechaVenc = new Date();
-      fechaVenc.setDate(fechaVenc.getDate() + 10);
+      // ✅ ARMAR XML COMPLETO PARA AFIP
+      const xmlFactura = `<?xml version="1.0" encoding="UTF-8"?>
+<FEAutRequest>
+  <Auth>
+    <Token>${ticketAFIP.token}</Token>
+    <Sign>${ticketAFIP.firma}</Sign>
+    <CUITRepresentado>${CUIT_EMPRESA.replace(/-/g, '')}</CUITRepresentado>
+  </Auth>
+  <FeDetReq>
+    <FECabecera>
+      <PtoVta>${puntoVenta}</PtoVta>
+      <CbteTipo>${tipoComprobante}</CbteTipo>
+      <CbteDesde>${numero.split('-')[1]}</CbteDesde>
+      <CbteHasta>${numero.split('-')[1]}</CbteHasta>
+      <CbteFch>${fechaComprobante.replace(/-/g, '')}</CbteFch>
+      <ImpTotal>${importeTotal.replace('.', ',')}</ImpTotal>
+      <ImpNeto>${importeNeto.replace('.', ',')}</ImpNeto>
+      <ImpIVA>${iva.replace('.', ',')}</ImpIVA>
+      <FchServDesde>${fechaComprobante.replace(/-/g, '')}</FchServDesde>
+      <FchServHasta>${fechaComprobante.replace(/-/g, '')}</FchServHasta>
+      <FchVtoPago>${fechaComprobante.replace(/-/g, '')}</FchVtoPago>
+    </FECabecera>
+    <FeDet>
+      <DocTipo>96</DocTipo>
+      <DocNro>${String(datos.dni || '00000000').replace(/\D/g, '')}</DocNro>
+      <CodigoDetalle>0</CodigoDetalle>
+      <Cantidad>1</Cantidad>
+      <UniMed>7</UniMed>
+      <PrecioUnitario>${importeTotal.replace('.', ',')}</PrecioUnitario>
+      <ImporteItem>${importeTotal.replace('.', ',')}</ImporteItem>
+      <IVA>21</IVA>
+    </FeDet>
+  </FeDetReq>
+</FEAutRequest>`;
+
+      // ✅ DETERMINAR URL SEGÚN ENTORNO
+      const esProduccion = ENTORNO.toLowerCase() === 'produccion';
+      const urlWSFE = esProduccion
+        ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest'
+        : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest';
+
+      console.log("📡 Enviando a:", urlWSFE);
+
+      // ✅ ENVIAR A AFIP
+      const respuestaAFIP = await hacerPeticionSOAP(urlWSFE, xmlFactura);
+      
+      // ✅ EXTRAER CAE DE LA RESPUESTA
+      const caeMatch = respuestaAFIP.match(/<CAE>(\d+)<\/CAE>/);
+      const vencMatch = respuestaAFIP.match(/<FchVtoCAE>(\d{8})<\/FchVtoCAE>/);
+
+      if (!caeMatch) {
+        console.log("❌ Respuesta completa AFIP:", respuestaAFIP);
+        throw new Error("AFIP no devolvió CAE");
+      }
+
+      const cae = caeMatch[1];
+      let fechaVenc = "Sin vencimiento";
+      
+      if (vencMatch) {
+        const f = vencMatch[1];
+        fechaVenc = `${f.slice(6,8)}/${f.slice(4,6)}/${f.slice(0,4)}`;
+      } else {
+        const f = new Date();
+        f.setDate(f.getDate() + 10);
+        fechaVenc = f.toLocaleDateString('es-AR');
+      }
 
       console.log(`✅ ✅ CAE OFICIAL RECIBIDO DE AFIP: ${cae}`);
+      console.log(`📅 Vencimiento CAE: ${fechaVenc}`);
+
       return {
         exito: true,
         cae: cae,
-        vencimiento: fechaVenc.toLocaleDateString('es-AR'),
+        vencimiento: fechaVenc,
         numeroAFIP: numero,
         oficial: true
       };
+
     } catch (error) {
       console.log("❌ Error enviando a AFIP:", error.message);
       console.log("⚠️ Se usó CAE de respaldo");
@@ -173,7 +249,6 @@ async function generarFacturaPDF(datos) {
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(rutaFacturas, nombreArchivo);
       const fecha = new Date().toLocaleString('es-AR');
-
       const nombreCliente = datos.nombre || 'Consumidor Final';
       const dniCliente = datos.dni || 'Consumidor Final';
       const domicilioCliente = datos.domicilio || 'Sin especificar';
@@ -230,12 +305,10 @@ async function generarFacturaPDF(datos) {
         { align: 'right' }
       );
       doc.moveDown(2);
-
       doc.fontSize(10).font('Helvetica-Oblique').fillColor('gray')
         .text('Factura generada automáticamente — MaxiMuebles S.R.L.', { align: 'center' });
 
       doc.end();
-
       stream.on('finish', () => {
         console.log(`✅ PDF GUARDADO: ${rutaCompleta}`);
         resolve({ numero, ruta: rutaCompleta, cae, nombreArchivo, oficial: datos.oficial });
@@ -261,7 +334,7 @@ async function enviarCorreoConFactura(datos) {
     const datosCompletos = { 
       ...datos, 
       numero,
-      dni: datos.dni_comprador || datos.dni || 'Consumidor Final',
+      dni: datos.dni_comprador || datos.dni || '00000000',
       domicilio: datos.domicilio_comprador || datos.domicilio || 'Sin especificar'
     };
 
@@ -311,23 +384,24 @@ async function enviarCorreoConFactura(datos) {
       `¡Hola! Gracias por tu compra 🧾\n\n` +
       `Factura N°: ${numero}\nCAE: ${respuestaAFIP.cae}\n` +
       `Vencimiento: ${respuestaAFIP.vencimiento}\n\n` +
-      `Descargala aquí: https://maximuebles-online.onrender.com${rutaPublicaPDF}`
+      `Descargala aquí: https://maximuebles-online.onrender.com/api/descargar-mi-factura/${datos.sesion_id}`
     );
     const linkWhatsApp = datosCompletos.whatsapp 
       ? `https://wa.me/${datosCompletos.whatsapp.replace(/\D/g, '')}?text=${mensaje}` 
       : null;
 
     // ✅ RESUMEN FINAL
-    console.log('\n' + '='.repeat(50));
+    console.log('\n' + '='.repeat(60));
     console.log(respuestaAFIP.oficial 
       ? '✅ ✅ FACTURA ENVIADA A AFIP — CAE OFICIAL RECIBIDO ✅ ✅' 
       : '⚠️ FACTURA GENERADA (CAE SIMULADO)');
     console.log(`🧾 Factura: ${numero}`);
     console.log(`👤 Cliente: ${datosCompletos.nombre} — DNI: ${datosCompletos.dni}`);
     console.log(`🔢 CAE: ${respuestaAFIP.cae}`);
+    console.log(`📅 Vencimiento CAE: ${respuestaAFIP.vencimiento}`);
     console.log(`📂 PDF: ${rutaPublicaPDF}`);
     if (linkWhatsApp) console.log(`📱 WhatsApp: ${linkWhatsApp}`);
-    console.log('='.repeat(50) + '\n');
+    console.log('='.repeat(60) + '\n');
 
     return {
       exito: true,
@@ -339,6 +413,7 @@ async function enviarCorreoConFactura(datos) {
       whatsappLink: linkWhatsApp,
       oficial: respuestaAFIP.oficial
     };
+
   } catch (error) {
     console.log('❌ ERROR:', error.message);
     return { exito: false, error: error.message };
@@ -359,6 +434,7 @@ function firmarXML(certPem, clavePem, fechaGen, fechaVenc) {
   </header>
   <CUITRepresentado>${CUIT_EMPRESA.replace(/-/g, '')}</CUITRepresentado>
 </loginTicketRequest>`;
+
     const clave = crypto.createPrivateKey({ key: clavePem.replace(/\\n/g, '\n'), format: 'pem' });
     const firma = crypto.createSign('sha256WithRSAEncryption');
     firma.update(xmlParaFirmar);
@@ -368,13 +444,6 @@ function firmarXML(certPem, clavePem, fechaGen, fechaVenc) {
     console.log("⚠️ Error firmando:", e.message);
     return "";
   }
-}
-
-async function solicitarCAE_AFIP(ticket, datosFactura) {
-  // ⚠️ Aquí se arma el envío completo a WSFE
-  // Por compatibilidad inicial, retorna CAE simulado hasta completar el XML
-  // El ticket ya se obtiene real → solo falta el cuerpo del comprobante
-  return "PENDIENTE-XML";
 }
 
 async function hacerPeticionHTTPS(url, xml) {
@@ -403,6 +472,38 @@ async function hacerPeticionHTTPS(url, xml) {
     });
     req.on('error', reject);
     req.write(xml);
+    req.end();
+  });
+}
+
+async function hacerPeticionSOAP(url, xmlBody) {
+  const soap = `<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    ${xmlBody}
+  </soap:Body>
+</soap:Envelope>`;
+
+  return new Promise((resolve, reject) => {
+    const uri = new URL(url);
+    const opciones = {
+      hostname: uri.hostname,
+      port: 443,
+      path: uri.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FEAutRequest',
+        'Content-Length': Buffer.byteLength(soap)
+      }
+    };
+    const req = https.request(opciones, res => {
+      let respuesta = '';
+      res.on('data', d => respuesta += d);
+      res.on('end', () => resolve(respuesta));
+    });
+    req.on('error', reject);
+    req.write(soap);
     req.end();
   });
 }
