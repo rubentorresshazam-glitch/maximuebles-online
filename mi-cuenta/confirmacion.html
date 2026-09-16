@@ -11,12 +11,10 @@
     <!-- ✅ GEOLOCALIZACIÓN -->
     <meta name="geo.region" content="AR-R">
     <meta name="geo.placename" content="Valle Medio, Río Negro">
-    <!-- ✅ COLOR EN NAVEGADOR MÓVIL -->
-    <meta name="theme-color" content="#006633">
     <!-- Fuentes e Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/confirmacion.css?v=3">
+    <link rel="stylesheet" href="/css/confirmacion.css?v=4">
 </head>
 <body>
     <!-- BARRA SUPERIOR -->
@@ -27,7 +25,6 @@
             <div class="topbar-item"><i class="fa-solid fa-check-circle"></i> Pago verificado</div>
         </div>
     </section>
-
     <!-- ENCABEZADO CON LOGO -->
     <header class="header header-simple">
         <div class="header-top-container">
@@ -38,7 +35,6 @@
             </div>
         </div>
     </header>
-
     <!-- CONTENIDO PRINCIPAL -->
     <main class="confirmacion-container">
         <!-- ✅ MENSAJE DE ÉXITO -->
@@ -74,10 +70,12 @@
                 <span class="valor total" id="mp-total">$ 0,00</span>
             </div>
         </div>
-               <!-- 🧾 DESCARGAR FACTURA EN PDF DIRECTAMENTE -->
+
+        <!-- 🧾 GENERAR FACTURA → CARGA PLANTILLA EN ESTA PÁGINA -->
         <div class="tarjeta-factura">
-            <h2><i class="fa-solid fa-file-pdf"></i> Descargar tu Factura</h2>
-            <p class="texto-ayuda">Escribí tu WhatsApp y generá tu factura en PDF para descargarla. Tu número quedará guardado en nuestro sistema.</p>
+            <h2><i class="fa-solid fa-file-pdf"></i> Tu Factura</h2>
+            <p class="texto-ayuda">Completá tu número de WhatsApp y generá tu factura. Todo queda registrado automáticamente.</p>
+            
             <form id="form-factura">
                 <div class="form-grupo">
                     <label>¿Querés descargar tu factura en PDF?</label>
@@ -88,21 +86,46 @@
                         </label>
                         <label class="radio-label">
                             <input type="radio" name="enviar_factura" value="si" onchange="mostrarCampoWhatsApp()">
-                            <span>Sí, descargar mi factura</span>
+                            <span>Sí, generar mi factura</span>
                         </label>
                     </div>
                 </div>
+
                 <div id="campo-whatsapp" class="campos-ocultos">
                     <div class="form-grupo">
                         <label for="whatsapp_cliente">Tu WhatsApp * (obligatorio)</label>
                         <input type="tel" id="whatsapp_cliente" placeholder="Ej: +54 9 294 412-3456" required>
                     </div>
-                    <button type="button" class="btn btn-enviar-factura" onclick="generarYDescargarPDF()">
-                        <i class="fa-solid fa-download"></i> Generar y Descargar Factura PDF
+                    
+                    <button type="button" class="btn btn-enviar-factura" onclick="generarFacturaAqui()">
+                        <i class="fa-solid fa-magic"></i> Generar y Ver Factura
                     </button>
-                    <p id="mensaje-descarga" style="margin-top:15px; display:none;"></p>
+                    
+                    <p id="mensaje-descarga" class="mensaje-descarga"></p>
                 </div>
             </form>
+
+            <!-- ✅ LA FACTURA APARECE ACÁ ABAJO SIN IR A OTRA PÁGINA -->
+            <div id="contenedor-factura-generada" class="contenedor-factura-generada">
+                <hr class="separador-factura">
+                <h3 class="titulo-factura-generada">📄 Factura Generada</h3>
+                
+                <!-- ✅ Aquí se carga el formato de factura-imprimible.html -->
+                <div id="plantilla-factura" class="plantilla-factura"></div>
+                
+                <!-- ✅ Botones de acción -->
+                <div class="acciones-factura">
+                    <button type="button" class="btn btn-descargar-factura" onclick="descargarPDF()">
+                        <i class="fa-solid fa-download"></i> Descargar PDF
+                    </button>
+                    <button type="button" class="btn btn-imprimir-factura" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> Imprimir
+                    </button>
+                    <a id="enlace-whatsapp" href="#" target="_blank" class="btn btn-whatsapp-factura">
+                        <i class="fa-brands fa-whatsapp"></i> Enviar por WhatsApp
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- 🏠 VOLVER A INICIO -->
@@ -120,7 +143,7 @@
         </div>
     </footer>
 
-    <!-- ✅ Script con WhatsApp -->
-    <script src="/js/confirmacion.js?v=3"></script>
+    <!-- ✅ Script corregido -->
+    <script src="/js/confirmacion.js?v=4"></script>
 </body>
 </html>

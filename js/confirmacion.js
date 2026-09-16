@@ -45,28 +45,29 @@ window.addEventListener("DOMContentLoaded", () => {
     // ✅ SEPARAR: ID DE PAGO (MP) ↔ ID DEL PEDIDO (TUYO)
     // ==================================================
     const params = new URLSearchParams(window.location.search);
-    const paymentId = params.get("payment_id") || params.get("preference_id") || ""; // ← SOLO de Mercado Pago
-    const pedidoId = pedidoGuardado.pedidoId || null; // ← TU ID REAL (1, 2, 3...) o NULL
-    const sesionId = pedidoGuardado.sesion_id || pedidoGuardado.sesion || 'invitado'; // ✅ SIEMPRE tenemos sesión
+    const paymentId = params.get("payment_id") || params.get("preference_id") || "";
+    const pedidoId = pedidoGuardado.pedidoId || null;
+    const sesionId = pedidoGuardado.sesion_id || pedidoGuardado.sesion || 'invitado';
 
-    // ✅ MOSTRAR EN PANTALLA EL ID DE PAGO (al usuario le sirve ese)
+    // ✅ MOSTRAR EN PANTALLA EL ID DE PAGO
     const ordenElem = document.getElementById("mp-orden-id");
     if (ordenElem) {
         ordenElem.textContent = paymentId || pedidoId || "Pendiente";
     }
 
-    // ✅ GUARDAR SEPARADOS → NUNCA MÁS SE CONFUNDEN
+    // ✅ GUARDAR TODOS LOS DATOS
     window._datosPedido = {
         nombre: pedidoGuardado.nombre || "Consumidor Final",
         whatsapp: pedidoGuardado.whatsapp || "",
-        sesion_id: sesionId,              // ✅ SIEMPRE disponible
-        pedidoId: pedidoId,               // ✅ TU ID REAL o NULL
-        paymentId: paymentId,             // ✅ ID de Mercado Pago → solo para mostrar
+        sesion_id: sesionId,
+        pedidoId: pedidoId,
+        paymentId: paymentId,
         dni: pedidoGuardado.dni_comprador || null,
         domicilio: pedidoGuardado.domicilio_comprador || null,
         carrito,
         totalCompra
     };
+
     console.log("✅ Datos listos:", window._datosPedido);
 
     // ✅ PRE-LLENAR WHATSAPP SI YA ESTÁ GUARDADO
@@ -96,6 +97,7 @@ function mostrarProductos(carrito) {
         contenedor.innerHTML = "<span style='color:#888;'>Sin productos</span>";
         return;
     }
+
     contenedor.innerHTML = "";
     carrito.forEach(item => {
         const nombre = item.nombre || "Producto";
@@ -124,6 +126,9 @@ function mostrarCampoWhatsApp() {
     if (seleccion.value === "no") {
         const input = document.getElementById("whatsapp_cliente");
         if (input) input.value = "";
+        // ✅ Ocultar factura si desmarca
+        const contFactura = document.getElementById("contenedor-factura-generada");
+        if (contFactura) contFactura.style.display = "none";
     }
 }
 
@@ -137,8 +142,8 @@ async function peticion(url, metodo = "POST", datos = {}) {
     return await respuesta.json();
 }
 
-// ✅ GENERAR FACTURA Y DESCARGAR PDF
-async function generarYDescargarPDF() {
+// ✅ NUEVA FUNCIÓN — CARGA PLANTILLA Y MUESTRA FACTURA ACÁ MISMO
+async function generarFacturaAqui() {
     const whatsappElem = document.getElementById("whatsapp_cliente");
     const whatsapp = whatsappElem.value.trim().replace(/\s/g, '');
     const datos = window._datosPedido || {};
@@ -156,19 +161,18 @@ async function generarYDescargarPDF() {
     mensaje.textContent = "✅ Generando tu factura... por favor esperá un momento";
 
     try {
-        // ✅ PASO 1: GUARDAR WHATSAPP EN LA BASE DE DATOS
+        // ✅ PASO 1: Guardar WhatsApp en la base
         await peticion("/actualizar-factura", "POST", {
             sesion_id: datos.sesion_id,
             whatsapp: whatsapp
         });
 
-        // ✅ PASO 2: PEDIR AL SERVIDOR QUE GENERE EL PDF
-        // ⚠️ ENVIAMOS AMBOS: el servidor elige cuál usar
+        // ✅ PASO 2: Pedir factura al servidor
         const respuesta = await peticion("/generar-factura-pdf", "POST", {
             nombre: datos.nombre,
             whatsapp: whatsapp,
-            pedido_id: datos.pedidoId,        // ✅ TU ID REAL o NULL
-            sesion_id: datos.sesion_id,       // ✅ SIEMPRE presente → respaldo seguro
+            pedido_id: datos.pedidoId,
+            sesion_id: datos.sesion_id,
             dni: datos.dni,
             domicilio: datos.domicilio,
             productos: datos.carrito,
@@ -177,28 +181,90 @@ async function generarYDescargarPDF() {
 
         console.log("📄 Respuesta factura:", respuesta);
 
-        if (respuesta.ok && respuesta.datos) {
-            // ✅ MOSTRAR DATOS DE LA FACTURA
-            mensaje.textContent = "✅ ¡Factura lista! Descargando...";
-            
-            // ✅ ABRIR PDF EN NUEVA PESTAÑA → usa la ruta pública del servidor
-            if (respuesta.datos.url) {
-                window.open(respuesta.datos.url, '_blank');
-            }
-
-            mensaje.innerHTML = `
-                ✅ <strong>¡Factura descargada con éxito!</strong><br>
-                🧾 N° Factura: ${respuesta.datos.numero || '—'}<br>
-                🔢 CAE: ${respuesta.datos.cae || 'En proceso'}<br>
-                Tu WhatsApp quedó guardado en nuestro sistema.
-            `;
-        } else {
+        if (!respuesta.ok || !respuesta.datos) {
             throw new Error(respuesta.mensaje || "No se pudo generar la factura");
         }
+
+        // ✅ PASO 3: Cargar plantilla de factura-imprimible.html
+        const plantillaRes = await fetch('/facturacionadmin/factura-imprimible.html');
+        if (!plantillaRes.ok) throw new Error("No se pudo cargar el formato de factura");
+        let htmlFactura = await plantillaRes.text();
+
+        // ✅ PASO 4: Rellenar datos en la plantilla
+        const nroFactura = (respuesta.datos.numero || 'Pendiente').split('|')[0].trim();
+        const cae = respuesta.datos.cae || 'En trámite';
+        const fecha = new Date().toLocaleString('es-AR');
+
+        // ✅ Generar filas de productos
+        const filasProductos = datos.carrito.map(p => `
+            <tr>
+                <td style="padding:8px; border-bottom:1px solid #ddd;">${p.nombre}</td>
+                <td style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">${p.cantidad}</td>
+                <td style="padding:8px; border-bottom:1px solid #ddd; text-align:right;">$ ${p.precio.toLocaleString("es-AR")}</td>
+                <td style="padding:8px; border-bottom:1px solid #ddd; text-align:right;">$ ${(p.precio * p.cantidad).toLocaleString("es-AR")}</td>
+            </tr>
+        `).join('');
+
+        // ✅ Reemplazar marcadores
+        htmlFactura = htmlFactura
+            .replace(/\[NRO_FACTURA\]/g, nroFactura)
+            .replace(/\[FECHA\]/g, fecha)
+            .replace(/\[CAE\]/g, cae)
+            .replace(/\[NOMBRE_CLIENTE\]/g, datos.nombre)
+            .replace(/\[DNI\]/g, datos.dni || 'Consumidor Final')
+            .replace(/\[DIRECCION\]/g, datos.domicilio || 'Sin especificar')
+            .replace(/\[WHATSAPP\]/g, whatsapp)
+            .replace(/\[FILAS_PRODUCTOS\]/g, filasProductos)
+            .replace(/\[TOTAL\]/g, `$ ${datos.totalCompra.toLocaleString("es-AR")}`);
+
+        // ✅ PASO 5: Mostrar factura en la página
+        const contenedor = document.getElementById("plantilla-factura");
+        contenedor.innerHTML = htmlFactura;
+
+        const contFactura = document.getElementById("contenedor-factura-generada");
+        contFactura.style.display = "block";
+
+        // ✅ PASO 6: Guardar datos para descarga
+        window._facturaGenerada = {
+            sesion_id: datos.sesion_id,
+            numero: nroFactura
+        };
+
+        // ✅ PASO 7: Preparar enlace WhatsApp
+        const linkWsp = document.getElementById("enlace-whatsapp");
+        const mensajeWsp = encodeURIComponent(
+            `¡Hola ${datos.nombre}! Gracias por tu compra 🧾\n\n` +
+            `Factura N°: ${nroFactura}\nCAE: ${cae}\n\n` +
+            `Descargala aquí: https://maximuebles-online.onrender.com/api/descargar-mi-factura/${encodeURIComponent(datos.sesion_id)}`
+        );
+        linkWsp.href = `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${mensajeWsp}`;
+
+        // ✅ Mensaje final
+        mensaje.innerHTML = `
+            ✅ <strong>¡Factura generada con éxito!</strong><br>
+            🧾 N°: ${nroFactura}<br>
+            🔢 CAE: ${cae}<br>
+            Tu factura está abajo lista para descargar o imprimir.
+        `;
 
     } catch (error) {
         console.error("❌ Error:", error);
         mensaje.style.color = "red";
         mensaje.textContent = `⚠️ Error: ${error.message || "Intentá nuevamente"}`;
     }
+}
+
+// ✅ DESCARGAR PDF — usa la ruta segura
+function descargarPDF() {
+    if (!window._facturaGenerada) {
+        alert("⚠️ Primero generá tu factura");
+        return;
+    }
+    const sesion = window._facturaGenerada.sesion_id;
+    window.open(`/api/descargar-mi-factura/${encodeURIComponent(sesion)}`, '_blank');
+}
+
+// ✅ Mantener nombre antiguo por si algo lo llama → redirige a la nueva
+async function generarYDescargarPDF() {
+    await generarFacturaAqui();
 }

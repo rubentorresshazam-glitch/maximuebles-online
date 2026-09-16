@@ -7,8 +7,44 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <!-- ✅ MISMA CARPETA → ruta corregida -->
     <link rel="stylesheet" href="facturacion.css">
+    <style>
+        /* ✅ OCULTAR BOTÓN IMPRIMIR CUANDO ESTÁ DENTRO DE confirmacion.html */
+        :host .boton-imprimir,
+        .contenedor-externo .boton-imprimir,
+        .modo-insertado .boton-imprimir {
+            display: none !important;
+        }
+        /* ✅ FORMATO FIJO A4 VERTICAL */
+        .hoja-factura {
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 12mm;
+            box-sizing: border-box;
+        }
+        /* ✅ AL IMPRIMIR → SIN DESORDEN */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            .boton-imprimir {
+                display: none !important;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .hoja-factura {
+                margin: 0;
+                padding: 12mm;
+                box-shadow: none;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="modo-insertado">
     <div class="boton-imprimir">
         <button onclick="window.print()">
             <i class="fa-solid fa-print"></i> Imprimir Factura
@@ -34,9 +70,9 @@
             </div>
             <!-- DATOS FISCALES PAREJOS A LA DERECHA -->
             <div class="datos-fiscales-der">
-                <p>Punto de Venta: <span id="punto-venta"></span></p>
-                <p>Comprobante N°: <span id="nro-comprobante"></span></p>
-                <p>Fecha de Emisión: <span id="fecha-emision"></span></p>
+                <p>Punto de Venta: <span id="punto-venta">[PUNTO_VENTA]</span></p>
+                <p>Comprobante N°: <span id="nro-comprobante">[NRO_FACTURA]</span></p>
+                <p>Fecha de Emisión: <span id="fecha-emision">[FECHA]</span></p>
                 <p>CUIT: 30-71500272-4</p>
                 <p>Ingresos Brutos: 46101497</p>
                 <p>Inicio de Actividades: 01/09/2015</p>
@@ -45,12 +81,12 @@
         <!-- CUADRO COMPRADOR -->
         <div class="cuadro-comprador">
             <div class="fila-comprador">
-                <span>DNI / CUIL: <span id="comprador-dni"></span></span>
-                <span>Apellido y Nombre / Razón Social: <span id="comprador-nombre"></span></span>
+                <span>DNI / CUIL: <span id="comprador-dni">[DNI]</span></span>
+                <span>Apellido y Nombre / Razón Social: <span id="comprador-nombre">[NOMBRE_CLIENTE]</span></span>
             </div>
             <div class="fila-comprador">
                 <span>Condición frente al IVA: Consumidor Final</span>
-                <span>Domicilio: <span id="comprador-direccion"></span></span>
+                <span>Domicilio: <span id="comprador-direccion">[DIRECCION]</span></span>
             </div>
             <div class="fila-comprador">
                 <span>Localidad: Valle Medio, Río Negro</span>
@@ -72,14 +108,14 @@
                 </tr>
             </thead>
             <tbody id="cuerpo-tabla">
-                <!-- SE LLENA AUTOMÁTICAMENTE -->
+                [FILAS_PRODUCTOS]
             </tbody>
         </table>
         <!-- TABLA TOTALES -->
         <table class="tabla-totales">
             <tr>
                 <td class="eti">Subtotal: $</td>
-                <td id="subtotal"></td>
+                <td id="subtotal">[TOTAL]</td>
             </tr>
             <tr>
                 <td class="eti">Importe Otros Tributos: $</td>
@@ -87,14 +123,14 @@
             </tr>
             <tr>
                 <td class="eti">Importe Total: $</td>
-                <td id="importe-total"></td>
+                <td id="importe-total">[TOTAL]</td>
             </tr>
         </table>
         <p class="leyenda">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</p>
         <table class="tabla-iva">
             <tr>
                 <td class="eti">IVA Contenido (21%): $</td>
-                <td id="iva"></td>
+                <td id="iva">[IVA]</td>
             </tr>
         </table>
         <!-- PIE ARCA / CAE -->
@@ -105,90 +141,86 @@
             <div class="arca-datos">
                 <div class="arca-titulo">ARCA</div>
                 <p>Comprobante Autorizado</p>
-                <p>Pág. 1/1 &nbsp;&nbsp; CAE N°: <span id="cae">En proceso</span></p>
+                <p>Pág. 1/1 &nbsp;&nbsp; CAE N°: <span id="cae">[CAE]</span></p>
                 <p>Fecha de Vto. de CAE: <span id="vto-cae">—</span></p>
                 <p class="pie-chico">Esta Agencia no se responsabiliza por los datos ingresados en el detalle de la operación.</p>
             </div>
         </div>
     </div>
-
     <script>
         // ✅ FORMATO MONEDA ARGENTINA
         function moneda(n) {
             return Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 });
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            // ✅ LEER SOLO EL NÚMERO DESDE LA URL
+        // ✅ DETECTAR MODO DE CARGA
+        const esPlantilla = document.body.innerHTML.includes('[NRO_FACTURA]');
+        const desdeConfirmacion = window.parent !== window;
+
+        // ✅ Si se abre sola (por URL con ?nro=...) → usar lógica original
+        if (!desdeConfirmacion && !esPlantilla) {
+            cargarDesdeURL();
+        }
+
+        // ✅ LÓGICA ORIGINAL: abrir por ?nro=
+        async function cargarDesdeURL() {
             const p = new URLSearchParams(window.location.search);
             const nroFactura = p.get('nro');
-
             console.log("🔍 Buscando factura N°:", nroFactura);
-
+            
             if (!nroFactura) {
                 document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Número de factura no especificado</h2><p>Volvé al panel y seleccioná una compra.</p></div>`;
                 return;
             }
-
+            
             try {
-                // ✅ TRAER LISTA DESDE LA BASE
                 const respuesta = await fetch('/api/pedidos/con-factura');
                 const datos = await respuesta.json();
-
+                
                 if (!datos.ok || !datos.datos) {
                     throw new Error("No se pudieron cargar los datos");
                 }
-
-                // ✅ BUSCAR COINCIDENCIA — acepta número limpio o con CAE
+                
                 const factura = datos.datos.find(pedido => {
                     if (!pedido.factura_numero) return false;
                     const soloNumero = pedido.factura_numero.split('|')[0].trim();
                     return soloNumero === nroFactura.trim() || pedido.factura_numero.startsWith(nroFactura.trim());
                 });
-
+                
                 if (!factura) {
                     document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Factura NO encontrada</h2><p>Busqué: <strong>${nroFactura}</strong></p></div>`;
                     console.error("❌ No encontré:", nroFactura);
                     return;
                 }
-
+                
                 console.log("✅ Factura encontrada:", factura);
-
-                // ✅ SEPARAR PUNTO DE VENTA Y NÚMERO
+                
                 let numeroLimpio = factura.factura_numero.split('|')[0].trim();
                 const [puntoVenta, nroComprobante] = numeroLimpio.split('-');
-
-                // ✅ FECHA
+                
                 const fechaEmision = factura.fecha_factura || factura.fecha || new Date();
                 const fechaFormateada = new Date(fechaEmision).toLocaleDateString('es-AR', {
                     day: '2-digit', month: '2-digit', year: 'numeric'
                 });
-
-                // ✅ LLENAR DATOS DE ENCABEZADO
+                
                 document.getElementById('punto-venta').textContent = puntoVenta || '00010';
                 document.getElementById('nro-comprobante').textContent = nroComprobante || '00000001';
                 document.getElementById('fecha-emision').textContent = fechaFormateada;
-
-                // ✅ DATOS DEL CLIENTE
                 document.getElementById('comprador-nombre').textContent = factura.nombre || 'Consumidor Final';
                 document.getElementById('comprador-dni').textContent = factura.dni_comprador || '—';
-                document.getElementById('comprador-direccion').textContent = factura.direccion || '—';
-
-                // ✅ CAE SI ESTÁ EN EL NÚMERO
+                document.getElementById('comprador-direccion').textContent = factura.domicilio_comprador || '—';
+                
                 if (factura.factura_numero.includes('| CAE:')) {
                     const partes = factura.factura_numero.split('| CAE:');
                     document.getElementById('cae').textContent = partes[1].trim().split('|')[0] || '—';
                 }
-
-                // ✅ TOTALES E IVA (21%)
+                
                 const total = Number(factura.total || 0);
                 const iva = total * 0.21;
                 document.getElementById('subtotal').textContent = moneda(total);
                 document.getElementById('importe-total').textContent = moneda(total);
                 document.getElementById('iva').textContent = moneda(iva);
-
-                // ✅ LLENAR TABLA DE PRODUCTOS
-                const cuerpoTabla = document.getElementById('cuerpo-tabla');
+                
                 let productos = [];
                 try {
                     productos = typeof factura.productos === 'string' 
@@ -197,13 +229,13 @@
                 } catch {
                     productos = [];
                 }
-
+                
+                const cuerpoTabla = document.getElementById('cuerpo-tabla');
                 cuerpoTabla.innerHTML = '';
                 productos.forEach(producto => {
                     const precio = Number(producto.precio || 0);
                     const cant = Number(producto.cantidad || 1);
                     const subtotal = precio * cant;
-
                     const fila = document.createElement('tr');
                     fila.innerHTML = `
                         <td class="cod"></td>
@@ -217,12 +249,12 @@
                     `;
                     cuerpoTabla.appendChild(fila);
                 });
-
+                
             } catch (error) {
                 console.error("❌ Error cargando factura:", error);
                 document.body.innerHTML = `<div style="padding:3rem;text-align:center;"><h2>⚠️ Error</h2><p>${error.message}</p></div>`;
             }
-        });
+        }
     </script>
 </body>
 </html>
