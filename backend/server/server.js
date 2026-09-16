@@ -1,7 +1,6 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ NEON DESPIERTO + RUTA SEGURA DE FACTURAS + MERCADO PAGO
-// ✅ SIN CONFLICTOS TLS → AFIP + MP JUNTOS ✅
+// ✅ TIENDA CARGA ✅ NEON ✅ FACTURAS ✅ MERCADO PAGO
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -40,7 +39,6 @@ setInterval(async () => {
 // ==================================================
 const carpetaFacturas = path.join(__dirname, '../facturacionadmin/facturas-generadas');
 
-// ✅ CREAR CARPETA SI NO EXISTE
 if (!fs.existsSync(carpetaFacturas)) {
   try {
     fs.mkdirSync(carpetaFacturas, { recursive: true });
@@ -81,7 +79,6 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
       return res.status(404).send('⚠️ Factura aún no generada');
     }
 
-    // ✅ LIMPIAR NÚMERO (quita CAE si viene incluido)
     let nroLimpio = nroFactura;
     if (nroFactura.includes('|')) {
       nroLimpio = nroFactura.split('|')[0].trim();
@@ -89,7 +86,6 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
 
     const nombreArchivo = `Factura-${nroLimpio}.pdf`;
     const rutaCompletaArchivo = path.join(carpetaFacturas, nombreArchivo);
-
     console.log("📄 Buscando:", rutaCompletaArchivo);
 
     if (!fs.existsSync(rutaCompletaArchivo)) {
@@ -121,7 +117,14 @@ const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com"
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ RUTA DE ARCHIVOS ESTÁTICOS — CORRECTA
 app.use(express.static(path.join(__dirname, '../')));
+
+// ✅ SOLUCIÓN: PÁGINA PRINCIPAL → NO MÁS "Cannot GET /"
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
 
 // ==================================================
 // ✅ RUTAS DE LA TIENDA
@@ -139,7 +142,7 @@ const contactoRutas = require('./routes/contacto.routes');
 app.use('/api/contacto', contactoRutas);
 
 // ==================================================
-// 💳 MERCADO PAGO — REDIRECCIÓN CORREGIDA
+// 💳 MERCADO PAGO
 // ==================================================
 app.post('/api/crear-preferencia-pago', async (req, res) => {
   try {
@@ -209,10 +212,11 @@ app.use((req, res, siguiente) => {
   siguiente();
 });
 
+// ✅ RUTAS DE ASSETS CORREGIDAS
 const unDia = 86400000, unaSemana = unDia * 7;
-app.use('/assets', express.static(path.join(__dirname, '../../assets'), { maxAge: unaSemana }));
-app.use('/css', express.static(path.join(__dirname, '../../css'), { maxAge: unDia * 3 }));
-app.use('/js', express.static(path.join(__dirname, '../../js'), { maxAge: unDia * 3 }));
+app.use('/assets', express.static(path.join(__dirname, '../assets'), { maxAge: unaSemana }));
+app.use('/css', express.static(path.join(__dirname, '../css'), { maxAge: unDia * 3 }));
+app.use('/js', express.static(path.join(__dirname, '../js'), { maxAge: unDia * 3 }));
 
 // ==================================================
 // ✅ INICIAR SERVIDOR
