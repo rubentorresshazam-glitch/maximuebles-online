@@ -1,27 +1,26 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ RUTAS CORREGIDAS → index.html en RAÍZ
+// ✅ DESCARGA SEGURA DE FACTURAS + RUTAS CORRECTAS
+// ✅ CONEXIÓN NEON + MERCADO PAGO
 // ==================================================
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-
 const db = require('./config/database');
-
 const { MercadoPagoConfig, Preference } = require('mercadopago');
+
 const mpClient = new MercadoPagoConfig({ 
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN 
 });
 
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
-
 const app = express();
 
 // ==================================================
-// ✅ MANTENER NEON DESPIERTO
+// ✅ MANTENER NEON DESPIERTO CADA 3 MINUTOS
 // ==================================================
 setInterval(async () => {
   try {
@@ -33,10 +32,9 @@ setInterval(async () => {
 }, 180000);
 
 // ==================================================
-// ✅ CARPETA DE FACTURAS
+// ✅ CARPETA DE FACTURAS — RUTA CORRECTA
 // ==================================================
 const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
-
 if (!fs.existsSync(carpetaFacturas)) {
   try {
     fs.mkdirSync(carpetaFacturas, { recursive: true });
@@ -46,12 +44,13 @@ if (!fs.existsSync(carpetaFacturas)) {
   }
 }
 
+// ✅ BLOQUEAR ACCESO DIRECTO A LA CARPETA DE FACTURAS
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
 
 // ==================================================
-// ✅ DESCARGA SEGURA DE FACTURAS
+// ✅ DESCARGA SEGURA DE FACTURAS → POR sesion_id 🔒
 // ==================================================
 app.get('/api/descargar-mi-factura/*', async (req, res) => {
   try {
@@ -106,7 +105,7 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
 });
 
 // ==================================================
-// ✅ CONFIGURACIÓN GENERAL — RUTAS CORREGIDAS
+// ✅ CONFIGURACIÓN GENERAL
 // ==================================================
 const PUERTO = process.env.PORT || 10000;
 const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com";
@@ -115,10 +114,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ DESDE backend/server/ → subir 2 niveles = raíz del proyecto
+// ✅ ARCHIVOS ESTÁTICOS — DESDE RAÍZ DEL PROYECTO
 app.use(express.static(path.join(__dirname, '../../')));
 
-// ✅ PÁGINA PRINCIPAL — CORREGIDA
+// ✅ PÁGINA PRINCIPAL
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../index.html'));
 });
@@ -209,7 +208,7 @@ app.use((req, res, siguiente) => {
   siguiente();
 });
 
-// ✅ ASSETS — CORREGIDOS
+// ✅ CACHÉ DE RECURSOS
 const unDia = 86400000, unaSemana = unDia * 7;
 app.use('/assets', express.static(path.join(__dirname, '../../assets'), { maxAge: unaSemana }));
 app.use('/css', express.static(path.join(__dirname, '../../css'), { maxAge: unDia * 3 }));

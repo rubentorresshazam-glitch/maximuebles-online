@@ -19,9 +19,40 @@
 /* ✅ ENCABEZADO — LOGO A LA DERECHA */
 .header-top-container {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     padding: 8px 20px;
+    width: 100%;
+}
+.logo {
+    margin-left: auto; /* Logo a la derecha */
+}
+/* ✅ Botones de acción con colores */
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366, #128C7E) !important;
+    color: white !important;
+}
+.btn-whatsapp:hover {
+    background: linear-gradient(135deg, #128C7E, #075E54) !important;
+    transform: translateY(-2px);
+}
+.btn-afip {
+    background: linear-gradient(135deg, #0066CC, #004999) !important;
+    color: white !important;
+}
+.btn-afip:hover {
+    background: linear-gradient(135deg, #004999, #003366) !important;
+    transform: translateY(-2px);
+}
+.acciones-factura {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+.acciones-factura button {
+    flex: 1;
+    min-width: 180px;
 }
 </style>
 </head>
@@ -47,15 +78,15 @@
     <!-- Encabezado con Logo a la Derecha -->
     <header class="header header-simple">
         <div class="header-top-container">
-            <div class="logo">
-                <a href="/index.html" class="logo-link">
-                    <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
-                </a>
-            </div>
-            <div class="header-right">
+            <div class="header-left">
                 <a href="../index.html" class="btn-secundario">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>Volver al Inicio</span>
+                </a>
+            </div>
+            <div class="logo">
+                <a href="/index.html" class="logo-link">
+                    <img src="/assets/logos/logomaxibuebles.png" alt="MaxiMuebles - Tienda de Muebles en Río Negro" class="logo-imagen">
                 </a>
             </div>
         </div>

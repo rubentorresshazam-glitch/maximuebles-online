@@ -1,7 +1,8 @@
 // ==================================================
 // GESTIÓN DE FACTURACIÓN · MAXIMUEBLES
 // ✅ CONECTADO A LA BASE DE DATOS → TRAE FACTURAS REALES
-// ✅ ENLACE SEGURO POR sesion_id → SOLO DESCARGA LA SUYA 🔒
+// ✅ ENLACE DIRECTO AL PDF + CORTO + SEGURO 🔒
+// ✅ Envío por WhatsApp con enlace listo para descargar
 // ==================================================
 let compraSeleccionada = null;
 let listaCompras = [];
@@ -48,6 +49,7 @@ async function cargarListaCompras() {
         fechaCompra = new Date(compra.fecha).toISOString().split('T')[0];
       }
       const coincideFecha = !fechaFiltro || fechaCompra === fechaFiltro;
+
       return coincideTexto && coincideFecha;
     });
 
@@ -115,6 +117,7 @@ async function cargarListaCompras() {
 function verDetalleFactura(compraId) {
   const compra = listaCompras.find(c => c.id === compraId);
   if (!compra) return alert("❌ Compra no encontrada");
+
   compraSeleccionada = compra;
 
   // ✅ PARSEAR PRODUCTOS
@@ -195,14 +198,17 @@ function abrirFacturaParaImprimir() {
     alert('⚠️ Primero seleccioná una compra de la lista');
     return;
   }
+
   let nroLimpio = compraSeleccionada.factura_numero || '';
   if (nroLimpio.includes('|')) {
     nroLimpio = nroLimpio.split('|')[0].trim();
   }
+
   if (!nroLimpio || nroLimpio === "Pendiente") {
     alert("⚠️ Esta compra todavía no tiene factura generada");
     return;
   }
+
   console.log("🧾 Abriendo factura N°:", nroLimpio);
   window.open(`factura-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
 }
@@ -215,21 +221,25 @@ function abrirRemitoParaImprimir() {
     alert('⚠️ Primero seleccioná una compra de la lista');
     return;
   }
+
   let nroLimpio = compraSeleccionada.factura_numero || '';
   if (nroLimpio.includes('|')) {
     nroLimpio = nroLimpio.split('|')[0].trim();
   }
+
   if (!nroLimpio || nroLimpio === "Pendiente") {
     alert("⚠️ Esta compra todavía no tiene factura generada");
     return;
   }
+
   console.log("📄 Abriendo remito N°:", nroLimpio);
   window.open(`remito-imprimible.html?nro=${encodeURIComponent(nroLimpio)}`, '_blank');
 }
 
 // ==================================================
-// 📱 ENVIAR FACTURA POR WHATSAPP AL CLIENTE 🔒 SEGURO
-// ✅ ENLACE POR sesion_id → NADIE VE LA AJENA
+// 📱 ENVIAR FACTURA POR WHATSAPP — ENLACE DIRECTO AL PDF ✅
+// ✅ Enlace corto y funcional → abre directamente el PDF
+// ✅ Cada cliente ve SOLO su factura 🔒
 // ==================================================
 function enviarPorWhatsApp() {
   if (!compraSeleccionada) {
@@ -260,18 +270,25 @@ function enviarPorWhatsApp() {
     nroFacturaLimpio = nroFacturaLimpio.split('|')[0].trim();
   }
 
-  // ✅ ENLACE SEGURO POR sesion_id → NO SE ADIVINA 🔒
+  // ✅ ENLACE DIRECTO AL PDF — CORTO Y FUNCIONAL
   const sesionId = compraSeleccionada.sesion_id || 'sin-sesion';
   const enlacePDF = `https://maximuebles-online.onrender.com/api/descargar-mi-factura/${encodeURIComponent(sesionId)}`;
 
-  // ✅ MENSAJE COMPLETO CON ENLACE
+  // ✅ MENSAJE CLARO → EL ENLACE ABRE EL PDF DIRECTAMENTE
   const mensaje = `🧾 *Factura MAXIMUEBLES S.R.L.*
+
 Hola ${compraSeleccionada.nombre}! ✅ Gracias por tu compra.
+
 Te adjunto tu factura electrónica:
+
 📄 *Factura N°:* ${nroFacturaLimpio}
 💰 *Total:* $ ${Number(compraSeleccionada.total).toLocaleString('es-AR')}
+
 📥 *Descargar factura en PDF:*
 ${enlacePDF}
+
+👉 Tocá el enlace y se descarga automáticamente.
+
 Gracias por confiar en nosotros! 🛋️
 MaxiMuebles — Valle Medio, Río Negro`;
 
@@ -283,7 +300,7 @@ MaxiMuebles — Valle Medio, Río Negro`;
   console.log("📱 Número:", numero);
   console.log("🧾 Factura:", nroFacturaLimpio);
   console.log("🔑 sesion_id:", sesionId);
-  console.log("📥 Enlace seguro:", enlacePDF);
+  console.log("📥 Enlace PDF:", enlacePDF);
 }
 
 // ==================================================
