@@ -1,6 +1,6 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ TIENDA CARGA ✅ NEON ✅ FACTURAS ✅ MERCADO PAGO
+// ✅ RUTAS CORREGIDAS → index.html en RAÍZ
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -8,10 +8,8 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-// ✅ CONEXIÓN A BASE DE DATOS
 const db = require('./config/database');
 
-// ✅ MERCADO PAGO
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const mpClient = new MercadoPagoConfig({ 
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN 
@@ -23,7 +21,7 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 const app = express();
 
 // ==================================================
-// ✅ MANTENER NEON DESPIERTO — CADA 3 MINUTOS
+// ✅ MANTENER NEON DESPIERTO
 // ==================================================
 setInterval(async () => {
   try {
@@ -35,9 +33,9 @@ setInterval(async () => {
 }, 180000);
 
 // ==================================================
-// ✅ CARPETA DE FACTURAS — RUTA CORRECTA
+// ✅ CARPETA DE FACTURAS
 // ==================================================
-const carpetaFacturas = path.join(__dirname, '../facturacionadmin/facturas-generadas');
+const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
 
 if (!fs.existsSync(carpetaFacturas)) {
   try {
@@ -48,13 +46,12 @@ if (!fs.existsSync(carpetaFacturas)) {
   }
 }
 
-// ❌ BLOQUEAR ACCESO DIRECTO A LA CARPETA
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
 
 // ==================================================
-// ✅ DESCARGA SEGURA DE FACTURAS → POR sesion_id
+// ✅ DESCARGA SEGURA DE FACTURAS
 // ==================================================
 app.get('/api/descargar-mi-factura/*', async (req, res) => {
   try {
@@ -109,7 +106,7 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
 });
 
 // ==================================================
-// ✅ CONFIGURACIÓN GENERAL
+// ✅ CONFIGURACIÓN GENERAL — RUTAS CORREGIDAS
 // ==================================================
 const PUERTO = process.env.PORT || 10000;
 const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com";
@@ -118,12 +115,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ RUTA DE ARCHIVOS ESTÁTICOS — CORRECTA
-app.use(express.static(path.join(__dirname, '../')));
+// ✅ DESDE backend/server/ → subir 2 niveles = raíz del proyecto
+app.use(express.static(path.join(__dirname, '../../')));
 
-// ✅ SOLUCIÓN: PÁGINA PRINCIPAL → NO MÁS "Cannot GET /"
+// ✅ PÁGINA PRINCIPAL — CORREGIDA
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(path.join(__dirname, '../../index.html'));
 });
 
 // ==================================================
@@ -207,16 +204,16 @@ app.get('/api/estado', (req, res) => {
 app.use((req, res, siguiente) => {
   const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
   if (rutasSinHtml.includes(req.path)) {
-    return res.sendFile(path.join(__dirname, `../${req.path.slice(1)}.html`));
+    return res.sendFile(path.join(__dirname, `../../${req.path.slice(1)}.html`));
   }
   siguiente();
 });
 
-// ✅ RUTAS DE ASSETS CORREGIDAS
+// ✅ ASSETS — CORREGIDOS
 const unDia = 86400000, unaSemana = unDia * 7;
-app.use('/assets', express.static(path.join(__dirname, '../assets'), { maxAge: unaSemana }));
-app.use('/css', express.static(path.join(__dirname, '../css'), { maxAge: unDia * 3 }));
-app.use('/js', express.static(path.join(__dirname, '../js'), { maxAge: unDia * 3 }));
+app.use('/assets', express.static(path.join(__dirname, '../../assets'), { maxAge: unaSemana }));
+app.use('/css', express.static(path.join(__dirname, '../../css'), { maxAge: unDia * 3 }));
+app.use('/js', express.static(path.join(__dirname, '../../js'), { maxAge: unDia * 3 }));
 
 // ==================================================
 // ✅ INICIAR SERVIDOR
