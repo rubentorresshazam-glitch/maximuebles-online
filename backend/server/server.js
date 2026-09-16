@@ -1,8 +1,7 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
 // ✅ NEON DESPIERTO + RUTA SEGURA DE FACTURAS + MERCADO PAGO
-// ✅ CARPETA PROTEGIDA + DESCARGA POR sesion_id 🔒
-// ✅ RUTA FLEXIBLE → acepta cualquier caracter del código
+// ✅ SIN CONFLICTOS TLS → AFIP + MP JUNTOS ✅
 // ==================================================
 require('dotenv').config();
 const express = require('express');
@@ -25,7 +24,7 @@ const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
 const app = express();
 
 // ==================================================
-// ✅ TRUCO: MANTENER NEON DESPIERTO — CADA 3 MINUTOS
+// ✅ MANTENER NEON DESPIERTO — CADA 3 MINUTOS
 // ==================================================
 setInterval(async () => {
   try {
@@ -34,20 +33,30 @@ setInterval(async () => {
   } catch (e) {
     console.log('⚠️ Neon durmiendo, despertando...');
   }
-}, 180000); // 👉 3 minutos = 180.000 milisegundos
+}, 180000);
 
 // ==================================================
-// 🔒 CARPETA DE FACTURAS — BLOQUEADA SIEMPRE
+// ✅ CARPETA DE FACTURAS — RUTA CORRECTA
 // ==================================================
-const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
-// ❌ NO exponemos la carpeta públicamente → la protegemos
+const carpetaFacturas = path.join(__dirname, '../facturacionadmin/facturas-generadas');
+
+// ✅ CREAR CARPETA SI NO EXISTE
+if (!fs.existsSync(carpetaFacturas)) {
+  try {
+    fs.mkdirSync(carpetaFacturas, { recursive: true });
+    console.log('✅ Carpeta de facturas lista:', carpetaFacturas);
+  } catch (err) {
+    console.log('⚠️ Error creando carpeta:', err.message);
+  }
+}
+
+// ❌ BLOQUEAR ACCESO DIRECTO A LA CARPETA
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
 
 // ==================================================
-// ✅ RUTA SEGURA DE DESCARGA → POR sesion_id 🔒
-// ✅ VERSIÓN FLEXIBLE → acepta cualquier caracter
+// ✅ DESCARGA SEGURA DE FACTURAS → POR sesion_id
 // ==================================================
 app.get('/api/descargar-mi-factura/*', async (req, res) => {
   try {
@@ -55,15 +64,14 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
     const sesionId = decodeURIComponent(rutaCompleta);
     console.log("📥 sesion_id recibido:", sesionId);
 
-    // ✅ BUSCA EL PEDIDO EN LA BASE POR sesion_id
     const resultado = await db.query(
       'SELECT factura_numero FROM pedidos WHERE sesion_id = $1 LIMIT 1',
       [sesionId]
     );
 
     if (resultado.rows.length === 0) {
-      console.log("❌ Pedido NO encontrado en la BD. sesion_id buscado:", sesionId);
-      return res.status(404).send('❌ Pedido no encontrado — Verificá que el pedido tenga sesion_id guardado');
+      console.log("❌ Pedido NO encontrado. sesion_id:", sesionId);
+      return res.status(404).send('❌ Pedido no encontrado');
     }
 
     const nroFactura = resultado.rows[0].factura_numero;
@@ -73,23 +81,26 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
       return res.status(404).send('⚠️ Factura aún no generada');
     }
 
-    // ✅ LIMPIAMOS EL NÚMERO POR SI TRAE CAE
+    // ✅ LIMPIAR NÚMERO (quita CAE si viene incluido)
     let nroLimpio = nroFactura;
     if (nroFactura.includes('|')) {
       nroLimpio = nroFactura.split('|')[0].trim();
     }
 
-    // ✅ ARMAMOS EL NOMBRE EXACTO DEL ARCHIVO
     const nombreArchivo = `Factura-${nroLimpio}.pdf`;
     const rutaCompletaArchivo = path.join(carpetaFacturas, nombreArchivo);
 
-    console.log("📄 Buscando archivo:", rutaCompletaArchivo);
+    console.log("📄 Buscando:", rutaCompletaArchivo);
 
-    // ✅ ENTREGA EL ARCHIVO AL CLIENTE
+    if (!fs.existsSync(rutaCompletaArchivo)) {
+      console.log("❌ Archivo no existe:", rutaCompletaArchivo);
+      return res.status(404).send('❌ PDF no encontrado en el servidor');
+    }
+
     res.download(rutaCompletaArchivo, nombreArchivo, (err) => {
       if (err) {
-        console.log('❌ PDF no encontrado:', nombreArchivo, err.message);
-        res.status(404).send('❌ Factura no encontrada en el servidor');
+        console.log('❌ Error descargando:', err.message);
+        res.status(404).send('❌ No se pudo descargar');
       } else {
         console.log("✅ Descarga entregada:", nombreArchivo);
       }
@@ -102,7 +113,7 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
 });
 
 // ==================================================
-// CONFIGURACIÓN GENERAL
+// ✅ CONFIGURACIÓN GENERAL
 // ==================================================
 const PUERTO = process.env.PORT || 10000;
 const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com";
@@ -110,7 +121,7 @@ const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com"
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../../')));
+app.use(express.static(path.join(__dirname, '../')));
 
 // ==================================================
 // ✅ RUTAS DE LA TIENDA
@@ -128,13 +139,13 @@ const contactoRutas = require('./routes/contacto.routes');
 app.use('/api/contacto', contactoRutas);
 
 // ==================================================
-// 💳 MERCADO PAGO
+// 💳 MERCADO PAGO — REDIRECCIÓN CORREGIDA
 // ==================================================
 app.post('/api/crear-preferencia-pago', async (req, res) => {
   try {
     const { productos, total, datosComprador } = req.body;
     const sesion_id = req.query.sesion_id || 'invitado';
-    
+
     const items = productos.map(item => ({
       id: String(item.id),
       title: item.nombre,
@@ -161,9 +172,15 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
       }
     });
 
-    res.json({ ok: true, mensaje: 'Preferencia creada', datos: respuesta });
+    res.json({ 
+      ok: true, 
+      mensaje: 'Preferencia creada', 
+      datos: respuesta,
+      urlPago: respuesta.init_point
+    });
+
   } catch (error) {
-    console.error('❌ Error MP:', error.message);
+    console.error('❌ Error Mercado Pago:', error.message);
     res.json({ ok: false, mensaje: error.message });
   }
 });
@@ -182,12 +199,12 @@ app.get('/api/estado', (req, res) => {
 });
 
 // ==================================================
-// ✅ CACHÉ Y URLS AMIGABLES SIN .HTML
+// ✅ RUTAS AMIGABLES SIN .HTML
 // ==================================================
 app.use((req, res, siguiente) => {
   const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
   if (rutasSinHtml.includes(req.path)) {
-    return res.sendFile(path.join(__dirname, `../../${req.path.slice(1)}.html`));
+    return res.sendFile(path.join(__dirname, `../${req.path.slice(1)}.html`));
   }
   siguiente();
 });
