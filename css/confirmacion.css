@@ -1,5 +1,4 @@
 /* ===== PÁGINA DE CONFIRMACIÓN DE PAGO — UNIFICADO ===== */
-
 .confirmacion-container {
     max-width: 700px;
     margin: 0 auto;
@@ -15,19 +14,16 @@
     border-radius: 14px;
     margin-bottom: 25px;
 }
-
 .icono-exito {
     font-size: 65px;
     color: #22b548;
     margin-bottom: 15px;
 }
-
 .tarjeta-exito h1 {
     color: #ffffff;
     font-size: 26px;
     margin-bottom: 8px;
 }
-
 .subtitulo {
     color: #9ca3af;
     font-size: 16px;
@@ -41,7 +37,6 @@
     padding: 25px;
     margin-bottom: 20px;
 }
-
 .tarjeta-datos h2, .tarjeta-factura h2 {
     color: #22b548;
     font-size: 18px;
@@ -50,31 +45,26 @@
     align-items: center;
     gap: 8px;
 }
-
 .dato-fila {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-
 .dato-fila:last-child {
     border-bottom: none;
     padding-top: 14px;
     margin-top: 6px;
 }
-
 .etiqueta {
     color: #9ca3af;
     font-size: 15px;
 }
-
 .valor {
     color: #ffffff;
     font-weight: 500;
     font-size: 15px;
 }
-
 .valor.total {
     font-size: 18px;
     font-weight: 700;
@@ -88,13 +78,11 @@
     margin-bottom: 18px;
     line-height: 1.5;
 }
-
 .radio-opciones {
     display: flex;
     gap: 20px;
     margin-bottom: 15px;
 }
-
 .radio-label {
     display: flex;
     align-items: center;
@@ -102,35 +90,29 @@
     color: #e5e7eb;
     cursor: pointer;
 }
-
 .radio-label input[type="radio"] {
     accent-color: #22b548;
     width: 18px;
     height: 18px;
 }
-
 .campos-ocultos {
     display: none;
     margin-top: 18px;
     padding-top: 20px;
     border-top: 1px dashed rgba(255, 255, 255, 0.12);
 }
-
 .campos-ocultos.mostrar {
     display: block;
 }
-
 .form-grupo {
     margin-bottom: 15px;
 }
-
 .form-grupo label {
     display: block;
     color: #e5e7eb;
     margin-bottom: 6px;
     font-size: 14px;
 }
-
 .form-grupo input,
 .form-grupo select {
     width: 100%;
@@ -143,13 +125,11 @@
     outline: none;
     transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
-
 .form-grupo input:focus,
 .form-grupo select:focus {
     border-color: #22b548;
     box-shadow: 0 0 0 2px rgba(34, 181, 72, 0.15);
 }
-
 .btn-enviar-factura {
     background: linear-gradient(135deg, #22b548, #1a8a36);
     color: #000;
@@ -162,17 +142,14 @@
     margin-top: 8px;
     transition: all 0.25s ease;
 }
-
 .btn-enviar-factura:hover {
     background: linear-gradient(135deg, #1a8a36, #15702c);
     transform: translateY(-2px);
 }
-
 .acciones-finales {
     text-align: center;
     margin-top: 10px;
 }
-
 .btn-volver-inicio {
     display: inline-flex;
     align-items: center;
@@ -186,10 +163,61 @@
     text-decoration: none;
     transition: all 0.25s ease;
 }
-
 .btn-volver-inicio:hover {
     background: rgba(34, 181, 72, 0.1);
     border-color: #22b548;
+}
+
+/* ✅ CONTENEDOR FACTURA INSERTADA */
+#contenedor-factura-generada {
+    margin-top: 25px;
+    display: none;
+}
+#plantilla-factura {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.acciones-factura {
+    display: flex;
+    gap: 12px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+.acciones-factura a,
+.acciones-factura button {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    text-decoration: none;
+}
+
+/* ✅ FORMATO FIJO A4 VERTICAL AL IMPRIMIR — SIN DESORDEN */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+    body * {
+        visibility: hidden;
+    }
+    #contenedor-factura-generada,
+    #contenedor-factura-generada * {
+        visibility: visible;
+    }
+    #contenedor-factura-generada {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .acciones-factura,
+    .boton-imprimir,
+    .btn-enviar-factura,
+    .btn-volver-inicio {
+        display: none !important;
+    }
 }
 
 /* Responsive */
@@ -198,4 +226,5 @@
     .icono-exito { font-size: 52px; }
     .dato-fila { flex-direction: column; gap: 4px; }
     .radio-opciones { flex-direction: column; gap: 10px; }
+    .acciones-factura { flex-direction: column; }
 }
