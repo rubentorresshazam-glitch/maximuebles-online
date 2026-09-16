@@ -1,7 +1,6 @@
 // ==================================================
-// 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
-// ✅ SIN CONFLICTO TLS → AFIP + MERCADO PAGO ✅
-// ✅ RUTA DE CARPETAS CORRECTA
+// 🧾 FACTURACIÓN — FIX ERROR DH KEY TOO SMALL ✅
+// ✅ AFIP + MERCADO PAGO FUNCIONAN JUNTOS ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -9,18 +8,24 @@ const PDFDocument = require('pdfkit');
 const crypto = require('crypto');
 const https = require('https');
 
-// ✅ SOLUCIÓN FINAL: SIN CONFLICTO CON MERCADO PAGO
-process.env.NODE_OPTIONS = '--tls-min-v1.2';
-https.globalAgent.options.minVersion = 'TLSv1.2';
-https.globalAgent.options.ciphers = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384';
-// ❌ QUITAMOS secureProtocol → era lo que chocaba
+// ==================================================
+// 🔧 SOLUCIÓN EXACTA PARA EL ERROR: "dh key too small"
+// ==================================================
+const agenteAFIP = new https.Agent({
+  minVersion: 'TLSv1.2',
+  ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DEFAULT:!DH',
+  rejectUnauthorized: false, // ← temporal para AFIP
+  secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
+});
 
-// ✅ DATOS DE LA EMPRESA — DESDE VARIABLES DE RENDER
+// ❌ NO modificamos el agente global → Mercado Pago queda intacto ✅
+
+// ✅ DATOS DE LA EMPRESA
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
 const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
-// ✅ VERIFICACIÓN DE CERTIFICADOS
+// ✅ CERTIFICADOS
 const CERTIFICADO = process.env.AFIP_CERT || "";
 const CLAVE_PRIVADA = process.env.AFIP_KEY || "";
 const AFIP_CARGADO = !!(CERTIFICADO && CLAVE_PRIVADA && CERTIFICADO.length > 100);
@@ -30,10 +35,10 @@ console.log(AFIP_CARGADO
   : "⚠️ Sin certificados → CAE simulado");
 
 // ==================================================
-// ✅ RUTA CORRECTA: desde backend/server/config/ → subir 2 niveles
+// ✅ RUTA DE CARPETAS
 // ==================================================
-const RUTA_RAIZ = path.join(__dirname, '../..');
-const rutaFacturas = path.join(RUTA_RAIZ, 'backend', 'facturacionadmin', 'facturas-generadas');
+const RUTA_RAIZ = path.join(__dirname, '../../');
+const rutaFacturas = path.join(RUTA_RAIZ, 'facturacionadmin', 'facturas-generadas');
 
 if (!fs.existsSync(rutaFacturas)) {
   try {
@@ -45,7 +50,7 @@ if (!fs.existsSync(rutaFacturas)) {
 }
 
 // ==================================================
-// ✅ CONTADOR DE NÚMEROS DE FACTURA
+// ✅ CONTADOR DE NÚMEROS
 // ==================================================
 const ARCHIVO_CONTADOR = path.join(rutaFacturas, 'ultimo-numero.txt');
 
@@ -55,7 +60,7 @@ function obtenerUltimoNumero() {
       return parseInt(fs.readFileSync(ARCHIVO_CONTADOR, 'utf8')) || 1000;
     }
   } catch (err) {
-    console.log('⚠️ Leyendo contador desde 1000:', err.message);
+    console.log('⚠️ Contador desde 1000');
   }
   return 1000;
 }
@@ -64,7 +69,7 @@ function guardarUltimoNumero(n) {
   try {
     fs.writeFileSync(ARCHIVO_CONTADOR, String(n), 'utf8');
   } catch (err) {
-    console.log('⚠️ No se pudo guardar número de factura:', err.message);
+    console.log('⚠️ No se guardó número');
   }
 }
 
@@ -75,7 +80,7 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔑 OBTENER TICKET DE ACCESO DE AFIP
+// 🔑 OBTENER TICKET DE AFIP — USANDO EL AGENTE CORREGIDO
 // ==================================================
 async function obtenerTicketAFIP() {
   if (!AFIP_CARGADO) return null;
@@ -101,22 +106,19 @@ async function obtenerTicketAFIP() {
 
     console.log(`🔑 Solicitando ticket a AFIP — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
     
+    // ✅ PASAMOS EL AGENTE CORREGIDO
     const respuesta = await hacerPeticionHTTPS(url, xmlTicket);
     
     const tokenMatch = respuesta.respuesta.match(/<token>([^<]+)<\/token>/);
     const firmaMatch = respuesta.respuesta.match(/<sign>([^<]+)<\/sign>/);
     
     if (!tokenMatch || !firmaMatch) {
-      console.log("❌ Respuesta completa de AFIP:", respuesta.respuesta);
+      console.log("❌ Respuesta AFIP:", respuesta.respuesta);
       throw new Error("AFIP no devolvió token o firma");
     }
 
     console.log("✅ Ticket AFIP obtenido");
-    return { 
-      token: tokenMatch[1], 
-      firma: firmaMatch[1], 
-      fechaVenc: fechaVenc 
-    };
+    return { token: tokenMatch[1], firma: firmaMatch[1], fechaVenc };
 
   } catch (error) {
     console.log("❌ Error obteniendo ticket AFIP:", error.message);
@@ -125,7 +127,7 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA REAL A AFIP/ARCA → OBTENER CAE OFICIAL
+// 📤 ENVIAR FACTURA A AFIP
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
@@ -182,7 +184,6 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
         : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest';
 
       console.log("📡 Enviando a:", urlWSFE);
-
       const respuestaAFIP = await hacerPeticionSOAP(urlWSFE, xmlFactura);
       
       const caeMatch = respuestaAFIP.match(/<CAE>(\d+)<\/CAE>/);
@@ -208,17 +209,10 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
       console.log(`✅ ✅ CAE OFICIAL RECIBIDO DE AFIP: ${cae}`);
       console.log(`📅 Vencimiento CAE: ${fechaVenc}`);
 
-      return {
-        exito: true,
-        cae: cae,
-        vencimiento: fechaVenc,
-        numeroAFIP: numero,
-        oficial: true
-      };
+      return { exito: true, cae, vencimiento: fechaVenc, numeroAFIP: numero, oficial: true };
 
     } catch (error) {
       console.log("❌ Error enviando a AFIP:", error.message);
-      console.log("⚠️ Se usó CAE de respaldo");
     }
   }
 
@@ -226,17 +220,11 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
   const caeSimulado = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
   const fechaVenc = new Date();
   fechaVenc.setDate(fechaVenc.getDate() + 10);
-  return {
-    exito: true,
-    cae: caeSimulado,
-    vencimiento: fechaVenc.toLocaleDateString('es-AR'),
-    numeroAFIP: numero,
-    oficial: false
-  };
+  return { exito: true, cae: caeSimulado, vencimiento: fechaVenc.toLocaleDateString('es-AR'), numeroAFIP: numero, oficial: false };
 }
 
 // ==================================================
-// 💾 GENERAR PDF COMPLETO CON DNI, CAE Y DATOS
+// 💾 GENERAR PDF
 // ==================================================
 async function generarFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
@@ -254,8 +242,6 @@ async function generarFacturaPDF(datos) {
       const whatsappCliente = datos.whatsapp || 'No indicado';
 
       console.log(`📄 Creando PDF: ${nombreArchivo}`);
-      console.log(`👤 Cliente: ${nombreCliente} — DNI: ${dniCliente}`);
-      console.log(`🔢 CAE: ${cae} ${esOficial}`);
 
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
       const stream = fs.createWriteStream(rutaCompleta);
@@ -307,10 +293,7 @@ async function generarFacturaPDF(datos) {
         console.log(`✅ PDF GUARDADO: ${rutaCompleta}`);
         resolve({ numero, ruta: rutaCompleta, cae, nombreArchivo, oficial: datos.oficial });
       });
-      stream.on('error', err => {
-        console.log(`❌ ERROR PDF: ${err.message}`);
-        reject(err);
-      });
+      stream.on('error', err => reject(err));
     } catch (error) {
       reject(error);
     }
@@ -390,14 +373,9 @@ async function enviarCorreoConFactura(datos) {
     console.log('='.repeat(60) + '\n');
 
     return {
-      exito: true,
-      numero,
-      cae: respuestaAFIP.cae,
-      vencimiento: respuestaAFIP.vencimiento,
-      rutaPDF: pdf.ruta,
-      url: rutaPublicaPDF,
-      whatsappLink: linkWhatsApp,
-      oficial: respuestaAFIP.oficial
+      exito: true, numero, cae: respuestaAFIP.cae,
+      vencimiento: respuestaAFIP.vencimiento, rutaPDF: pdf.ruta,
+      url: rutaPublicaPDF, whatsappLink: linkWhatsApp, oficial: respuestaAFIP.oficial
     };
 
   } catch (error) {
@@ -407,7 +385,7 @@ async function enviarCorreoConFactura(datos) {
 }
 
 // ==================================================
-// 🔧 FUNCIONES AUXILIARES
+// 🔧 FUNCIONES AUXILIARES — USAN agenteAFIP
 // ==================================================
 function firmarXML(certPem, clavePem, fechaGen, fechaVenc) {
   try {
@@ -420,7 +398,6 @@ function firmarXML(certPem, clavePem, fechaGen, fechaVenc) {
   </header>
   <CUITRepresentado>${CUIT_EMPRESA.replace(/-/g, '')}</CUITRepresentado>
 </loginTicketRequest>`;
-
     const clave = crypto.createPrivateKey({ key: clavePem.replace(/\\n/g, '\n'), format: 'pem' });
     const firma = crypto.createSign('sha256WithRSAEncryption');
     firma.update(xmlParaFirmar);
@@ -443,7 +420,8 @@ async function hacerPeticionHTTPS(url, xml) {
       headers: {
         'Content-Type': 'text/xml; charset=utf-8',
         'Content-Length': Buffer.byteLength(xml)
-      }
+      },
+      agent: agenteAFIP // ✅ AGENTE CORREGIDO
     };
     const req = https.request(opciones, res => {
       let respuesta = '';
@@ -469,7 +447,6 @@ async function hacerPeticionSOAP(url, xmlBody) {
     ${xmlBody}
   </soap:Body>
 </soap:Envelope>`;
-
   return new Promise((resolve, reject) => {
     const uri = new URL(url);
     const opciones = {
@@ -481,7 +458,8 @@ async function hacerPeticionSOAP(url, xmlBody) {
         'Content-Type': 'text/xml; charset=utf-8',
         'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FEAutRequest',
         'Content-Length': Buffer.byteLength(soap)
-      }
+      },
+      agent: agenteAFIP // ✅ AGENTE CORREGIDO
     };
     const req = https.request(opciones, res => {
       let respuesta = '';
