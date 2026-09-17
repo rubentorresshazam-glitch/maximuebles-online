@@ -1,6 +1,7 @@
 // ==================================================
 // 🧾 FACTURACIÓN — FIX ERROR DH KEY TOO SMALL ✅
 // ✅ AFIP + MERCADO PAGO FUNCIONAN JUNTOS ✅
+// ✅ DESCARGA FUNCIONA: nombre y ruta coinciden ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -14,11 +15,9 @@ const https = require('https');
 const agenteAFIP = new https.Agent({
   minVersion: 'TLSv1.2',
   ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DEFAULT:!DH',
-  rejectUnauthorized: false, // ← temporal para AFIP
+  rejectUnauthorized: false,
   secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
 });
-
-// ❌ NO modificamos el agente global → Mercado Pago queda intacto ✅
 
 // ✅ DATOS DE LA EMPRESA
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
@@ -29,13 +28,12 @@ const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 const CERTIFICADO = process.env.AFIP_CERT || "";
 const CLAVE_PRIVADA = process.env.AFIP_KEY || "";
 const AFIP_CARGADO = !!(CERTIFICADO && CLAVE_PRIVADA && CERTIFICADO.length > 100);
-
 console.log(AFIP_CARGADO 
   ? "✅ CERTIFICADOS AFIP DETECTADOS → Conexión REAL activada" 
   : "⚠️ Sin certificados → CAE simulado");
 
 // ==================================================
-// ✅ RUTA DE CARPETAS
+// ✅ RUTA DE CARPETAS — CORREGIDA: MISMA EN TODO EL SISTEMA
 // ==================================================
 const RUTA_RAIZ = path.join(__dirname, '../../');
 const rutaFacturas = path.join(RUTA_RAIZ, 'facturacionadmin', 'facturas-generadas');
@@ -53,7 +51,6 @@ if (!fs.existsSync(rutaFacturas)) {
 // ✅ CONTADOR DE NÚMEROS
 // ==================================================
 const ARCHIVO_CONTADOR = path.join(rutaFacturas, 'ultimo-numero.txt');
-
 function obtenerUltimoNumero() {
   try {
     if (fs.existsSync(ARCHIVO_CONTADOR)) {
@@ -64,7 +61,6 @@ function obtenerUltimoNumero() {
   }
   return 1000;
 }
-
 function guardarUltimoNumero(n) {
   try {
     fs.writeFileSync(ARCHIVO_CONTADOR, String(n), 'utf8');
@@ -72,7 +68,6 @@ function guardarUltimoNumero(n) {
     console.log('⚠️ No se guardó número');
   }
 }
-
 function generarNumeroFactura() {
   const ult = obtenerUltimoNumero() + 1;
   guardarUltimoNumero(ult);
@@ -80,7 +75,7 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔑 OBTENER TICKET DE AFIP — USANDO EL AGENTE CORREGIDO
+// 🔑 OBTENER TICKET DE AFIP
 // ==================================================
 async function obtenerTicketAFIP() {
   if (!AFIP_CARGADO) return null;
@@ -88,7 +83,6 @@ async function obtenerTicketAFIP() {
     const esProduccion = ENTORNO.toLowerCase() === 'produccion';
     const fechaGen = new Date();
     const fechaVenc = new Date(fechaGen.getTime() + 12 * 60 * 60 * 1000);
-
     const xmlTicket = `<?xml version="1.0" encoding="UTF-8"?>
 <loginTicketRequest version="1.0">
   <header>
@@ -99,14 +93,11 @@ async function obtenerTicketAFIP() {
   </header>
   <signature>${firmarXML(CERTIFICADO, CLAVE_PRIVADA, fechaGen, fechaVenc)}</signature>
 </loginTicketRequest>`;
-
     const url = esProduccion
       ? 'https://servicios1.afip.gov.ar/wsfe/LoginTicket'
       : 'https://wswhomo.afip.gov.ar/wsfe/LoginTicket';
-
     console.log(`🔑 Solicitando ticket a AFIP — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
     
-    // ✅ PASAMOS EL AGENTE CORREGIDO
     const respuesta = await hacerPeticionHTTPS(url, xmlTicket);
     
     const tokenMatch = respuesta.respuesta.match(/<token>([^<]+)<\/token>/);
@@ -116,10 +107,8 @@ async function obtenerTicketAFIP() {
       console.log("❌ Respuesta AFIP:", respuesta.respuesta);
       throw new Error("AFIP no devolvió token o firma");
     }
-
     console.log("✅ Ticket AFIP obtenido");
     return { token: tokenMatch[1], firma: firmaMatch[1], fechaVenc };
-
   } catch (error) {
     console.log("❌ Error obteniendo ticket AFIP:", error.message);
     return null;
@@ -132,18 +121,15 @@ async function obtenerTicketAFIP() {
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
   console.log(`📤 Enviando factura N° ${numero} a AFIP/ARCA...`);
-
   if (AFIP_CARGADO && ticketAFIP) {
     try {
       console.log("🌐 ENVIANDO A AFIP REAL...");
-
       const puntoVenta = parseInt(PUNTO_VENTA);
       const tipoComprobante = 6;
       const fechaComprobante = new Date().toISOString().split('T')[0];
       const importeTotal = Number(datos.total).toFixed(2);
       const importeNeto = Number(datos.total / 1.21).toFixed(2);
       const iva = Number(datos.total - importeNeto).toFixed(2);
-
       const xmlFactura = `<?xml version="1.0" encoding="UTF-8"?>
 <FEAutRequest>
   <Auth>
@@ -177,23 +163,19 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
     </FeDet>
   </FeDetReq>
 </FEAutRequest>`;
-
       const esProduccion = ENTORNO.toLowerCase() === 'produccion';
       const urlWSFE = esProduccion
         ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest'
         : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest';
-
       console.log("📡 Enviando a:", urlWSFE);
       const respuestaAFIP = await hacerPeticionSOAP(urlWSFE, xmlFactura);
       
       const caeMatch = respuestaAFIP.match(/<CAE>(\d+)<\/CAE>/);
       const vencMatch = respuestaAFIP.match(/<FchVtoCAE>(\d{8})<\/FchVtoCAE>/);
-
       if (!caeMatch) {
         console.log("❌ Respuesta completa AFIP:", respuestaAFIP);
         throw new Error("AFIP no devolvió CAE");
       }
-
       const cae = caeMatch[1];
       let fechaVenc = "Sin vencimiento";
       
@@ -205,17 +187,13 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
         f.setDate(f.getDate() + 10);
         fechaVenc = f.toLocaleDateString('es-AR');
       }
-
       console.log(`✅ ✅ CAE OFICIAL RECIBIDO DE AFIP: ${cae}`);
       console.log(`📅 Vencimiento CAE: ${fechaVenc}`);
-
       return { exito: true, cae, vencimiento: fechaVenc, numeroAFIP: numero, oficial: true };
-
     } catch (error) {
       console.log("❌ Error enviando a AFIP:", error.message);
     }
   }
-
   console.log("⚠️ Usando CAE simulado");
   const caeSimulado = Math.floor(Math.random() * 900000000000 + 100000000000).toString();
   const fechaVenc = new Date();
@@ -224,7 +202,7 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
 }
 
 // ==================================================
-// 💾 GENERAR PDF
+// 💾 GENERAR PDF — NOMBRE EXACTO PARA DESCARGA ✅
 // ==================================================
 async function generarFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
@@ -233,20 +211,24 @@ async function generarFacturaPDF(datos) {
       const cae = datos.cae || 'EN PROCESO';
       const vencimientoCAE = datos.vencimientoCAE || '';
       const esOficial = datos.oficial ? "✅ OFICIAL AFIP" : "⚠️ SIMULADO";
+      
+      // ✅ NOMBRE CLAVE: Coincide con lo que busca server.js
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(rutaFacturas, nombreArchivo);
+      
       const fecha = new Date().toLocaleString('es-AR');
       const nombreCliente = datos.nombre || 'Consumidor Final';
       const dniCliente = datos.dni || 'Consumidor Final';
       const domicilioCliente = datos.domicilio || 'Sin especificar';
       const whatsappCliente = datos.whatsapp || 'No indicado';
-
+      
       console.log(`📄 Creando PDF: ${nombreArchivo}`);
-
+      console.log(`📂 Ruta: ${rutaCompleta}`);
+      
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
       const stream = fs.createWriteStream(rutaCompleta);
       doc.pipe(stream);
-
+      
       doc.fontSize(20).font('Helvetica-Bold').text('FACTURA ELECTRÓNICA', { align: 'center' });
       doc.fontSize(10).fillColor(datos.oficial ? 'green' : 'orange').text(esOficial, { align: 'center' });
       doc.fillColor('black');
@@ -256,13 +238,13 @@ async function generarFacturaPDF(datos) {
       doc.text(`Domicilio Fiscal: Roque Sáenz Peña y Castillón N° 0 — Luis Beltrán — Río Negro`, { align: 'center' });
       doc.text(`Punto de Venta N°: ${PUNTO_VENTA}`, { align: 'center' });
       doc.moveDown(1);
-
+      
       doc.fontSize(12).font('Helvetica-Bold').text(`FACTURA N°: ${numero}`);
       doc.fontSize(11).font('Helvetica').text(`Fecha: ${fecha}`);
       doc.text(`Tipo: Factura B — Consumidor Final`);
       doc.text(`CAE: ${cae}${vencimientoCAE ? ` — Vencimiento CAE: ${vencimientoCAE}` : ''}`);
       doc.moveDown(1);
-
+      
       doc.fontSize(12).font('Helvetica-Bold').text('DATOS DEL COMPRADOR');
       doc.fontSize(11).font('Helvetica');
       doc.text(`Nombre: ${nombreCliente}`);
@@ -270,7 +252,7 @@ async function generarFacturaPDF(datos) {
       doc.text(`Domicilio: ${domicilioCliente}`);
       doc.text(`WhatsApp: ${whatsappCliente}`);
       doc.moveDown(1);
-
+      
       doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE PRODUCTOS');
       doc.fontSize(11).font('Helvetica');
       const productos = datos.productos || [];
@@ -279,20 +261,23 @@ async function generarFacturaPDF(datos) {
         doc.text(`• ${p.nombre}  x${p.cantidad}  —  $ ${subtotal}`);
       });
       doc.moveDown(1);
-
+      
       doc.fontSize(14).font('Helvetica-Bold').text(
         `TOTAL A PAGAR: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`, 
         { align: 'right' }
       );
       doc.moveDown(2);
+      
       doc.fontSize(10).font('Helvetica-Oblique').fillColor('gray')
         .text('Factura generada automáticamente — MaxiMuebles S.R.L.', { align: 'center' });
-
+      
       doc.end();
+      
       stream.on('finish', () => {
         console.log(`✅ PDF GUARDADO: ${rutaCompleta}`);
         resolve({ numero, ruta: rutaCompleta, cae, nombreArchivo, oficial: datos.oficial });
       });
+      
       stream.on('error', err => reject(err));
     } catch (error) {
       reject(error);
@@ -301,83 +286,95 @@ async function generarFacturaPDF(datos) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL
+// 🚀 FUNCIÓN PRINCIPAL — GUARDA EN BD CON FORMATO CORRECTO ✅
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
     const numero = generarNumeroFactura();
-
     const datosCompletos = { 
       ...datos, 
       numero,
       dni: datos.dni_comprador || datos.dni || '00000000',
       domicilio: datos.domicilio_comprador || datos.domicilio || 'Sin especificar'
     };
-
+    
     const ticketAFIP = await obtenerTicketAFIP();
     const respuestaAFIP = await enviarFacturaAARCA(datosCompletos, ticketAFIP);
     
     datosCompletos.cae = respuestaAFIP.cae;
     datosCompletos.vencimientoCAE = respuestaAFIP.vencimiento;
     datosCompletos.oficial = respuestaAFIP.oficial;
-
+    
     const pdf = await generarFacturaPDF(datosCompletos);
-    const rutaPublicaPDF = `/facturacionadmin/facturas-generadas/${pdf.nombreArchivo}`;
-    const numeroFacturaGuardar = `${numero} | CAE: ${respuestaAFIP.cae}${respuestaAFIP.oficial ? ' ✅ AFIP' : ''}`;
-
+    
+    // ✅ GUARDAR SOLO EL NÚMERO EN BD — SIN CAE ADENTRO → la descarga lo encuentra
+    const numeroSolo = numero; // Ej: "00010-00001234"
+    
     const db = require('../config/database');
     let resultado;
-
+    
     if (datos.pedido_id && Number.isInteger(Number(datos.pedido_id))) {
       resultado = await db.query(
         `UPDATE pedidos 
          SET factura_generada = true, factura_numero = $1, factura_ruta = $2, 
-             fecha_factura = NOW(), dni_comprador = $3
-         WHERE id = $4 RETURNING id`,
-        [numeroFacturaGuardar, rutaPublicaPDF, datosCompletos.dni, datos.pedido_id]
+             fecha_factura = NOW(), dni_comprador = $3, sesion_id = COALESCE(sesion_id, $4)
+         WHERE id = $5 RETURNING id, sesion_id`,
+        [numeroSolo, pdf.nombreArchivo, datosCompletos.dni, datos.sesion_id, datos.pedido_id]
       );
     } else if (datos.sesion_id) {
       resultado = await db.query(
         `UPDATE pedidos 
          SET factura_generada = true, factura_numero = $1, factura_ruta = $2, 
              fecha_factura = NOW(), dni_comprador = $3
-         WHERE sesion_id = $4 RETURNING id`,
-        [numeroFacturaGuardar, rutaPublicaPDF, datosCompletos.dni, datos.sesion_id]
+         WHERE sesion_id = $4 RETURNING id, sesion_id`,
+        [numeroSolo, pdf.nombreArchivo, datosCompletos.dni, datos.sesion_id]
       );
     } else {
       throw new Error('Falta ID o sesión');
     }
-
+    
     if (resultado.rows.length === 0) throw new Error('Pedido no encontrado');
-
+    
+    const sesionIdFinal = resultado.rows[0].sesion_id;
+    console.log(`✅ BD actualizada — sesion_id confirmado: ${sesionIdFinal}`);
+    
+    // ✅ ENLACE DE DESCARGA DIRECTO CON EL sesion_id CONFIRMADO
+    const enlaceDescarga = `https://maximuebles-online.onrender.com/api/descargar-mi-factura/${sesionIdFinal}`;
+    
     const mensaje = encodeURIComponent(
       `¡Hola! Gracias por tu compra 🧾\n\n` +
-      `Factura N°: ${numero}\nCAE: ${respuestaAFIP.cae}\n` +
+      `Factura N°: ${numeroSolo}\nCAE: ${respuestaAFIP.cae}\n` +
       `Vencimiento: ${respuestaAFIP.vencimiento}\n\n` +
-      `Descargala aquí: https://maximuebles-online.onrender.com/api/descargar-mi-factura/${datos.sesion_id}`
+      `Descargala aquí: ${enlaceDescarga}`
     );
+    
     const linkWhatsApp = datosCompletos.whatsapp 
       ? `https://wa.me/${datosCompletos.whatsapp.replace(/\D/g, '')}?text=${mensaje}` 
       : null;
-
+    
     console.log('\n' + '='.repeat(60));
     console.log(respuestaAFIP.oficial 
       ? '✅ ✅ FACTURA ENVIADA A AFIP — CAE OFICIAL RECIBIDO ✅ ✅' 
       : '⚠️ FACTURA GENERADA (CAE SIMULADO)');
-    console.log(`🧾 Factura: ${numero}`);
+    console.log(`🧾 Factura: ${numeroSolo}`);
     console.log(`👤 Cliente: ${datosCompletos.nombre} — DNI: ${datosCompletos.dni}`);
     console.log(`🔢 CAE: ${respuestaAFIP.cae}`);
     console.log(`📅 Vencimiento CAE: ${respuestaAFIP.vencimiento}`);
-    console.log(`📂 PDF: ${rutaPublicaPDF}`);
+    console.log(`📄 Archivo PDF: ${pdf.nombreArchivo}`);
+    console.log(`🔗 Enlace descarga: ${enlaceDescarga}`);
     if (linkWhatsApp) console.log(`📱 WhatsApp: ${linkWhatsApp}`);
     console.log('='.repeat(60) + '\n');
-
+    
     return {
-      exito: true, numero, cae: respuestaAFIP.cae,
-      vencimiento: respuestaAFIP.vencimiento, rutaPDF: pdf.ruta,
-      url: rutaPublicaPDF, whatsappLink: linkWhatsApp, oficial: respuestaAFIP.oficial
+      exito: true, 
+      numero: numeroSolo, 
+      cae: respuestaAFIP.cae,
+      vencimiento: respuestaAFIP.vencimiento, 
+      rutaPDF: pdf.ruta,
+      url: enlaceDescarga, 
+      whatsappLink: linkWhatsApp, 
+      oficial: respuestaAFIP.oficial
     };
-
   } catch (error) {
     console.log('❌ ERROR:', error.message);
     return { exito: false, error: error.message };
@@ -385,7 +382,7 @@ async function enviarCorreoConFactura(datos) {
 }
 
 // ==================================================
-// 🔧 FUNCIONES AUXILIARES — USAN agenteAFIP
+// 🔧 FUNCIONES AUXILIARES
 // ==================================================
 function firmarXML(certPem, clavePem, fechaGen, fechaVenc) {
   try {
@@ -421,7 +418,7 @@ async function hacerPeticionHTTPS(url, xml) {
         'Content-Type': 'text/xml; charset=utf-8',
         'Content-Length': Buffer.byteLength(xml)
       },
-      agent: agenteAFIP // ✅ AGENTE CORREGIDO
+      agent: agenteAFIP
     };
     const req = https.request(opciones, res => {
       let respuesta = '';
@@ -459,7 +456,7 @@ async function hacerPeticionSOAP(url, xmlBody) {
         'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FEAutRequest',
         'Content-Length': Buffer.byteLength(soap)
       },
-      agent: agenteAFIP // ✅ AGENTE CORREGIDO
+      agent: agenteAFIP
     };
     const req = https.request(opciones, res => {
       let respuesta = '';

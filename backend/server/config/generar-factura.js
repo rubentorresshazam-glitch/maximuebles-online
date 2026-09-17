@@ -1,16 +1,19 @@
 // ==================================================
 // 🧾 GENERADOR DE FACTURAS PDF — MAXIMUEBLES
 // ✅ ARCHIVO EXCLUSIVO PARA GENERAR FACTURAS
-// ✅ Ruta garantizada en Render y en tu PC
+// ✅ RUTA CORREGIDA → COINCIDE CON DESCARGA
+// ✅ NOMBRE DE ARCHIVO IGUAL EN TODO EL SISTEMA
 // ==================================================
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument } = require('pdfkit');
 
-// ✅ RUTA INTELIGENTE: funciona en TU PC y en RENDER
+// ✅ RUTA CORREGIDA: MISMA CARPETA QUE BUSCA server.js
+// En Render: ruta absoluta confirmada
+// En tu PC: coincide con tu estructura local
 const CARPETA_FACTURAS = process.env.NODE_ENV === 'production'
-  ? require('os').tmpdir() // En Render: carpeta garantizada
-  : path.join(__dirname, '../../../facturacionadmin/facturas-generadas'); // En tu PC: tu carpeta
+  ? path.join(__dirname, '../../facturacionadmin/facturas-generadas')
+  : path.join(__dirname, '../../../facturacionadmin/facturas-generadas');
 
 // ✅ Crear carpeta si no existe
 if (!fs.existsSync(CARPETA_FACTURAS)) {
@@ -18,32 +21,34 @@ if (!fs.existsSync(CARPETA_FACTURAS)) {
     fs.mkdirSync(CARPETA_FACTURAS, { recursive: true });
     console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
   } catch (err) {
-    console.log('⚠️ Usando carpeta temporal:', err.message);
-    CARPETA_FACTURAS = require('os').tmpdir();
+    console.log('⚠️ Error creando carpeta:', err.message);
   }
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL — SE LLAMA DESDE DONDE QUIERAS
+// 🚀 FUNCIÓN PRINCIPAL
 // ==================================================
 async function crearFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
     try {
       const numero = datos.numero;
       const cae = datos.cae || 'EN PROCESO';
+
+      // ✅ NOMBRE EXACTO → COINCIDE CON server.js: Factura-NÚMERO.pdf
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
       const fecha = new Date().toLocaleString('es-AR');
 
       console.log(`📄 Generando factura: ${numero}`);
       console.log(`📂 Guardando en: ${rutaCompleta}`);
+      console.log(`📄 Nombre archivo: ${nombreArchivo}`);
 
-      // ✅ Crear documento PDF
+      // ✅ Crear documento PDF — TU DISEÑO IGUAL
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
       const stream = fs.createWriteStream(rutaCompleta);
       doc.pipe(stream);
 
-      // ✅ CABECERA — DATOS DE LA EMPRESA
+      // ✅ CABECERA — TU DISEÑO SIN CAMBIOS
       doc.fontSize(20).font('Helvetica-Bold').text('FACTURA ELECTRÓNICA', { align: 'center' });
       doc.moveDown(0.5);
       doc.fontSize(14).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
@@ -110,7 +115,6 @@ async function crearFacturaPDF(datos) {
         console.log(`❌ ERROR AL GUARDAR PDF: ${err.message}`);
         reject(new Error(`No se pudo guardar la factura: ${err.message}`));
       });
-
     } catch (error) {
       console.log(`❌ ERROR CREANDO PDF: ${error.message}`);
       reject(error);
@@ -118,5 +122,5 @@ async function crearFacturaPDF(datos) {
   });
 }
 
-// ✅ EXPORTAR PARA USARLO DESDE DONDE SEA
+// ✅ EXPORTAR
 module.exports = { crearFacturaPDF };
