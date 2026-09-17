@@ -74,7 +74,7 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔑 OBTENER TICKET DE AFIP
+// 🔑 OBTENER TICKET DE AFIP — URL CORREGIDA ✅
 // ==================================================
 async function obtenerTicketAFIP() {
   if (!AFIP_CARGADO) return null;
@@ -82,6 +82,7 @@ async function obtenerTicketAFIP() {
     const esProduccion = ENTORNO.toLowerCase() === 'produccion';
     const fechaGen = new Date();
     const fechaVenc = new Date(fechaGen.getTime() + 12 * 60 * 60 * 1000);
+    
     const xmlTicket = `<?xml version="1.0" encoding="UTF-8"?>
 <loginTicketRequest version="1.0">
   <header>
@@ -92,10 +93,14 @@ async function obtenerTicketAFIP() {
   </header>
   <signature>${firmarXML(CERTIFICADO, CLAVE_PRIVADA, fechaGen, fechaVenc)}</signature>
 </loginTicketRequest>`;
+
+    // ✅ URL CORRECTA WSAA — NO es /wsfe/
     const url = esProduccion
-      ? 'https://servicios1.afip.gov.ar/wsfe/LoginTicket'
-      : 'https://wswhomo.afip.gov.ar/wsfe/LoginTicket';
+      ? 'https://wsaa.afip.gov.ar/wsaa/services/LoginTicket'
+      : 'https://wsaahomo.afip.gov.ar/wsaa/services/LoginTicket';
+
     console.log(`🔑 Solicitando ticket a AFIP — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
+    console.log(`📡 URL: ${url}`);
     
     const respuesta = await hacerPeticionHTTPS(url, xmlTicket);
     
@@ -106,6 +111,7 @@ async function obtenerTicketAFIP() {
       console.log("❌ Respuesta AFIP:", respuesta.respuesta);
       throw new Error("AFIP no devolvió token o firma");
     }
+    
     console.log("✅ Ticket AFIP obtenido");
     return { token: tokenMatch[1], firma: firmaMatch[1], fechaVenc };
   } catch (error) {
@@ -115,7 +121,9 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA A AFIP — CAE SIEMPRE COMO TEXTO ✅
+// 📤 ENVIAR FACTURA A AFIP — ESTRUCTURA OFICIAL WSFEv1 ✅
+// ✅ Método correcto: FECAESolicitar (NO FEAutRequest)
+// ✅ Estructura XML oficial de AFIP
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
@@ -125,63 +133,70 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
     try {
       console.log("🌐 ENVIANDO A AFIP REAL...");
       const puntoVenta = parseInt(PUNTO_VENTA);
-      const tipoComprobante = 6;
-      const fechaComprobante = new Date().toISOString().split('T')[0];
+      const tipoComprobante = 6; // 6 = Factura B
+      const fechaComprobante = new Date().toISOString().split('T')[0].replace(/-/g, '');
       const importeTotal = Number(datos.total).toFixed(2);
       const importeNeto = Number(datos.total / 1.21).toFixed(2);
       const iva = Number(datos.total - importeNeto).toFixed(2);
-      
+      const nroComprobante = parseInt(numero.split('-')[1]);
+      const cuitEmpresa = CUIT_EMPRESA.replace(/-/g, '');
+      const dniComprador = String(datos.dni || '00000000').replace(/\D/g, '');
+
+      // ✅ ESTRUCTURA OFICIAL WSFEv1 — FECAESolicitar
       const xmlFactura = `<?xml version="1.0" encoding="UTF-8"?>
-<FEAutRequest>
+<FECAESolicitarRequest xmlns="http://ar.gov.afip.dif.FEV1/">
   <Auth>
     <Token>${ticketAFIP.token}</Token>
     <Sign>${ticketAFIP.firma}</Sign>
-    <CUITRepresentado>${CUIT_EMPRESA.replace(/-/g, '')}</CUITRepresentado>
+    <Cuit>${cuitEmpresa}</Cuit>
   </Auth>
-  <FeDetReq>
-    <FECabecera>
+  <FeCAEReq>
+    <FeCabReq>
+      <CantReg>1</CantReg>
       <PtoVta>${puntoVenta}</PtoVta>
       <CbteTipo>${tipoComprobante}</CbteTipo>
-      <CbteDesde>${numero.split('-')[1]}</CbteDesde>
-      <CbteHasta>${numero.split('-')[1]}</CbteHasta>
-      <CbteFch>${fechaComprobante.replace(/-/g, '')}</CbteFch>
-      <ImpTotal>${importeTotal.replace('.', ',')}</ImpTotal>
-      <ImpNeto>${importeNeto.replace('.', ',')}</ImpNeto>
-      <ImpIVA>${iva.replace('.', ',')}</ImpIVA>
-      <FchServDesde>${fechaComprobante.replace(/-/g, '')}</FchServDesde>
-      <FchServHasta>${fechaComprobante.replace(/-/g, '')}</FchServHasta>
-      <FchVtoPago>${fechaComprobante.replace(/-/g, '')}</FchVtoPago>
-    </FECabecera>
-    <FeDet>
-      <DocTipo>96</DocTipo>
-      <DocNro>${String(datos.dni || '00000000').replace(/\D/g, '')}</DocNro>
-      <CodigoDetalle>0</CodigoDetalle>
-      <Cantidad>1</Cantidad>
-      <UniMed>7</UniMed>
-      <PrecioUnitario>${importeTotal.replace('.', ',')}</PrecioUnitario>
-      <ImporteItem>${importeTotal.replace('.', ',')}</ImporteItem>
-      <IVA>21</IVA>
-    </FeDet>
-  </FeDetReq>
-</FEAutRequest>`;
+    </FeCabReq>
+    <FeDetReq>
+      <FECAEDetRequest>
+        <Concepto>1</Concepto>
+        <DocTipo>96</DocTipo>
+        <DocNro>${dniComprador}</DocNro>
+        <CbteDesde>${nroComprobante}</CbteDesde>
+        <CbteHasta>${nroComprobante}</CbteHasta>
+        <CbteFch>${fechaComprobante}</CbteFch>
+        <ImpTotal>${importeTotal}</ImpTotal>
+        <ImpNeto>${importeNeto}</ImpNeto>
+        <ImpIVA>${iva}</ImpIVA>
+        <MonId>PES</MonId>
+        <MonCotiz>1</MonCotiz>
+      </FECAEDetRequest>
+    </FeDetReq>
+  </FeCAEReq>
+</FECAESolicitarRequest>`;
       
       const esProduccion = ENTORNO.toLowerCase() === 'produccion';
       const urlWSFE = esProduccion
-        ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest'
-        : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?op=FEAutRequest';
+        ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx'
+        : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx';
       
       console.log("📡 Enviando a:", urlWSFE);
-      const respuestaAFIP = await hacerPeticionSOAP(urlWSFE, xmlFactura);
+      const respuestaAFIP = await hacerPeticionSOAP(urlWSFE, xmlFactura, 'FECAESolicitar');
       
+      // ✅ Buscar CAE en la respuesta
       const caeMatch = respuestaAFIP.match(/<CAE>(\d+)<\/CAE>/);
       const vencMatch = respuestaAFIP.match(/<FchVtoCAE>(\d{8})<\/FchVtoCAE>/);
+      const errMatch = respuestaAFIP.match(/<Desc>([^<]+)<\/Desc>/);
       
       if (!caeMatch) {
+        if (errMatch) {
+          console.log("❌ AFIP devolvió error:", errMatch[1]);
+          throw new Error(`AFIP: ${errMatch[1]}`);
+        }
         console.log("❌ Respuesta completa AFIP:", respuestaAFIP);
         throw new Error("AFIP no devolvió CAE");
       }
       
-      const cae = caeMatch[1]; // ✅ String, nunca número
+      const cae = caeMatch[1]; // ✅ Siempre como texto
       let fechaVenc = "Sin vencimiento";
       
       if (vencMatch) {
@@ -202,14 +217,13 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
     }
   }
   
-  // ⚠️ CAE SIMULADO — AHORA EN FORMATO CORTO DE 8 DÍGITOS ✅
+  // ⚠️ CAE SIMULADO — 8 dígitos ✅
   console.log("⚠️ Usando CAE simulado");
-  const caeSimulado = String(Math.floor(Math.random() * 90000000 + 10000000)); // 8 dígitos → entra en todo ✅
+  const caeSimulado = String(Math.floor(Math.random() * 90000000 + 10000000));
   const fechaVenc = new Date();
   fechaVenc.setDate(fechaVenc.getDate() + 10);
   return { exito: true, cae: caeSimulado, vencimiento: fechaVenc.toLocaleDateString('es-AR'), numeroAFIP: numero, oficial: false };
 }
-
 // ==================================================
 // 💾 GENERAR PDF
 // ==================================================
