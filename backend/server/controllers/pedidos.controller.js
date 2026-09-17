@@ -1,7 +1,7 @@
 const db = require('../config/database');
 const { enviarCorreoConFactura } = require('../config/afip-facturacion');
 
-// ✅ Crear pedido — WhatsApp en lugar de correo
+// ✅ Crear pedido — WhatsApp + sesion_id confirmado desde BD
 exports.crearPedido = async (req, res) => {
   try {
     const { 
@@ -9,7 +9,6 @@ exports.crearPedido = async (req, res) => {
       quiero_factura, dni_comprador, domicilio_comprador
     } = req.body;
 
-    // ✅ Validar datos
     if (!nombre || !whatsapp || !direccion || !productos || productos.length === 0) {
       return res.status(400).json({ 
         ok: false,
@@ -18,39 +17,40 @@ exports.crearPedido = async (req, res) => {
     }
 
     const productosJson = JSON.stringify(productos);
-    const sesion = sesion_id || 'invitado';
+    const sesionRecibida = sesion_id || 'invitado';
     const factura = quiero_factura === true || quiero_factura === 'true';
 
-    // ✅ GUARDAR PEDIDO EN LA BASE
+    // ✅ INSERTAR Y OBTENER EL sesion_id REAL DE LA BASE
     const resultado = await db.query(
       `INSERT INTO pedidos 
        (nombre, whatsapp, telefono, direccion, productos, total, notas, 
         sesion_id, quiero_factura, dni_comprador, domicilio_comprador, estado, fecha) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pendiente', NOW())
-       RETURNING id, sesion_id`,
+       RETURNING id, sesion_id, factura_numero`,
       [
         nombre, whatsapp || null, telefono || null, direccion || '', productosJson, total, notas || '',
-        sesion, factura, dni_comprador || null, domicilio_comprador || null
+        sesionRecibida, factura, dni_comprador || null, domicilio_comprador || null
       ]
     );
 
     const pedidoId = resultado.rows[0].id;
     const sesionIdReal = resultado.rows[0].sesion_id;
-    console.log(`✅ Pedido guardado: ID ${pedidoId} — Sesión: ${sesionIdReal}`);
 
-    // ✅ RESPUESTA INMEDIATA AL CLIENTE
+    console.log(`✅ Pedido guardado: ID ${pedidoId} — Sesión REAL: ${sesionIdReal}`);
+
+    // ✅ DEVOLVER EL sesion_id REAL para que el cliente use ESTE
     res.status(201).json({
       ok: true,
       mensaje: `¡Gracias ${nombre}! Tu pedido se registró correctamente.`,
       pedidoId: pedidoId,
-      sesion_id: sesionIdReal
+      sesion_id: sesionIdReal // ← CLAVE: el cliente usa ESTE
     });
 
-    // ✅ FACTURA — SE GENERA EN SEGUNDO PLANO
+    // ✅ GENERAR FACTURA EN SEGUNDO PLANO
     if (factura) {
       enviarCorreoConFactura({
         pedido_id: pedidoId,
-        sesion_id: sesionIdReal,
+        sesion_id: sesionIdReal, // ← Usamos el REAL de la BD
         nombre,
         whatsapp,
         dni: dni_comprador,
@@ -61,7 +61,7 @@ exports.crearPedido = async (req, res) => {
         const numeroFactura = respuestaFactura?.exito ? respuestaFactura.numero : 'SIN-FACTURA';
         console.log(`✅ Factura N° ${numeroFactura} generada para pedido ${pedidoId}`);
       }).catch(err => {
-        console.log('⚠️ Factura no se pudo generar (pedido guardado OK):', err.message);
+        console.log('⚠️ Factura no se pudo generar:', err.message);
       });
     }
 
@@ -74,7 +74,7 @@ exports.crearPedido = async (req, res) => {
   }
 };
 
-// ✅ Listar TODOS los pedidos — INCLUYE factura_numero Y sesion_id
+// ✅ Listar todos los pedidos — INCLUYE sesion_id completo
 exports.listarPedidos = async (req, res) => {
   try {
     const pedidos = await db.query(
@@ -89,7 +89,7 @@ exports.listarPedidos = async (req, res) => {
   }
 };
 
-// ✅ LISTAR SOLO PEDIDOS CON FACTURA → INCLUYE sesion_id ✅ CORREGIDO
+// ✅ Listar solo pedidos con factura — TRAE EL sesion_id COMPLETO
 exports.listarConFactura = async (req, res) => {
   try {
     const pedidos = await db.query(
@@ -99,6 +99,7 @@ exports.listarConFactura = async (req, res) => {
        WHERE factura_numero IS NOT NULL 
        ORDER BY fecha DESC`
     );
+    console.log(`📋 Cargadas ${pedidos.rows.length} facturas para panel`);
     res.json({ ok: true, datos: pedidos.rows });
   } catch (error) {
     console.error('❌ Error cargando facturas:', error.message);
@@ -106,21 +107,24 @@ exports.listarConFactura = async (req, res) => {
   }
 };
 
-// ✅ Ver mis pedidos como cliente
+// ✅ Ver mis pedidos como cliente — por sesion_id EXACTO
 exports.verPedidoCliente = async (req, res) => {
   try {
     const sesion_id = req.query.sesion_id;
     if (!sesion_id) {
       return res.status(400).json({ ok: false, mensaje: 'Falta identificación de sesión' });
     }
+
     const pedidos = await db.query(
       `SELECT *, productos::text FROM pedidos WHERE sesion_id = $1 ORDER BY fecha DESC`,
       [sesion_id]
     );
+
     const datos = pedidos.rows.map(p => ({
       ...p,
       productos: JSON.parse(p.productos)
     }));
+
     res.json({ ok: true, datos });
   } catch (error) {
     console.error('❌ Error al cargar pedidos:', error.message);
@@ -135,9 +139,11 @@ exports.verDetalle = async (req, res) => {
       `SELECT *, productos::text FROM pedidos WHERE id = $1`,
       [req.params.id]
     );
+
     if (!pedido.rows.length) {
       return res.status(404).json({ ok: false, mensaje: 'Pedido no encontrado' });
     }
+
     res.json({ 
       ok: true, 
       datos: {
@@ -151,7 +157,7 @@ exports.verDetalle = async (req, res) => {
   }
 };
 
-// ✅ GUARDAR WHATSAPP DEL CLIENTE DESDE CONFIRMACIÓN
+// ✅ Actualizar WhatsApp del cliente
 exports.actualizarFactura = async (req, res) => {
   try {
     const { sesion_id, whatsapp } = req.body;
@@ -166,7 +172,7 @@ exports.actualizarFactura = async (req, res) => {
   }
 };
 
-// ✅ GENERAR FACTURA PDF Y DEVOLVER ENLACE DE DESCARGA
+// ✅ Generar factura PDF y devolver enlace
 exports.generarFacturaPDF = async (req, res) => {
   try {
     const resultado = await enviarCorreoConFactura(req.body);
@@ -174,6 +180,7 @@ exports.generarFacturaPDF = async (req, res) => {
     if (!resultado.exito) {
       return res.status(400).json({ ok: false, mensaje: "No se pudo generar la factura" });
     }
+
     res.json({ 
       ok: true, 
       mensaje: "Factura generada con éxito",
