@@ -1,7 +1,6 @@
 // ==================================================
 // 🧾 FACTURACIÓN — MAXIMUEBLES S.R.L.
-// ✅ FIX TLS: minVersion + agenteAFIP corregido ✅
-// ✅ WSAA oficial + FECAESolicitar + CMS ✅
+// ✅ FIX: SOAPAction para WSAA + TLS 1.2 ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +9,7 @@ const crypto = require('crypto');
 const https = require('https');
 
 // ==================================================
-// 🔧 SOLUCIÓN DEFINITIVA ERROR TLS ✅
+// 🔧 AGENTE TLS — 1.2 mínimo ✅
 // ==================================================
 const agenteAFIP = new https.Agent({
   minVersion: 'TLSv1.2',
@@ -79,7 +78,7 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔒 FIRMAR PARA TICKET
+// 🔒 FIRMAR TICKET
 // ==================================================
 function firmarXMLParaTicket(fechaGen, fechaVenc) {
   try {
@@ -92,9 +91,6 @@ function firmarXMLParaTicket(fechaGen, fechaVenc) {
   }
 }
 
-// ==================================================
-// 🔒 FIRMAR COMO CMS
-// ==================================================
 function firmarCMS(xml) {
   const firma = crypto.createSign('SHA256');
   firma.update(xml);
@@ -104,7 +100,7 @@ function firmarCMS(xml) {
 }
 
 // ==================================================
-// 🔑 OBTENER TICKET WSAA — URL CORRECTA ✅
+// 🔑 OBTENER TICKET WSAA — SOAPAction AGREGADO ✅
 // ==================================================
 async function obtenerTicketAFIP() {
   if (!AFIP_CARGADO) return null;
@@ -127,7 +123,6 @@ async function obtenerTicketAFIP() {
 
     const cmsFirmado = firmarCMS(xmlTRA);
 
-    // ✅ URL OFICIAL CORRECTA
     const urlWSAA = esProduccion
       ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms'
       : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms';
@@ -154,7 +149,7 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 📤 LLAMADA WSAA
+// 📤 LLAMADA WSAA — SOAPAction CORRECTO AGREGADO ✅
 // ==================================================
 async function llamarWSAA(url, cmsFirmado) {
   const uri = new URL(url);
@@ -176,6 +171,7 @@ async function llamarWSAA(url, cmsFirmado) {
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml; charset=utf-8',
+        'SOAPAction': 'http://ar.gov.afip.dif.wsaa/LoginCms', // ✅ ESTO FALTABA
         'Content-Length': Buffer.byteLength(body)
       },
       agent: agenteAFIP
@@ -198,7 +194,7 @@ async function llamarWSAA(url, cmsFirmado) {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA — FECAESolicitar ✅
+// 📤 ENVIAR FACTURA A AFIP — FECAESolicitar ✅
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
