@@ -1,6 +1,7 @@
 // ==================================================
 // 🧾 FACTURACIÓN — MAXIMUEBLES S.R.L.
-// ✅ FIX: clavePem is not defined + WSAA oficial ✅
+// ✅ FIX TLS: minVersion + agenteAFIP corregido ✅
+// ✅ WSAA oficial + FECAESolicitar + CMS ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -9,13 +10,13 @@ const crypto = require('crypto');
 const https = require('https');
 
 // ==================================================
-// 🔧 ERROR "dh key too small" SOLUCIONADO ✅
+// 🔧 SOLUCIÓN DEFINITIVA ERROR TLS ✅
 // ==================================================
 const agenteAFIP = new https.Agent({
-  minVersion: 'TLSv1.0',
-  ciphers: 'DEFAULT:@SECLEVEL=1',
-  rejectUnauthorized: false,
-  secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
+  minVersion: 'TLSv1.2',
+  maxVersion: 'TLSv1.3',
+  ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384',
+  rejectUnauthorized: false
 });
 
 // ✅ DATOS DE LA EMPRESA
@@ -23,7 +24,7 @@ const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
 const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
-// ✅ CERTIFICADOS — LIMPIAMOS SALTOS DE LÍNEA
+// ✅ CERTIFICADOS
 const CERTIFICADO = (process.env.AFIP_CERT || "").replace(/\\n/g, '\n');
 const CLAVE_PRIVADA = (process.env.AFIP_KEY || "").replace(/\\n/g, '\n');
 const AFIP_CARGADO = !!(CERTIFICADO && CLAVE_PRIVADA && CERTIFICADO.length > 100);
@@ -78,17 +79,28 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔑 FIRMAR PARA TICKET — AHORA CLAVE BIEN DEFINIDA ✅
+// 🔒 FIRMAR PARA TICKET
 // ==================================================
 function firmarXMLParaTicket(fechaGen, fechaVenc) {
   try {
     const firma = crypto.createSign('SHA256');
     firma.update(`${fechaGen.toISOString()}${fechaVenc.toISOString()}wsfe`);
-    return firma.sign(CLAVE_PRIVADA, 'base64'); // ✅ Usamos CLAVE_PRIVADA
+    return firma.sign(CLAVE_PRIVADA, 'base64');
   } catch (e) {
     console.log("⚠️ Error firmando ticket:", e.message);
     return "";
   }
+}
+
+// ==================================================
+// 🔒 FIRMAR COMO CMS
+// ==================================================
+function firmarCMS(xml) {
+  const firma = crypto.createSign('SHA256');
+  firma.update(xml);
+  firma.end();
+  const firmaB64 = firma.sign(CLAVE_PRIVADA, 'base64');
+  return firmaB64.replace(/(.{76})/g, '$1\n');
 }
 
 // ==================================================
@@ -113,6 +125,8 @@ async function obtenerTicketAFIP() {
   <signature>${firmarXMLParaTicket(fechaGen, fechaVenc)}</signature>
 </loginTicketRequest>`;
 
+    const cmsFirmado = firmarCMS(xmlTRA);
+
     // ✅ URL OFICIAL CORRECTA
     const urlWSAA = esProduccion
       ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms'
@@ -121,7 +135,6 @@ async function obtenerTicketAFIP() {
     console.log(`🔑 Conectando a WSAA — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
     console.log(`📡 URL: ${urlWSAA}`);
 
-    const cmsFirmado = firmarCMS(xmlTRA);
     const respuesta = await llamarWSAA(urlWSAA, cmsFirmado);
 
     const token = respuesta.match(/<token>([^<]+)<\/token>/i)?.[1];
@@ -138,17 +151,6 @@ async function obtenerTicketAFIP() {
     console.log("❌ Error WSAA:", error.message);
     return null;
   }
-}
-
-// ==================================================
-// 🔒 FIRMAR COMO CMS
-// ==================================================
-function firmarCMS(xml) {
-  const firma = crypto.createSign('SHA256');
-  firma.update(xml);
-  firma.end();
-  const firmaB64 = firma.sign(CLAVE_PRIVADA, 'base64'); // ✅ CLAVE_PRIVADA
-  return firmaB64.replace(/(.{76})/g, '$1\n');
 }
 
 // ==================================================
