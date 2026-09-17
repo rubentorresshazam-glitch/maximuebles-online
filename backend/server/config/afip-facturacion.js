@@ -1,7 +1,6 @@
 // ==================================================
 // 🧾 FACTURACIÓN — MAXIMUEBLES S.R.L.
-// ✅ WSAA: URLs oficiales + formato CMS + FECAESolicitar ✅
-// ✅ CAE SIEMPRE COMO TEXTO → sin error de rango ✅
+// ✅ FIX: clavePem is not defined + WSAA oficial ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +9,7 @@ const crypto = require('crypto');
 const https = require('https');
 
 // ==================================================
-// 🔧 SOLUCIÓN ERROR "dh key too small" → AFIP + MP conviven ✅
+// 🔧 ERROR "dh key too small" SOLUCIONADO ✅
 // ==================================================
 const agenteAFIP = new https.Agent({
   minVersion: 'TLSv1.0',
@@ -24,7 +23,7 @@ const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
 const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
-// ✅ CERTIFICADOS
+// ✅ CERTIFICADOS — LIMPIAMOS SALTOS DE LÍNEA
 const CERTIFICADO = (process.env.AFIP_CERT || "").replace(/\\n/g, '\n');
 const CLAVE_PRIVADA = (process.env.AFIP_KEY || "").replace(/\\n/g, '\n');
 const AFIP_CARGADO = !!(CERTIFICADO && CLAVE_PRIVADA && CERTIFICADO.length > 100);
@@ -79,18 +78,21 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔒 FIRMAR XML COMO CMS — FORMATO QUE ENTIENDE AFIP ✅
+// 🔑 FIRMAR PARA TICKET — AHORA CLAVE BIEN DEFINIDA ✅
 // ==================================================
-function firmarCMS(xml, certPem, clavePem) {
-  const firma = crypto.createSign('SHA256');
-  firma.update(xml);
-  firma.end();
-  const firmaB64 = firma.sign(clavePem, 'base64');
-  return firmaB64.replace(/(.{76})/g, '$1\n');
+function firmarXMLParaTicket(fechaGen, fechaVenc) {
+  try {
+    const firma = crypto.createSign('SHA256');
+    firma.update(`${fechaGen.toISOString()}${fechaVenc.toISOString()}wsfe`);
+    return firma.sign(CLAVE_PRIVADA, 'base64'); // ✅ Usamos CLAVE_PRIVADA
+  } catch (e) {
+    console.log("⚠️ Error firmando ticket:", e.message);
+    return "";
+  }
 }
 
 // ==================================================
-// 🔑 OBTENER TICKET WSAA — URLs OFICIALES CORREGIDAS ✅
+// 🔑 OBTENER TICKET WSAA — URL CORRECTA ✅
 // ==================================================
 async function obtenerTicketAFIP() {
   if (!AFIP_CARGADO) return null;
@@ -100,7 +102,6 @@ async function obtenerTicketAFIP() {
     const fechaVenc = new Date(fechaGen.getTime() + 12 * 60 * 60 * 1000);
     const uniqueId = Math.floor(Date.now() / 1000);
 
-    // 1. Crear solicitud
     const xmlTRA = `<?xml version="1.0" encoding="UTF-8"?>
 <loginTicketRequest version="1.0">
   <header>
@@ -109,13 +110,10 @@ async function obtenerTicketAFIP() {
     <expirationTime>${fechaVenc.toISOString()}</expirationTime>
     <service>wsfe</service>
   </header>
-  <signature>${firmarXMLParaTicket(clavePem, fechaGen, fechaVenc)}</signature>
+  <signature>${firmarXMLParaTicket(fechaGen, fechaVenc)}</signature>
 </loginTicketRequest>`;
 
-    // 2. Firmar como CMS
-    const cmsFirmado = firmarCMS(xmlTRA, certPem, clavePem);
-
-    // 3. ✅ URL OFICIAL CORRECTA
+    // ✅ URL OFICIAL CORRECTA
     const urlWSAA = esProduccion
       ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms'
       : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms';
@@ -123,10 +121,9 @@ async function obtenerTicketAFIP() {
     console.log(`🔑 Conectando a WSAA — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
     console.log(`📡 URL: ${urlWSAA}`);
 
-    // 4. Enviar
+    const cmsFirmado = firmarCMS(xmlTRA);
     const respuesta = await llamarWSAA(urlWSAA, cmsFirmado);
 
-    // 5. Extraer datos
     const token = respuesta.match(/<token>([^<]+)<\/token>/i)?.[1];
     const sign = respuesta.match(/<sign>([^<]+)<\/sign>/i)?.[1];
 
@@ -144,21 +141,18 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 🔒 FIRMAR PARA TICKET
+// 🔒 FIRMAR COMO CMS
 // ==================================================
-function firmarXMLParaTicket(clavePem, fechaGen, fechaVenc) {
-  try {
-    const firma = crypto.createSign('SHA256');
-    firma.update(`${fechaGen.toISOString()}${fechaVenc.toISOString()}wsfe`);
-    return firma.sign(clavePem, 'base64');
-  } catch (e) {
-    console.log("⚠️ Error firmando ticket:", e.message);
-    return "";
-  }
+function firmarCMS(xml) {
+  const firma = crypto.createSign('SHA256');
+  firma.update(xml);
+  firma.end();
+  const firmaB64 = firma.sign(CLAVE_PRIVADA, 'base64'); // ✅ CLAVE_PRIVADA
+  return firmaB64.replace(/(.{76})/g, '$1\n');
 }
 
 // ==================================================
-// 📤 LLAMADA WSAA CON FORMATO SOAP CORRECTO ✅
+// 📤 LLAMADA WSAA
 // ==================================================
 async function llamarWSAA(url, cmsFirmado) {
   const uri = new URL(url);
@@ -202,7 +196,7 @@ async function llamarWSAA(url, cmsFirmado) {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA A AFIP — FECAESolicitar ✅
+// 📤 ENVIAR FACTURA — FECAESolicitar ✅
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
@@ -210,7 +204,6 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
 
   if (AFIP_CARGADO && ticketAFIP) {
     try {
-      console.log("🌐 ENVIANDO A AFIP REAL...");
       const puntoVenta = parseInt(PUNTO_VENTA);
       const tipoComprobante = 6;
       const fechaComprobante = new Date().toISOString().split('T')[0].replace(/-/g, '');
@@ -221,7 +214,6 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
       const cuitEmpresa = CUIT_EMPRESA.replace(/-/g, '');
       const dniComprador = String(datos.dni || '00000000').replace(/\D/g, '');
 
-      // ✅ ESTRUCTURA OFICIAL WSFEv1
       const xmlFactura = `<?xml version="1.0" encoding="UTF-8"?>
 <FECAESolicitarRequest xmlns="http://ar.gov.afip.dif.FEV1/">
   <Auth>
