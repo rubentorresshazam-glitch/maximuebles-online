@@ -50,42 +50,54 @@ app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
 });
 
 // ==================================================
-// ✅ DESCARGA SEGURA DE FACTURAS → POR sesion_id 🔒
+// ✅ DESCARGA SEGURA DE FACTURAS — VERSIÓN CORREGIDA
 // ==================================================
-app.get('/api/descargar-mi-factura/*', async (req, res) => {
+app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
   try {
-    const rutaCompleta = req.params[0];
-    const sesionId = decodeURIComponent(rutaCompleta);
-    console.log("📥 sesion_id recibido:", sesionId);
+    const sesionId = decodeURIComponent(req.params.sesionId);
+    console.log("📥 Buscando sesion_id:", sesionId);
 
     const resultado = await db.query(
-      'SELECT factura_numero FROM pedidos WHERE sesion_id = $1 LIMIT 1',
+      'SELECT factura_numero, id FROM pedidos WHERE sesion_id = $1 LIMIT 1',
       [sesionId]
     );
 
     if (resultado.rows.length === 0) {
-      console.log("❌ Pedido NO encontrado. sesion_id:", sesionId);
+      console.log("❌ NO encontrado. sesion_id =", sesionId);
+      // 🔍 Mostrar todos los IDs guardados para comparar
+      const todos = await db.query('SELECT sesion_id FROM pedidos ORDER BY id DESC LIMIT 5');
+      console.log("📋 Últimos 5 sesion_id en BD:", todos.rows.map(r => r.sesion_id));
       return res.status(404).send('❌ Pedido no encontrado');
     }
 
-    const nroFactura = resultado.rows[0].factura_numero;
-    console.log("🧾 Factura encontrada:", nroFactura);
+    const { factura_numero, id } = resultado.rows[0];
+    console.log("✅ Pedido encontrado — ID:", id, "Factura:", factura_numero);
 
-    if (!nroFactura || nroFactura === 'Pendiente') {
+    if (!factura_numero || factura_numero === 'Pendiente') {
       return res.status(404).send('⚠️ Factura aún no generada');
     }
 
-    let nroLimpio = nroFactura;
-    if (nroFactura.includes('|')) {
-      nroLimpio = nroFactura.split('|')[0].trim();
+    let nroLimpio = factura_numero;
+    if (factura_numero.includes('|')) {
+      nroLimpio = factura_numero.split('|')[0].trim();
     }
 
     const nombreArchivo = `Factura-${nroLimpio}.pdf`;
     const rutaCompletaArchivo = path.join(carpetaFacturas, nombreArchivo);
-    console.log("📄 Buscando:", rutaCompletaArchivo);
+    
+    console.log("📄 Buscando archivo:", rutaCompletaArchivo);
+    console.log("📂 Carpeta facturas:", carpetaFacturas);
+    console.log("📄 Existe archivo:", fs.existsSync(rutaCompletaArchivo));
 
     if (!fs.existsSync(rutaCompletaArchivo)) {
-      console.log("❌ Archivo no existe:", rutaCompletaArchivo);
+      console.log("❌ Archivo NO existe en disco");
+      // Listar archivos que sí hay
+      try {
+        const archivos = fs.readdirSync(carpetaFacturas);
+        console.log("📋 Archivos en carpeta:", archivos);
+      } catch(e) {
+        console.log("⚠️ No se puede leer carpeta:", e.message);
+      }
       return res.status(404).send('❌ PDF no encontrado en el servidor');
     }
 
@@ -99,11 +111,10 @@ app.get('/api/descargar-mi-factura/*', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error descargando factura:', error.message);
+    console.error('❌ Error:', error.message);
     res.status(500).send('❌ Error del servidor');
   }
 });
-
 // ==================================================
 // ✅ CONFIGURACIÓN GENERAL
 // ==================================================
