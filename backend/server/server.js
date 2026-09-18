@@ -32,7 +32,7 @@ setInterval(async () => {
 }, 180000);
 
 // ==================================================
-// ✅ RUTA UNIFICADA DE FACTURAS — MISMA EN TODO EL SISTEMA
+// ✅ RUTA UNIFICADA DE FACTURAS
 // ==================================================
 const CARPETA_FACTURAS = path.join(__dirname, 'facturacionadmin', 'facturas-generadas');
 fs.ensureDirSync(CARPETA_FACTURAS);
@@ -142,7 +142,7 @@ const contactoRutas = require('./routes/contacto.routes');
 app.use('/api/contacto', contactoRutas);
 
 // ==================================================
-// 💳 MERCADO PAGO
+// 💳 MERCADO PAGO — Respuesta coincidente con frontend ✅
 // ==================================================
 app.post('/api/crear-preferencia-pago', async (req, res) => {
   try {
@@ -175,10 +175,13 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
       }
     });
 
+    // ✅ Coincide con lo que busca checkout.js: respPago.datos.urlPago
     res.json({ 
       ok: true, 
-      mensaje: 'Preferencia creada', 
-      urlPago: respuesta.init_point
+      mensaje: 'Preferencia creada',
+      datos: {
+        urlPago: respuesta.init_point
+      }
     });
   } catch (error) {
     console.error('❌ Error Mercado Pago:', error.message);
