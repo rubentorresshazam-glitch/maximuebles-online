@@ -83,7 +83,7 @@ function cargarResumenFinal() {
   document.getElementById("res_metodo_pago").textContent = "Pagar con Mercado Pago";
 }
 
-// ✅ PROCESAR PAGO — WHATSAPP + DATOS DE FACTURA COMPLETOS
+// ✅ PROCESAR PAGO — CORREGIDO PARA QUE LLEGUE A MERCADO PAGO ✅
 async function procesarPago() {
   const nombre = document.getElementById("nombre").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
@@ -94,7 +94,7 @@ async function procesarPago() {
   const telefono = document.getElementById("telefono").value.trim();
   const direccionCompleta = `${calle}, ${document.getElementById("piso").value.trim() || ''} - ${localidad} (${cp}), Río Negro`.trim();
 
-  // ✅ Validación: AHORA PIDE WHATSAPP en lugar de correo
+  // ✅ Validación
   if (!nombre || !whatsapp || !calle || !cp || !localidad) {
     alert("⚠️ Completá nombre, WhatsApp y dirección por favor");
     return;
@@ -102,7 +102,7 @@ async function procesarPago() {
 
   alert("✅ Preparando el pago... en unos segundos irás a Mercado Pago");
 
-  // ✅ Convertimos para el servidor
+  // ✅ Convertir productos
   const productosParaEnviar = carrito.map(item => ({
     producto_id: item.id,
     cantidad: item.cantidad,
@@ -113,7 +113,7 @@ async function procesarPago() {
   const sesion_id = obtenerSesionId();
   const quiereFactura = document.getElementById("quiero_factura")?.checked || false;
 
-  // ✅ DATOS COMPLETOS: WHATSAPP + FACTURA
+  // ✅ Datos completos
   const datosCompra = {
     nombre,
     whatsapp,
@@ -132,7 +132,7 @@ async function procesarPago() {
   localStorage.setItem("carrito_pago", JSON.stringify({ carrito: productosParaEnviar, totalCompra }));
 
   try {
-    // ✅ PASO 1: Guardar pedido en la base de datos
+    // ✅ PASO 1: Guardar pedido
     const respPedido = await peticion("/pedidos", "POST", datosCompra);
     console.log("📦 Pedido guardado:", respPedido);
 
@@ -141,23 +141,21 @@ async function procesarPago() {
       return;
     }
 
-    // ✅ PASO 2: Generar enlace de Mercado Pago
+    // ✅ PASO 2: Generar enlace de pago — NOMBRES COINCIDIENDO ✅
     const respPago = await peticion("/crear-preferencia-pago", "POST", {
       productos: carrito,
       total: totalCompra,
       sesion_id,
-      datosComprador: {
-        nombre,
-        whatsapp
-      }
+      datosComprador: { nombre, whatsapp }
     });
 
     console.log("💳 Respuesta Mercado Pago:", respPago);
 
-    if (respPago.ok && respPago.datos && respPago.datos.init_point) {
+    // ✅ AHORA COINCIDE: respPago.urlPago
+    if (respPago.ok && respPago.urlPago) {
       localStorage.removeItem("carrito");
-      alert("✅ ¡Listo! A continuación serás redirigido a Mercado Pago para finalizar tu compra");
-      window.location.href = respPago.datos.init_point;
+      alert("✅ ¡Listo! A continuación serás redirigido a Mercado Pago");
+      window.location.href = respPago.urlPago; // ✅ ESTO ES LO QUE FALTABA
     } else {
       alert(respPago.mensaje || "No se pudo generar el enlace de pago");
     }
