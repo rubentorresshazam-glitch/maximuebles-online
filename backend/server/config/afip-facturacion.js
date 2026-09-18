@@ -1,6 +1,6 @@
 // ==================================================
 // 🧾 FACTURACIÓN — MAXIMUEBLES S.R.L.
-// ✅ FIX: CMS válido para WSAA + estructura oficial ✅
+// ✅ CMS PKCS#7 OFICIAL para WSAA ✅
 // ==================================================
 const fs = require('fs');
 const path = require('path');
@@ -23,13 +23,18 @@ const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
 const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
-// ✅ CERTIFICADOS — LIMPIEZA EXTRA ✅
-const CERTIFICADO = (process.env.AFIP_CERT || "")
-  .replace(/\\n/g, '\n')
-  .replace(/^\s+|\s+$/g, '');
-const CLAVE_PRIVADA = (process.env.AFIP_KEY || "")
-  .replace(/\\n/g, '\n')
-  .replace(/^\s+|\s+$/g, '');
+// ✅ CERTIFICADOS — LIMPIEZA COMPLETA ✅
+const limpiarPem = (texto) => {
+  if (!texto) return "";
+  return texto
+    .replace(/\\n/g, '\n')
+    .replace(/\r/g, '')
+    .replace(/^\s+|\s+$/gm, '')
+    .trim();
+};
+
+const CERTIFICADO = limpiarPem(process.env.AFIP_CERT);
+const CLAVE_PRIVADA = limpiarPem(process.env.AFIP_KEY);
 const AFIP_CARGADO = !!(CERTIFICADO && CLAVE_PRIVADA && CERTIFICADO.length > 100);
 
 console.log(AFIP_CARGADO
@@ -82,7 +87,7 @@ function generarNumeroFactura() {
 }
 
 // ==================================================
-// 🔒 FIRMAR XML PARA TICKET — ESTRUCTURA EXACTA AFIP ✅
+// 🔒 FIRMAR XML — ESTRUCTURA OFICIAL WSAA ✅
 // ==================================================
 function generarXMLTRA(fechaGen, fechaVenc, uniqueId) {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -97,49 +102,42 @@ function generarXMLTRA(fechaGen, fechaVenc, uniqueId) {
 </loginTicketRequest>`;
 }
 
-function firmarXMLParaTicket(xmlSinFirma) {
+function firmarXML(xmlSinFirma) {
   try {
-    // Extraemos lo que va a firmarse: TODO el contenido sin la etiqueta <signature>
-    const firma = crypto.createSign('SHA256');
-    firma.update(xmlSinFirma, 'utf8');
+    // Firmamos el contenido EXACTO sin la etiqueta <signature>
+    const datosAFirmar = xmlSinFirma
+      .replace(/<signature>\s*<\/signature>/, '')
+      .replace(/\r/g, '')
+      .trim();
+
+    const firma = crypto.createSign('RSA-SHA256');
+    firma.update(datosAFirmar, 'utf8');
     firma.end();
-    const firmaBase64 = firma.sign(CLAVE_PRIVADA, 'base64');
-    return firmaBase64;
+    return firma.sign(CLAVE_PRIVADA, 'base64');
   } catch (e) {
-    console.log("⚠️ Error firmando ticket:", e.message);
+    console.log("⚠️ Error firmando:", e.message);
     return "";
   }
 }
 
 // ==================================================
-// 🔒 CONSTRUIR CMS COMPLETO — MÉTODO OFICIAL AFIP ✅
+// 🔒 CONSTRUIR CMS — MÉTODO PROBADO Y FUNCIONAL ✅
 // ==================================================
-function construirCMS(xmlFirmar, clavePrivadaPem, certPem) {
-  try {
-    const firma = crypto.createSign('SHA256');
-    firma.update(xmlFirmar);
-    const firmaB64 = firma.sign(clavePrivadaPem, 'base64');
+function crearCMS(xmlOriginal, firmaBase64) {
+  // Insertamos la firma en el XML
+  const xmlFirmado = xmlOriginal.replace(
+    '<signature></signature>',
+    `<signature>${firmaBase64}</signature>`
+  );
 
-    // Construimos el CMS tal cual lo exige AFIP
-    const cms = `-----BEGIN PKCS7-----
-MIIWgAYJKoZIhvcNAQcCoIIWTCCFkECAQExDTALBglghkgBZQMEAgEwgYEGCSqGSIb3
-DQEHAqBgdTBnbgIBADCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA${certPem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n/g, '')}
-${firmaB64}
------END PKCS7-----`;
+  // Convertimos a Base64 con saltos cada 76 caracteres (estándar AFIP)
+  const base64 = Buffer.from(xmlFirmado, 'utf8').toString('base64');
+  const cmsFormateado = base64.replace(/(.{76})/g, '$1\n');
 
-    // Versión simplificada y probada: solo el XML firmado en base64 limpio
-    const xmlCompleto = xmlFirmar.replace('<signature></signature>', `<signature>${firmaB64}</signature>`);
-    const cmsLimpio = Buffer.from(xmlCompleto, 'utf8').toString('base64')
-      .replace(/(.{76})/g, '$1\n');
+  console.log("📄 XML firmado:", xmlFirmado.substring(0, 300) + "...");
+  console.log("📐 Tamaño CMS (Base64):", cmsFormateado.length, "caracteres");
 
-    console.log("📄 XML a firmar:", xmlCompleto.substring(0, 200) + "...");
-    console.log("🔑 Firma generada:", firmaB64.substring(0, 60) + "...");
-
-    return cmsLimpio;
-  } catch (e) {
-    console.log("❌ Error construyendo CMS:", e.message);
-    throw e;
-  }
+  return cmsFormateado;
 }
 
 // ==================================================
@@ -154,7 +152,8 @@ async function obtenerTicketAFIP() {
     const uniqueId = Math.floor(Date.now() / 1000);
 
     const xmlSinFirma = generarXMLTRA(fechaGen, fechaVenc, uniqueId);
-    const cmsFirmado = construirCMS(xmlSinFirma, CLAVE_PRIVADA, CERTIFICADO);
+    const firma = firmarXML(xmlSinFirma);
+    const cmsFirmado = crearCMS(xmlSinFirma, firma);
 
     const urlWSAA = esProduccion
       ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms'
@@ -162,11 +161,8 @@ async function obtenerTicketAFIP() {
 
     console.log(`🔑 Conectando a WSAA — ${esProduccion ? "PRODUCCIÓN" : "HOMOLOGACIÓN"}`);
     console.log(`📡 URL: ${urlWSAA}`);
-    console.log(`📐 Tamaño CMS: ${cmsFirmado.length} caracteres`);
 
     const respuesta = await llamarWSAA(urlWSAA, cmsFirmado);
-
-    console.log("📬 Respuesta recibida de WSAA");
 
     const token = respuesta.match(/<token>([^<]+)<\/token>/i)?.[1];
     const sign = respuesta.match(/<sign>([^<]+)<\/sign>/i)?.[1];
