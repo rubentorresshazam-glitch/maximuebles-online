@@ -1,13 +1,13 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
 // ✅ DESCARGA SEGURA DE FACTURAS + RUTAS CORRECTAS
-// ✅ CONEXIÓN NEON + MERCADO PAGO
+// ✅ CONEXIÓN NEON + MERCADO PAGO + PDFKIT
 // ==================================================
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs-extra'); // ✅ Cambiado a fs-extra
 const db = require('./config/database');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 
@@ -17,6 +17,7 @@ const mpClient = new MercadoPagoConfig({
 
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
+
 const app = express();
 
 // ==================================================
@@ -32,25 +33,26 @@ setInterval(async () => {
 }, 180000);
 
 // ==================================================
-// ✅ CARPETA DE FACTURAS — RUTA CORRECTA
+// ✅ CARPETA DE FACTURAS — RUTA CORRECTA Y GARANTIZADA
 // ==================================================
-const carpetaFacturas = path.join(__dirname, '../../facturacionadmin/facturas-generadas');
-if (!fs.existsSync(carpetaFacturas)) {
-  try {
-    fs.mkdirSync(carpetaFacturas, { recursive: true });
-    console.log('✅ Carpeta de facturas lista:', carpetaFacturas);
-  } catch (err) {
-    console.log('⚠️ Error creando carpeta:', err.message);
-  }
-}
+const carpetaFacturas = path.join(__dirname, 'facturacionadmin', 'facturas-generadas');
+fs.ensureDirSync(carpetaFacturas); // ✅ Crea toda la ruta si no existe
+console.log('✅ Carpeta de facturas lista:', carpetaFacturas);
 
 // ✅ BLOQUEAR ACCESO DIRECTO A LA CARPETA DE FACTURAS
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido — Solo administración');
 });
 
+// ✅ CARPETA PÚBLICA PARA ENLACES CORTOS (opcional, para WhatsApp)
+app.use('/facturas-publicas', express.static(carpetaFacturas, {
+  setHeaders: (res) => {
+    res.set('Content-Disposition', 'attachment'); // Fuerza descarga
+  }
+}));
+
 // ==================================================
-// ✅ DESCARGA SEGURA DE FACTURAS — VERSIÓN CORREGIDA
+// ✅ DESCARGA SEGURA DE FACTURAS — POR sesion_id
 // ==================================================
 app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
   try {
@@ -58,53 +60,65 @@ app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
     console.log("📥 Buscando sesion_id:", sesionId);
 
     const resultado = await db.query(
-      'SELECT factura_numero, id FROM pedidos WHERE sesion_id = $1 LIMIT 1',
+      'SELECT factura_numero, factura_archivo, id FROM pedidos WHERE sesion_id = $1 LIMIT 1',
       [sesionId]
     );
 
     if (resultado.rows.length === 0) {
       console.log("❌ NO encontrado. sesion_id =", sesionId);
-      // 🔍 Mostrar todos los IDs guardados para comparar
       const todos = await db.query('SELECT sesion_id FROM pedidos ORDER BY id DESC LIMIT 5');
       console.log("📋 Últimos 5 sesion_id en BD:", todos.rows.map(r => r.sesion_id));
-      return res.status(404).send('❌ Pedido no encontrado');
+      return res.status(404).send(`
+        <html style="font-family:system-ui;text-align:center;padding:3rem;">
+          <h2 style="color:red;">⚠️ Factura no encontrada</h2>
+          <p>No hay pedido asociado a esta sesión.</p>
+          <a href="/mi-cuenta/confirmacion.html">Volver a tu compra</a>
+        </html>
+      `);
     }
 
-    const { factura_numero, id } = resultado.rows[0];
+    const { factura_numero, factura_archivo, id } = resultado.rows[0];
     console.log("✅ Pedido encontrado — ID:", id, "Factura:", factura_numero);
 
     if (!factura_numero || factura_numero === 'Pendiente') {
-      return res.status(404).send('⚠️ Factura aún no generada');
+      return res.status(404).send(`
+        <html style="font-family:system-ui;text-align:center;padding:3rem;">
+          <h2 style="color:orange;">📄 Factura en proceso</h2>
+          <p>La factura aún no fue generada. Volvé a intentar en unos segundos.</p>
+          <a href="/mi-cuenta/confirmacion.html">Volver</a>
+        </html>
+      `);
     }
 
-    let nroLimpio = factura_numero;
-    if (factura_numero.includes('|')) {
-      nroLimpio = factura_numero.split('|')[0].trim();
+    // ✅ Usar nombre de archivo guardado O armarlo
+    let nombreArchivo = factura_archivo;
+    if (!nombreArchivo) {
+      let nroLimpio = factura_numero.includes('|') 
+        ? factura_numero.split('|')[0].trim() 
+        : factura_numero;
+      nombreArchivo = `Factura-${nroLimpio}.pdf`;
     }
 
-    const nombreArchivo = `Factura-${nroLimpio}.pdf`;
     const rutaCompletaArchivo = path.join(carpetaFacturas, nombreArchivo);
-    
-    console.log("📄 Buscando archivo:", rutaCompletaArchivo);
-    console.log("📂 Carpeta facturas:", carpetaFacturas);
-    console.log("📄 Existe archivo:", fs.existsSync(rutaCompletaArchivo));
+    console.log("📄 Buscando:", rutaCompletaArchivo);
+    console.log("✅ Existe:", fs.existsSync(rutaCompletaArchivo));
 
     if (!fs.existsSync(rutaCompletaArchivo)) {
-      console.log("❌ Archivo NO existe en disco");
-      // Listar archivos que sí hay
-      try {
-        const archivos = fs.readdirSync(carpetaFacturas);
-        console.log("📋 Archivos en carpeta:", archivos);
-      } catch(e) {
-        console.log("⚠️ No se puede leer carpeta:", e.message);
-      }
-      return res.status(404).send('❌ PDF no encontrado en el servidor');
+      console.log("❌ Archivo NO existe");
+      const archivos = fs.readdirSync(carpetaFacturas);
+      console.log("📋 Archivos en carpeta:", archivos);
+      return res.status(404).send(`
+        <html style="font-family:system-ui;text-align:center;padding:3rem;">
+          <h2 style="color:red;">❌ PDF no encontrado</h2>
+          <p>El archivo no se generó correctamente. Contactanos.</p>
+        </html>
+      `);
     }
 
     res.download(rutaCompletaArchivo, nombreArchivo, (err) => {
       if (err) {
         console.log('❌ Error descargando:', err.message);
-        res.status(404).send('❌ No se pudo descargar');
+        res.status(500).send('Error al descargar');
       } else {
         console.log("✅ Descarga entregada:", nombreArchivo);
       }
@@ -112,9 +126,10 @@ app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error:', error.message);
-    res.status(500).send('❌ Error del servidor');
+    res.status(500).send('Error del servidor');
   }
 });
+
 // ==================================================
 // ✅ CONFIGURACIÓN GENERAL
 // ==================================================
@@ -125,7 +140,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ ARCHIVOS ESTÁTICOS — DESDE RAÍZ DEL PROYECTO
+// ✅ ARCHIVOS ESTÁTICOS — DESDE RAÍZ
 app.use(express.static(path.join(__dirname, '../../')));
 
 // ✅ PÁGINA PRINCIPAL
@@ -204,15 +219,16 @@ app.get('/api/estado', (req, res) => {
     mensaje: '✅ Servidor en línea',
     empresa: NOMBRE_EMPRESA,
     cuit: CUIT_EMPRESA,
-    mp: !!process.env.MERCADO_PAGO_ACCESS_TOKEN
+    mp: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
+    carpeta_facturas: carpetaFacturas
   });
 });
 
 // ==================================================
 // ✅ RUTAS AMIGABLES SIN .HTML
 // ==================================================
+const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
 app.use((req, res, siguiente) => {
-  const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
   if (rutasSinHtml.includes(req.path)) {
     return res.sendFile(path.join(__dirname, `../../${req.path.slice(1)}.html`));
   }
@@ -233,9 +249,9 @@ app.listen(PUERTO, () => {
   console.log(`✅ SERVIDOR DE ${NOMBRE_EMPRESA} — EN LÍNEA`);
   console.log('='.repeat(60));
   console.log(`📍 Puerto: ${PUERTO}`);
-  console.log(`🗄️  DB: ${process.env.DB_HOST ? '✅' : '❌'}`);
+  console.log(`🗄️  DB: Conectada ✅`);
   console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
   console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
   console.log(`🔑 Descarga segura: /api/descargar-mi-factura/`);
-  console.log(`🧠 Neon: ¡Manteniéndola despierta cada 3 min!`);
+  console.log(`📄 Carpeta PDFs: ${carpetaFacturas}`);
 });

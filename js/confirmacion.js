@@ -2,35 +2,42 @@
 window.addEventListener("DOMContentLoaded", () => {
     console.log("✅ Página de confirmación cargada");
 
-    // ✅ RECUPERAR DATOS
-    const guardado = localStorage.getItem("carrito_pago");
-    const pedidoGuardado = JSON.parse(localStorage.getItem("ultimaCompra") || localStorage.getItem("pedido_confirmado") || '{}');
-
-    console.log("📦 Carrito guardado:", guardado);
-    console.log("🧾 Pedido guardado:", pedidoGuardado);
+    // ✅ RECUPERAR DATOS — BUSCAR EN TODAS LAS UBICACIONES POSIBLES
+    let pedidoGuardado = null;
+    try {
+        pedidoGuardado = JSON.parse(localStorage.getItem("ultimaCompra") || localStorage.getItem("pedido_confirmado") || '{}');
+    } catch (e) {
+        console.warn("⚠️ Error leyendo pedido:", e);
+        pedidoGuardado = {};
+    }
 
     let carrito = [];
     let totalCompra = 0;
 
-    // ✅ LEER DATOS DEL CARRITO
+    // ✅ LEER CARRITO
+    const guardado = localStorage.getItem("carrito_pago");
     if (guardado) {
         try {
             const datos = JSON.parse(guardado);
-            carrito = datos.carrito || [];
-            totalCompra = datos.totalCompra || 0;
+            carrito = datos.carrito || datos.productos || [];
+            totalCompra = datos.totalCompra || datos.total || 0;
         } catch (e) {
             console.warn("⚠️ Error leyendo carrito:", e);
         }
     }
 
-    // ✅ SI NO HAY CARRITO, USAR LOS DATOS DEL PEDIDO
+    // ✅ SI ESTÁ VACÍO, USAR DIRECTAMENTE DEL PEDIDO
     if (carrito.length === 0 && pedidoGuardado.carrito) {
         carrito = pedidoGuardado.carrito || [];
         totalCompra = pedidoGuardado.totalCompra || pedidoGuardado.total || 0;
     }
+    if (carrito.length === 0 && pedidoGuardado.productos) {
+        carrito = pedidoGuardado.productos || [];
+        totalCompra = pedidoGuardado.total || 0;
+    }
 
-    console.log("✅ Productos a mostrar:", carrito);
-    console.log("✅ Total:", totalCompra);
+    console.log("📦 Productos cargados:", carrito);
+    console.log("💰 Total:", totalCompra);
 
     // ✅ MOSTRAR PRODUCTOS
     mostrarProductos(carrito);
@@ -41,40 +48,32 @@ window.addEventListener("DOMContentLoaded", () => {
         totalElem.textContent = `$ ${totalCompra.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`;
     }
 
-    // ==================================================
-    // ✅ SEPARAR: ID DE PAGO (MP) ↔ ID DEL PEDIDO (TUYO)
-    // ==================================================
+    // ✅ DATOS DE SESIÓN
     const params = new URLSearchParams(window.location.search);
     const paymentId = params.get("payment_id") || params.get("preference_id") || "";
-    const pedidoId = pedidoGuardado.pedidoId || null;
-    const sesionId = pedidoGuardado.sesion_id || pedidoGuardado.sesion || 'invitado';
+    const pedidoId = pedidoGuardado.pedidoId || pedidoGuardado.id || null;
+    const sesionId = pedidoGuardado.sesion_id || pedidoGuardado.sesion || localStorage.getItem("sesion_id") || 'invitado';
 
-    // ✅ MOSTRAR EN PANTALLA EL ID DE PAGO
+    // ✅ MOSTRAR NÚMERO DE OPERACIÓN
     const ordenElem = document.getElementById("mp-orden-id");
     if (ordenElem) {
-        ordenElem.textContent = paymentId || pedidoId || "Pendiente";
+        ordenElem.textContent = paymentId || pedidoId || "Completado";
     }
 
-    // ✅ GUARDAR TODOS LOS DATOS
+    // ✅ GUARDAR TODO — WhatsApp YA ESTÁ GUARDADO
     window._datosPedido = {
         nombre: pedidoGuardado.nombre || "Consumidor Final",
-        whatsapp: pedidoGuardado.whatsapp || "",
+        whatsapp: pedidoGuardado.whatsapp || pedidoGuardado.telefono || "",
         sesion_id: sesionId,
         pedidoId: pedidoId,
         paymentId: paymentId,
-        dni: pedidoGuardado.dni_comprador || null,
-        domicilio: pedidoGuardado.domicilio_comprador || null,
-        carrito,
-        totalCompra
+        dni: pedidoGuardado.dni_comprador || pedidoGuardado.dni || null,
+        domicilio: pedidoGuardado.domicilio_comprador || pedidoGuardado.direccion || null,
+        carrito: carrito,
+        totalCompra: totalCompra
     };
 
-    console.log("✅ Datos listos:", window._datosPedido);
-
-    // ✅ PRE-LLENAR WHATSAPP SI YA ESTÁ GUARDADO
-    if (pedidoGuardado.whatsapp) {
-        const inputWsp = document.getElementById("whatsapp_cliente");
-        if (inputWsp) inputWsp.value = pedidoGuardado.whatsapp;
-    }
+    console.log("✅ Datos completos:", window._datosPedido);
 
     // ✅ MOSTRAR FECHA
     const fecha = new Date().toLocaleString("es-AR", {
@@ -88,24 +87,21 @@ window.addEventListener("DOMContentLoaded", () => {
 // ===== MOSTRAR PRODUCTOS EN EL RESUMEN =====
 function mostrarProductos(carrito) {
     const contenedor = document.getElementById("lista_productos");
-    if (!contenedor) {
-        console.warn("⚠️ No se encontró el contenedor #lista_productos");
-        return;
-    }
+    if (!contenedor) return;
     
     if (!carrito || carrito.length === 0) {
         contenedor.innerHTML = "<span style='color:#888;'>Sin productos</span>";
         return;
     }
-
+    
     contenedor.innerHTML = "";
     carrito.forEach(item => {
         const nombre = item.nombre || "Producto";
-        const cantidad = item.cantidad || 1;
+        const cantidad = Number(item.cantidad) || 1;
         const precio = Number(item.precio) || 0;
         const subtotal = precio * cantidad;
         contenedor.innerHTML += `
-            <div class="producto-confirmacion" style="padding:6px 0; border-bottom:1px solid #222;">
+            <div class="producto-confirmacion" style="padding:6px 0; border-bottom:1px solid #eee;">
                 <span>${nombre}</span>
                 <span>${cantidad} × $ ${precio.toLocaleString("es-AR")} = $ ${subtotal.toLocaleString("es-AR")}</span>
             </div>
@@ -113,26 +109,24 @@ function mostrarProductos(carrito) {
     });
 }
 
-// ===== MOSTRAR / OCULTAR CAMPO DE WHATSAPP =====
-function mostrarCampoWhatsApp() {
-    const seleccion = document.querySelector('input[name="enviar_factura"]:checked');
+// ===== MOSTRAR / OCULTAR BOTÓN =====
+function mostrarBotonDescarga() {
+    const seleccion = document.querySelector('input[name="quiero_factura"]:checked');
     if (!seleccion) return;
     
-    const campoWhatsApp = document.getElementById("campo-whatsapp");
-    if (!campoWhatsApp) return;
+    const zonaDescarga = document.getElementById("zona-descarga");
+    if (!zonaDescarga) return;
     
-    campoWhatsApp.style.display = seleccion.value === "si" ? "block" : "none";
-    
-    if (seleccion.value === "no") {
-        const input = document.getElementById("whatsapp_cliente");
-        if (input) input.value = "";
-        // ✅ Ocultar factura si desmarca
+    if (seleccion.value === "si") {
+        zonaDescarga.classList.add("mostrar");
+    } else {
+        zonaDescarga.classList.remove("mostrar");
         const contFactura = document.getElementById("contenedor-factura-generada");
         if (contFactura) contFactura.style.display = "none";
     }
 }
 
-// ✅ FUNCIÓN DE PETICIÓN A LA API
+// ✅ PETICIÓN A LA API
 async function peticion(url, metodo = "POST", datos = {}) {
     const respuesta = await fetch(`/api/pedidos${url}`, {
         method: metodo,
@@ -142,35 +136,25 @@ async function peticion(url, metodo = "POST", datos = {}) {
     return await respuesta.json();
 }
 
-// ✅ NUEVA FUNCIÓN — CARGA PLANTILLA Y MUESTRA FACTURA ACÁ MISMO
-async function generarFacturaAqui() {
-    const whatsappElem = document.getElementById("whatsapp_cliente");
-    const whatsapp = whatsappElem.value.trim().replace(/\s/g, '');
+// ✅ GENERAR FACTURA — SIN pedir WhatsApp
+async function generarYDescargar() {
     const datos = window._datosPedido || {};
-    const mensaje = document.getElementById("mensaje-descarga");
-
-    // ✅ Validar WhatsApp
-    if (!whatsapp || whatsapp.length < 8) {
-        alert("⚠️ Escribí tu número de WhatsApp completo por favor.");
-        whatsappElem.focus();
+    const contFactura = document.getElementById("contenedor-factura-generada");
+    
+    if (!datos.whatsapp) {
+        alert("⚠️ No encontramos tu número de WhatsApp. Contactanos para tu factura.");
+        return;
+    }
+    if (!datos.carrito || datos.carrito.length === 0) {
+        alert("⚠️ No encontramos los productos de tu compra. Recargá la página e intentá nuevamente.");
         return;
     }
 
-    mensaje.style.display = "block";
-    mensaje.style.color = "#22b548";
-    mensaje.textContent = "✅ Generando tu factura... por favor esperá un momento";
-
     try {
-        // ✅ PASO 1: Guardar WhatsApp en la base
-        await peticion("/actualizar-factura", "POST", {
-            sesion_id: datos.sesion_id,
-            whatsapp: whatsapp
-        });
-
-        // ✅ PASO 2: Pedir factura al servidor
-        const respuesta = await peticion("/generar-factura-pdf", "POST", {
+        // ✅ Pedir factura al servidor
+        const respuesta = await peticion("/generar-factura-pdf", {
             nombre: datos.nombre,
-            whatsapp: whatsapp,
+            whatsapp: datos.whatsapp,
             pedido_id: datos.pedidoId,
             sesion_id: datos.sesion_id,
             dni: datos.dni,
@@ -181,31 +165,44 @@ async function generarFacturaAqui() {
 
         console.log("📄 Respuesta factura:", respuesta);
 
-        if (!respuesta.ok || !respuesta.datos) {
+        if (!respuesta.ok && !respuesta.datos) {
             throw new Error(respuesta.mensaje || "No se pudo generar la factura");
         }
 
-        // ✅ PASO 3: Cargar plantilla de factura-imprimible.html
+        // ✅ Cargar TU plantilla
         const plantillaRes = await fetch('/facturacionadmin/factura-imprimible.html');
         if (!plantillaRes.ok) throw new Error("No se pudo cargar el formato de factura");
         let htmlFactura = await plantillaRes.text();
 
-        // ✅ PASO 4: Rellenar datos en la plantilla
-        const nroFactura = (respuesta.datos.numero || 'Pendiente').split('|')[0].trim();
-        const cae = respuesta.datos.cae || 'En trámite';
-        const fecha = new Date().toLocaleString('es-AR');
+        // ✅ Datos
+        const nroFactura = (respuesta.datos?.numero || 'Pendiente').split('|')[0].trim();
+        const cae = respuesta.datos?.cae || 'En trámite';
+        const fecha = new Date().toLocaleDateString('es-AR', {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        const totalNum = Number(datos.totalCompra) || 0;
+        const ivaNum = totalNum * 0.21;
 
-        // ✅ Generar filas de productos
-        const filasProductos = datos.carrito.map(p => `
-            <tr>
-                <td style="padding:8px; border-bottom:1px solid #ddd;">${p.nombre}</td>
-                <td style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">${p.cantidad}</td>
-                <td style="padding:8px; border-bottom:1px solid #ddd; text-align:right;">$ ${p.precio.toLocaleString("es-AR")}</td>
-                <td style="padding:8px; border-bottom:1px solid #ddd; text-align:right;">$ ${(p.precio * p.cantidad).toLocaleString("es-AR")}</td>
-            </tr>
-        `).join('');
+        // ✅ Filas completas de la tabla
+        const filasCompletas = datos.carrito.map(p => {
+            const precio = Number(p.precio) || 0;
+            const cant = Number(p.cantidad) || 1;
+            const subtotal = precio * cant;
+            return `
+                <tr>
+                    <td class="cod"></td>
+                    <td class="descr">${p.nombre || 'Producto'}</td>
+                    <td class="cant">${cant}</td>
+                    <td class="um">unidades</td>
+                    <td class="pu">$ ${precio.toLocaleString("es-AR", {minimumFractionDigits:2})}</td>
+                    <td class="bon">0,00</td>
+                    <td class="ib">0,00</td>
+                    <td class="sub">$ ${subtotal.toLocaleString("es-AR", {minimumFractionDigits:2})}</td>
+                </tr>
+            `;
+        }).join('');
 
-        // ✅ Reemplazar marcadores
+        // ✅ Reemplazar TODOS los marcadores
         htmlFactura = htmlFactura
             .replace(/\[NRO_FACTURA\]/g, nroFactura)
             .replace(/\[FECHA\]/g, fecha)
@@ -213,48 +210,27 @@ async function generarFacturaAqui() {
             .replace(/\[NOMBRE_CLIENTE\]/g, datos.nombre)
             .replace(/\[DNI\]/g, datos.dni || 'Consumidor Final')
             .replace(/\[DIRECCION\]/g, datos.domicilio || 'Sin especificar')
-            .replace(/\[WHATSAPP\]/g, whatsapp)
-            .replace(/\[FILAS_PRODUCTOS\]/g, filasProductos)
-            .replace(/\[TOTAL\]/g, `$ ${datos.totalCompra.toLocaleString("es-AR")}`);
+            .replace(/\[FILAS_PRODUCTOS\]/g, filasCompletas)
+            .replace(/\[TOTAL\]/g, `$ ${totalNum.toLocaleString("es-AR", {minimumFractionDigits:2})}`)
+            .replace(/\[IVA\]/g, `$ ${ivaNum.toLocaleString("es-AR", {minimumFractionDigits:2})}`);
 
-        // ✅ PASO 5: Mostrar factura en la página
-        const contenedor = document.getElementById("plantilla-factura");
-        contenedor.innerHTML = htmlFactura;
-
-        const contFactura = document.getElementById("contenedor-factura-generada");
+        // ✅ Mostrar factura
+        document.getElementById("plantilla-factura").innerHTML = htmlFactura;
         contFactura.style.display = "block";
 
-        // ✅ PASO 6: Guardar datos para descarga
+        // ✅ Guardar para descarga
         window._facturaGenerada = {
             sesion_id: datos.sesion_id,
             numero: nroFactura
         };
 
-        // ✅ PASO 7: Preparar enlace WhatsApp
-        const linkWsp = document.getElementById("enlace-whatsapp");
-        const mensajeWsp = encodeURIComponent(
-            `¡Hola ${datos.nombre}! Gracias por tu compra 🧾\n\n` +
-            `Factura N°: ${nroFactura}\nCAE: ${cae}\n\n` +
-            `Descargala aquí: https://maximuebles-online.onrender.com/api/descargar-mi-factura/${encodeURIComponent(datos.sesion_id)}`
-        );
-        linkWsp.href = `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${mensajeWsp}`;
-
-        // ✅ Mensaje final
-        mensaje.innerHTML = `
-            ✅ <strong>¡Factura generada con éxito!</strong><br>
-            🧾 N°: ${nroFactura}<br>
-            🔢 CAE: ${cae}<br>
-            Tu factura está abajo lista para descargar o imprimir.
-        `;
-
     } catch (error) {
         console.error("❌ Error:", error);
-        mensaje.style.color = "red";
-        mensaje.textContent = `⚠️ Error: ${error.message || "Intentá nuevamente"}`;
+        alert(`⚠️ Error: ${error.message}`);
     }
 }
 
-// ✅ DESCARGAR PDF — usa la ruta segura
+// ✅ DESCARGAR PDF
 function descargarPDF() {
     if (!window._facturaGenerada) {
         alert("⚠️ Primero generá tu factura");
@@ -262,9 +238,4 @@ function descargarPDF() {
     }
     const sesion = window._facturaGenerada.sesion_id;
     window.open(`/api/descargar-mi-factura/${encodeURIComponent(sesion)}`, '_blank');
-}
-
-// ✅ Mantener nombre antiguo por si algo lo llama → redirige a la nueva
-async function generarYDescargarPDF() {
-    await generarFacturaAqui();
 }

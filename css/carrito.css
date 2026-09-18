@@ -36,19 +36,16 @@
   backdrop-filter: blur(12px);
   box-shadow: var(--sombra-suave);
 }
-
 .contenedor-cabecera {
   padding: 0.5rem 1.5rem;
   max-width: 1240px;
   margin: 0 auto;
 }
-
 .logo-carrito {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
 }
-
 .logo-carrito .logo-imagen {
   max-height: 55px;
   width: auto;
@@ -64,7 +61,6 @@
   margin: 0 auto 5rem;
   padding: 0 1.5rem;
 }
-
 .titulo-pagina {
   color: var(--b1);
   font-size: 2rem;
@@ -74,7 +70,6 @@
   position: relative;
   display: inline-block;
 }
-
 .titulo-pagina::after {
   content: '';
   position: absolute;
@@ -95,7 +90,6 @@
   gap: 2.2rem;
   align-items: start;
 }
-
 @media (max-width: 920px) {
   .contenedor-principal {
     grid-template-columns: 1fr;
@@ -115,7 +109,6 @@
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
-
 .pantalla-vacia {
   display: flex;
   align-items: center;
@@ -123,19 +116,16 @@
   text-align: center;
   min-height: 360px;
 }
-
 .contenido-vacio {
   max-width: 420px;
   margin: 0 auto;
 }
-
 .icono-grande {
   font-size: 5rem;
   margin-bottom: 1.5rem;
   opacity: 0.9;
   filter: drop-shadow(0 6px 16px rgba(52, 160, 57, 0.15));
 }
-
 .contenido-vacio h2 {
   color: var(--b1);
   font-size: 1.6rem;
@@ -143,14 +133,12 @@
   font-weight: 600;
   letter-spacing: 0.5px;
 }
-
 .contenido-vacio p {
   color: var(--g1);
   font-size: 1rem;
   margin-bottom: 2.2rem;
   line-height: 1.7;
 }
-
 .boton-ir-tienda {
   display: inline-flex;
   align-items: center;
@@ -167,7 +155,6 @@
   box-shadow: var(--sombra-verde);
   border: 1px solid rgba(52, 160, 57, 0.2);
 }
-
 .boton-ir-tienda:hover {
   background: linear-gradient(135deg, var(--v3), var(--v4));
   transform: translateY(-3px);
@@ -178,7 +165,6 @@
    📋 LISTA DE PRODUCTOS
    ================================================== */
 .oculto { display: none !important; }
-
 .subtitulo-lista {
   color: var(--b1);
   font-size: 1.15rem;
@@ -188,13 +174,11 @@
   font-weight: 600;
   letter-spacing: 0.3px;
 }
-
 #lista-items {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
 }
-
 .mensaje-cargando {
   color: var(--g1);
   text-align: center;
@@ -216,21 +200,18 @@
   border: 1px solid rgba(52, 160, 57, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .item-producto:hover {
   border-color: rgba(52, 160, 57, 0.25);
   background: linear-gradient(145deg, var(--n4), rgba(40, 48, 40, 0.7));
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
 }
-
 @media (max-width: 650px) {
   .item-producto {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 }
-
 .item-img {
   width: 75px;
   height: 75px;
@@ -242,7 +223,6 @@
   font-size: 1.8rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
-
 .item-info h4 {
   color: var(--b1);
   font-size: 1.05rem;
@@ -250,14 +230,12 @@
   font-weight: 600;
   letter-spacing: 0.3px;
 }
-
 .item-precio {
   color: var(--v4);
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.5px;
 }
-
 .item-cantidad {
   display: flex;
   align-items: center;
@@ -266,7 +244,6 @@
   overflow: hidden;
   background: var(--n2);
 }
-
 .item-cantidad button {
   width: 36px;
   height: 36px;
@@ -277,12 +254,10 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .item-cantidad button:hover {
   background: rgba(52, 160, 57, 0.15);
   color: var(--v4);
 }
-
 .item-cantidad span {
   width: 36px;
   text-align: center;
@@ -292,7 +267,6 @@
   border-left: 1px solid rgba(52, 160, 57, 0.15);
   border-right: 1px solid rgba(52, 160, 57, 0.15);
 }
-
 .item-subtotal {
   color: var(--b1);
   font-weight: 600;
@@ -301,7 +275,6 @@
   text-align: right;
   letter-spacing: 0.3px;
 }
-
 .item-quitar {
   background: transparent;
   border: none;
@@ -312,7 +285,6 @@
   border-radius: 8px;
   transition: all 0.25s ease;
 }
-
 .item-quitar:hover {
   background: rgba(255, 107, 107, 0.1);
   color: #FF8E8E;
@@ -325,7 +297,6 @@
   position: sticky;
   top: 2rem;
 }
-
 .panel-resumen {
   background: linear-gradient(145deg, var(--n2), rgba(30, 36, 30, 0.9));
   border: 1px solid var(--borde);
@@ -335,7 +306,6 @@
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
-
 .panel-resumen h3 {
   color: var(--b1);
   font-size: 1.2rem;
@@ -345,7 +315,6 @@
   font-weight: 600;
   letter-spacing: 0.5px;
 }
-
 .fila-resumen {
   display: flex;
   justify-content: space-between;
@@ -353,13 +322,11 @@
   margin-bottom: 1rem;
   font-size: 0.98rem;
 }
-
 .texto-verde { 
   color: var(--v4); 
   font-weight: 600; 
   letter-spacing: 0.3px;
 }
-
 .linea-divisoria {
   border: none;
   border-top: 2px solid transparent;
@@ -367,26 +334,22 @@
   height: 2px;
   margin: 1.2rem 0;
 }
-
 .fila-resumen.total {
   font-size: 1.4rem;
   margin-top: 0.6rem;
   padding-top: 0.8rem;
 }
-
 .fila-resumen.total strong {
   color: var(--v4);
   font-weight: 800;
   letter-spacing: 0.5px;
 }
-
 .botones-acciones {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
   margin-top: 1.8rem;
 }
-
 .boton-vaciar {
   width: 100%;
   display: flex;
@@ -403,14 +366,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .boton-vaciar:hover {
   background: linear-gradient(145deg, var(--n4), var(--n3));
   border-color: rgba(255, 107, 107, 0.25);
   color: #FF8E8E;
   transform: translateY(-1px);
 }
-
 .boton-pagar {
   width: 100%;
   display: flex;
@@ -431,13 +392,11 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--sombra-verde);
 }
-
 .boton-pagar:hover {
   background: linear-gradient(135deg, var(--v3), var(--v4));
   transform: translateY(-3px);
   box-shadow: 0 10px 30px rgba(52, 160, 57, 0.35);
 }
-
 .texto-seguridad {
   text-align: center;
   color: var(--g1);
@@ -457,10 +416,172 @@
   margin-top: 3rem;
   text-align: center;
 }
-
 .pie-carrito p {
   color: var(--g2);
   font-size: 0.85rem;
   letter-spacing: 0.5px;
   margin: 0;
+}
+
+/* ==================================================
+   🧾 ESTILOS PARA FACTURA DENTRO DE CONFIRMACIÓN
+   ================================================== */
+#plantilla-factura {
+  background: #fff !important;
+  color: #000 !important;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* ✅ Ajustar formato A4 vertical al imprimir */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #contenedor-factura-generada,
+  #contenedor-factura-generada * {
+    visibility: visible;
+  }
+  
+  #contenedor-factura-generada {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  .acciones-factura,
+  button,
+  .btn,
+  a[target="_blank"]:nth-child(3) {
+    display: none !important;
+  }
+}
+
+/* ✅ Estilos específicos de confirmacion.html */
+.confirmacion-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tarjeta-exito,
+.tarjeta-datos,
+.tarjeta-factura {
+  background: linear-gradient(145deg, var(--n2), rgba(30, 36, 30, 0.9));
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: var(--sombra-suave);
+}
+
+.dato-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+.dato-fila .etiqueta {
+  color: var(--g1);
+  font-weight: 500;
+}
+.dato-fila .valor {
+  color: var(--b1);
+  font-weight: 600;
+}
+.dato-fila.total-fila {
+  border-bottom: none;
+  margin-top: 10px;
+  padding-top: 15px;
+}
+.dato-fila.total-fila .valor {
+  color: var(--v4);
+  font-size: 1.3rem;
+}
+
+.form-grupo {
+  margin-bottom: 15px;
+}
+.form-grupo label {
+  display: block;
+  color: var(--b1);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.form-grupo input[type="tel"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--n3);
+  color: var(--b1);
+  font-size: 1rem;
+}
+.radio-opciones {
+  display: flex;
+  gap: 20px;
+}
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--b1);
+  cursor: pointer;
+}
+.campos-ocultos {
+  margin-top: 15px;
+}
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-enviar-factura {
+  width: 100%;
+  background: linear-gradient(135deg, var(--v2), var(--v3));
+  color: white;
+  margin-top: 10px;
+}
+.btn-enviar-factura:hover {
+  background: linear-gradient(135deg, var(--v3), var(--v4));
+  transform: translateY(-2px);
+}
+.btn-volver-inicio {
+  width: 100%;
+  background: var(--n3);
+  color: var(--b2);
+  text-decoration: none;
+  text-align: center;
+  display: block;
+}
+.btn-volver-inicio:hover {
+  background: var(--n4);
+}
+.acciones-finales {
+  margin-top: 20px;
+}
+.texto-ayuda {
+  color: var(--g1);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+.producto-confirmacion {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--n3);
+  color: var(--b2);
+  font-size: 0.95rem;
 }

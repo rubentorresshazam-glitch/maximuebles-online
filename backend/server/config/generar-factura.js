@@ -1,28 +1,30 @@
 // ==================================================
 // 🧾 GENERADOR DE FACTURAS PDF — MAXIMUEBLES
-// ✅ ARCHIVO EXCLUSIVO PARA GENERAR FACTURAS
-// ✅ RUTA CORREGIDA → COINCIDE CON DESCARGA
-// ✅ NOMBRE DE ARCHIVO IGUAL EN TODO EL SISTEMA
+// ✅ MISMA RUTA EN TODO EL SISTEMA ✅
+// ✅ FORMATO A4 VERTICAL → NO SE DESORDENA AL IMPRIMIR ✅
+// ✅ NOMBRE DE ARCHIVO IGUAL EN DESCARGA ✅
 // ==================================================
-const fs = require('fs');
+const fs = require('fs-extra'); // ✅ Crea carpetas automáticamente
 const path = require('path');
-const { PDFDocument } = require('pdfkit');
+const PDFDocument = require('pdfkit');
 
-// ✅ RUTA CORREGIDA: MISMA CARPETA QUE BUSCA server.js
-// En Render: ruta absoluta confirmada
-// En tu PC: coincide con tu estructura local
-const CARPETA_FACTURAS = process.env.NODE_ENV === 'production'
-  ? path.join(__dirname, '../../facturacionadmin/facturas-generadas')
-  : path.join(__dirname, '../../../facturacionadmin/facturas-generadas');
+// ==================================================
+// ✅ RUTA UNIFICADA — COINCIDE CON server.js y afip-facturacion.js
+// ==================================================
+const CARPETA_FACTURAS = path.join(__dirname, '../facturacionadmin/facturas-generadas');
 
-// ✅ Crear carpeta si no existe
-if (!fs.existsSync(CARPETA_FACTURAS)) {
-  try {
-    fs.mkdirSync(CARPETA_FACTURAS, { recursive: true });
-    console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
-  } catch (err) {
-    console.log('⚠️ Error creando carpeta:', err.message);
-  }
+// ✅ Crear carpeta completa si no existe
+fs.ensureDirSync(CARPETA_FACTURAS);
+console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
+
+// ==================================================
+// ✅ FORMATEAR NÚMEROS CON COMA ARGENTINA
+// ==================================================
+function formatearMonto(n) {
+  return Number(n || 0).toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 // ==================================================
@@ -33,64 +35,77 @@ async function crearFacturaPDF(datos) {
     try {
       const numero = datos.numero;
       const cae = datos.cae || 'EN PROCESO';
+      const vencimientoCAE = datos.vencimiento || '';
+      const esOficial = datos.oficial !== false;
 
-      // ✅ NOMBRE EXACTO → COINCIDE CON server.js: Factura-NÚMERO.pdf
+      // ✅ NOMBRE EXACTO → Coincide con descarga segura
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
-      const fecha = new Date().toLocaleString('es-AR');
+      
+      // ✅ Solo fecha, sin hora
+      const fecha = new Date().toLocaleDateString('es-AR', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
 
       console.log(`📄 Generando factura: ${numero}`);
       console.log(`📂 Guardando en: ${rutaCompleta}`);
-      console.log(`📄 Nombre archivo: ${nombreArchivo}`);
 
-      // ✅ Crear documento PDF — TU DISEÑO IGUAL
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      // ✅ DOCUMENTO A4 VERTICAL → Fijo para impresión
+      const doc = new PDFDocument({
+        size: 'A4',
+        layout: 'portrait',
+        margins: { top: 40, left: 40, right: 40, bottom: 50 }
+      });
+
       const stream = fs.createWriteStream(rutaCompleta);
       doc.pipe(stream);
 
-      // ✅ CABECERA — TU DISEÑO SIN CAMBIOS
-      doc.fontSize(20).font('Helvetica-Bold').text('FACTURA ELECTRÓNICA', { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(14).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
+      // ======================================
+      // ✅ ENCABEZADO — TU DISEÑO PRESERVADO
+      // ======================================
+      doc.fontSize(20).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
       doc.fontSize(11).font('Helvetica').text(`CUIT: 30-71500272-4`, { align: 'center' });
-      doc.text(`Domicilio Fiscal: Roque Sáenz Peña y Castillón N° 0 - Luis Beltrán - Río Negro`, { align: 'center' });
+      doc.text(`Domicilio Fiscal: Roque Sáenz Peña y Castillón — Luis Beltrán — Río Negro`, { align: 'center' });
       doc.text(`Punto de Venta N°: ${process.env.AFIP_PUNTO_VENTA || "00010"}`, { align: 'center' });
       doc.moveDown(1);
 
       // ✅ NÚMERO Y FECHA
-      doc.fontSize(12).font('Helvetica-Bold').text(`FACTURA N°: ${numero}`);
-      doc.fontSize(11).font('Helvetica').text(`Fecha: ${fecha}`);
-      doc.text(`Tipo: Consumidor Final`);
-      doc.text(`CAE: ${cae}`);
-      if (datos.vencimientoCAE) {
-        doc.text(`Vencimiento CAE: ${datos.vencimientoCAE}`);
-      }
+      doc.fontSize(18).font('Helvetica-Bold').fillColor(esOficial ? '#22B548' : '#f59e0b');
+      doc.text('FACTURA B', { align: 'right' });
+      doc.fillColor('black');
+      doc.fontSize(11).font('Helvetica');
+      doc.text(`N°: ${numero}`, { align: 'right' });
+      doc.text(`Fecha: ${fecha}`, { align: 'right' });
+      doc.text(`CAE: ${cae}${vencimientoCAE ? ` — Vencimiento: ${vencimientoCAE}` : ''}`, { align: 'right' });
       doc.moveDown(1);
 
       // ✅ DATOS DEL COMPRADOR
       doc.fontSize(12).font('Helvetica-Bold').text('DATOS DEL COMPRADOR');
+      doc.moveDown(0.5);
       doc.fontSize(11).font('Helvetica');
       doc.text(`Nombre: ${datos.nombre || 'Consumidor Final'}`);
-      doc.text(`WhatsApp: ${datos.whatsapp || 'No indicado'}`);
       doc.text(`DNI/CUIL: ${datos.dni || 'Consumidor Final'}`);
       doc.text(`Domicilio: ${datos.domicilio || 'Sin especificar'}`);
+      doc.text(`WhatsApp: ${datos.whatsapp || 'No indicado'}`);
       doc.moveDown(1);
 
-      // ✅ DETALLE DE PRODUCTOS
-      doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE PRODUCTOS');
+      // ✅ DETALLE DE PRODUCTOS — TABLA ORDENADA
+      doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE COMPRA');
+      doc.moveDown(0.5);
       doc.fontSize(11).font('Helvetica');
+
       const productos = datos.productos || [];
       productos.forEach(p => {
-        const subtotal = (p.precio * p.cantidad).toFixed(2).replace('.', ',');
-        doc.text(`• ${p.nombre}  x${p.cantidad}  —  $ ${subtotal}`);
+        const subtotal = formatearMonto((p.precio || 0) * (p.cantidad || 1));
+        doc.text(`• ${p.nombre || 'Producto'}  × ${p.cantidad || 1}  —  $ ${subtotal}`);
       });
       doc.moveDown(1);
 
       // ✅ TOTAL
-      doc.fontSize(14).font('Helvetica-Bold').text(
-        `TOTAL A PAGAR: $ ${Number(datos.total).toFixed(2).replace('.', ',')}`, 
-        { align: 'right' }
-      );
+      const total = formatearMonto(datos.total || 0);
+      doc.fontSize(14).font('Helvetica-Bold').fillColor('#22B548');
+      doc.text(`TOTAL A PAGAR: $ ${total}`, { align: 'right' });
+      doc.fillColor('black');
       doc.moveDown(2);
 
       // ✅ PIE DE PÁGINA
@@ -99,18 +114,18 @@ async function crearFacturaPDF(datos) {
 
       doc.end();
 
-      // ✅ CUANDO TERMINA DE GUARDARSE
+      // ✅ ARCHIVO GUARDADO
       stream.on('finish', () => {
-        console.log(`✅ FACTURA PDF GENERADA: ${rutaCompleta}`);
+        console.log(`✅ FACTURA PDF LISTA: ${nombreArchivo}`);
         resolve({ 
           ok: true, 
           numero: numero, 
-          ruta: rutaCompleta,
-          nombreArchivo: nombreArchivo
+          archivo: nombreArchivo, // ← Coincide con BD
+          ruta: rutaCompleta
         });
       });
 
-      // ❌ SI HAY ERROR
+      // ❌ ERROR
       stream.on('error', (err) => {
         console.log(`❌ ERROR AL GUARDAR PDF: ${err.message}`);
         reject(new Error(`No se pudo guardar la factura: ${err.message}`));
@@ -122,5 +137,5 @@ async function crearFacturaPDF(datos) {
   });
 }
 
-// ✅ EXPORTAR
+// ✅ EXPORTAR — para llamar desde el controlador y afip-facturacion
 module.exports = { crearFacturaPDF };
