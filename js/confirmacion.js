@@ -1,7 +1,7 @@
 // ===== PÁGINA DE CONFIRMACIÓN DE PAGO =====
 window.addEventListener("DOMContentLoaded", () => {
     console.log("✅ Página de confirmación cargada");
-
+    
     // ✅ RECUPERAR DATOS — BUSCAR EN TODAS LAS UBICACIONES POSIBLES
     let pedidoGuardado = null;
     try {
@@ -60,7 +60,7 @@ window.addEventListener("DOMContentLoaded", () => {
         ordenElem.textContent = paymentId || pedidoId || "Completado";
     }
 
-    // ✅ GUARDAR TODO — WhatsApp YA ESTÁ GUARDADO
+    // ✅ GUARDAR TODO
     window._datosPedido = {
         nombre: pedidoGuardado.nombre || "Consumidor Final",
         whatsapp: pedidoGuardado.whatsapp || pedidoGuardado.telefono || "",
@@ -72,7 +72,6 @@ window.addEventListener("DOMContentLoaded", () => {
         carrito: carrito,
         totalCompra: totalCompra
     };
-
     console.log("✅ Datos completos:", window._datosPedido);
 
     // ✅ MOSTRAR FECHA
@@ -126,9 +125,9 @@ function mostrarBotonDescarga() {
     }
 }
 
-// ✅ PETICIÓN A LA API
+// ✅ FUNCIÓN PETICIÓN CORREGIDA
 async function peticion(url, metodo = "POST", datos = {}) {
-    const respuesta = await fetch(`/api/pedidos${url}`, {
+    const respuesta = await fetch(`/api${url}`, {
         method: metodo,
         headers: { "Content-Type": "application/json" },
         body: Object.keys(datos).length ? JSON.stringify(datos) : undefined
@@ -136,7 +135,7 @@ async function peticion(url, metodo = "POST", datos = {}) {
     return await respuesta.json();
 }
 
-// ✅ GENERAR FACTURA — SIN pedir WhatsApp
+// ✅ GENERAR FACTURA — MÉTODO CORREGIDO ✅
 async function generarYDescargar() {
     const datos = window._datosPedido || {};
     const contFactura = document.getElementById("contenedor-factura-generada");
@@ -151,8 +150,8 @@ async function generarYDescargar() {
     }
 
     try {
-        // ✅ Pedir factura al servidor
-        const respuesta = await peticion("/generar-factura-pdf", {
+        // 🔑 CORRECCIÓN PRINCIPAL: Pasar 'POST' como segundo parámetro
+        const respuesta = await peticion("/pedidos/generar-factura-pdf", "POST", {
             nombre: datos.nombre,
             whatsapp: datos.whatsapp,
             pedido_id: datos.pedidoId,
@@ -169,21 +168,21 @@ async function generarYDescargar() {
             throw new Error(respuesta.mensaje || "No se pudo generar la factura");
         }
 
-        // ✅ Cargar TU plantilla
+        // ✅ Cargar plantilla de factura
         const plantillaRes = await fetch('/facturacionadmin/factura-imprimible.html');
         if (!plantillaRes.ok) throw new Error("No se pudo cargar el formato de factura");
         let htmlFactura = await plantillaRes.text();
 
-        // ✅ Datos
-        const nroFactura = (respuesta.datos?.numero || 'Pendiente').split('|')[0].trim();
-        const cae = respuesta.datos?.cae || 'En trámite';
+        // ✅ Datos para la factura
+        const nroFactura = (respuesta.datos?.numero || respuesta.numero || 'Pendiente').split('|')[0].trim();
+        const cae = respuesta.datos?.cae || respuesta.cae || 'En trámite';
         const fecha = new Date().toLocaleDateString('es-AR', {
             day: '2-digit', month: '2-digit', year: 'numeric'
         });
         const totalNum = Number(datos.totalCompra) || 0;
         const ivaNum = totalNum * 0.21;
 
-        // ✅ Filas completas de la tabla
+        // ✅ Filas de productos
         const filasCompletas = datos.carrito.map(p => {
             const precio = Number(p.precio) || 0;
             const cant = Number(p.cantidad) || 1;
@@ -202,7 +201,7 @@ async function generarYDescargar() {
             `;
         }).join('');
 
-        // ✅ Reemplazar TODOS los marcadores
+        // ✅ Reemplazar marcadores
         htmlFactura = htmlFactura
             .replace(/\[NRO_FACTURA\]/g, nroFactura)
             .replace(/\[FECHA\]/g, fecha)
@@ -214,11 +213,11 @@ async function generarYDescargar() {
             .replace(/\[TOTAL\]/g, `$ ${totalNum.toLocaleString("es-AR", {minimumFractionDigits:2})}`)
             .replace(/\[IVA\]/g, `$ ${ivaNum.toLocaleString("es-AR", {minimumFractionDigits:2})}`);
 
-        // ✅ Mostrar factura
+        // ✅ Mostrar factura en pantalla
         document.getElementById("plantilla-factura").innerHTML = htmlFactura;
         contFactura.style.display = "block";
 
-        // ✅ Guardar para descarga
+        // ✅ Guardar datos para descarga
         window._facturaGenerada = {
             sesion_id: datos.sesion_id,
             numero: nroFactura
@@ -230,12 +229,13 @@ async function generarYDescargar() {
     }
 }
 
-// ✅ DESCARGAR PDF
+// ✅ DESCARGAR PDF — RUTA CORRECTA
 function descargarPDF() {
     if (!window._facturaGenerada) {
         alert("⚠️ Primero generá tu factura");
         return;
     }
     const sesion = window._facturaGenerada.sesion_id;
+    // 🔑 Ruta directa al archivo generado
     window.open(`/api/descargar-mi-factura/${encodeURIComponent(sesion)}`, '_blank');
 }
