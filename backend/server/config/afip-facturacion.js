@@ -1,7 +1,8 @@
 // ==================================================
 // 🧾 FACTURACIÓN ELECTRÓNICA — MAXIMUEBLES S.R.L.
 // ✅ CMS PKCS#7 REAL con node-forge → AFIP acepta ✅
-// ✅ Unificado con generación de PDF + descarga segura ✅
+// ✅ Rutas unificadas + descarga segura ✅
+// ✅ Sin conflictos TLS → AFIP + Mercado Pago conviven ✅
 // ==================================================
 const fs = require('fs-extra');
 const path = require('path');
@@ -27,7 +28,7 @@ const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const PUNTO_VENTA = process.env.AFIP_PUNTO_VENTA || "00010";
 const ENTORNO = process.env.AFIP_ENTORNO || "produccion";
 
-// ✅ LIMPIEZA DE CERTIFICADOS
+// ✅ LIMPIEZA DE CERTIFICADOS — Convierte \n reales
 const limpiarPem = (texto) => {
   if (!texto) return "";
   return texto
@@ -46,22 +47,21 @@ console.log(AFIP_CARGADO
   : "⚠️ Sin certificados → CAE simulado");
 
 // ==================================================
-// ✅ RUTA DE CARPETAS — COINCIDE CON SERVER.JS
+// ✅ RUTA DE CARPETAS — MISMA QUE server.js
 // ==================================================
 const CARPETA_FACTURAS = path.join(__dirname, 'facturacionadmin', 'facturas-generadas');
 fs.ensureDirSync(CARPETA_FACTURAS);
 console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
 
 // ==================================================
-// ✅ CONTADOR DE NÚMEROS — AHORA DESDE LA BASE DE DATOS
+// ✅ FORMATEAR MONTOS
 // ==================================================
-// Ya no usamos archivo, la BD es la fuente oficial
 function formatearMonto(n) {
   return Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 });
 }
 
 // ==================================================
-// 🔒 GENERAR XML DE TICKET — ESTRUCTURA EXACTA WSAA ✅
+// 🔒 GENERAR XML DE TICKET — WSAA
 // ==================================================
 function generarXMLTRA(fechaGen, fechaVenc, uniqueId) {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -76,7 +76,7 @@ function generarXMLTRA(fechaGen, fechaVenc, uniqueId) {
 }
 
 // ==================================================
-// 🔒 CONSTRUIR CMS PKCS#7 — MÉTODO OFICIAL ✅
+// 🔒 CONSTRUIR CMS PKCS#7 — node-forge
 // ==================================================
 function construirCMS_PKCS7(xmlDatos, certPem, clavePrivadaPem) {
   try {
@@ -142,7 +142,7 @@ async function obtenerTicketAFIP() {
 }
 
 // ==================================================
-// 📤 LLAMADA WSAA — SOAPAction CORRECTO ✅
+// 📤 LLAMADA WSAA — SOAPAction CORRECTO
 // ==================================================
 async function llamarWSAA(url, cmsFirmado) {
   const uri = new URL(url);
@@ -155,7 +155,6 @@ async function llamarWSAA(url, cmsFirmado) {
     </wsaa:loginCms>
   </soapenv:Body>
 </soapenv:Envelope>`;
-
   return new Promise((resolve, reject) => {
     const opciones = {
       hostname: uri.hostname,
@@ -184,12 +183,12 @@ async function llamarWSAA(url, cmsFirmado) {
 }
 
 // ==================================================
-// 📤 ENVIAR FACTURA A AFIP — FECAESolicitar ✅
+// 📤 ENVIAR FACTURA A AFIP — FECAESolicitar
 // ==================================================
 async function enviarFacturaAARCA(datos, ticketAFIP) {
   const numero = datos.numero;
   console.log(`📤 Enviando factura N° ${numero} a AFIP/ARCA...`);
-
+  
   if (AFIP_CARGADO && ticketAFIP) {
     try {
       const puntoVenta = parseInt(PUNTO_VENTA);
@@ -201,7 +200,7 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
       const nroComprobante = parseInt(numero.split('-')[1]);
       const cuitEmpresa = CUIT_EMPRESA.replace(/-/g, '');
       const dniComprador = String(datos.dni || '00000000').replace(/\D/g, '');
-
+      
       const xmlFactura = `<?xml version="1.0" encoding="UTF-8"?>
 <FECAESolicitarRequest xmlns="http://ar.gov.afip.dif.FEV1/">
   <Auth>
@@ -232,19 +231,19 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
     </FeDetReq>
   </FeCAEReq>
 </FECAESolicitarRequest>`;
-
+      
       const esProduccion = ENTORNO.toLowerCase() === 'produccion';
       const urlWSFE = esProduccion
         ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx'
         : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx';
-
+      
       console.log("📡 Enviando a:", urlWSFE);
       const respuestaAFIP = await hacerPeticionSOAP(urlWSFE, xmlFactura, 'FECAESolicitar');
       
       const caeMatch = respuestaAFIP.match(/<CAE>(\d+)<\/CAE>/);
       const vencMatch = respuestaAFIP.match(/<FchVtoCAE>(\d{8})<\/FchVtoCAE>/);
       const errMatch = respuestaAFIP.match(/<Desc>([^<]+)<\/Desc>/);
-
+      
       if (!caeMatch) {
         if (errMatch) {
           console.log("❌ AFIP devolvió:", errMatch[1]);
@@ -253,7 +252,7 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
         console.log("❌ Respuesta completa AFIP:", respuestaAFIP);
         throw new Error("AFIP no devolvió CAE");
       }
-
+      
       const cae = caeMatch[1];
       let fechaVenc = "Sin vencimiento";
       if (vencMatch) {
@@ -264,7 +263,7 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
         f.setDate(f.getDate() + 10);
         fechaVenc = f.toLocaleDateString('es-AR');
       }
-
+      
       console.log(`✅ ✅ CAE OFICIAL RECIBIDO DE AFIP: ${cae}`);
       console.log(`📅 Vencimiento CAE: ${fechaVenc}`);
       
@@ -273,7 +272,7 @@ async function enviarFacturaAARCA(datos, ticketAFIP) {
       console.log("❌ Error enviando a AFIP:", error.message);
     }
   }
-
+  
   // ⚠️ CAE SIMULADO
   console.log("⚠️ Usando CAE simulado");
   const caeSimulado = String(Math.floor(Math.random() * 90000000 + 10000000));
@@ -292,7 +291,6 @@ async function hacerPeticionSOAP(url, xmlBody, metodo) {
     ${xmlBody}
   </soap:Body>
 </soap:Envelope>`;
-
   return new Promise((resolve, reject) => {
     const uri = new URL(url);
     const opciones = {
@@ -319,7 +317,7 @@ async function hacerPeticionSOAP(url, xmlBody, metodo) {
 }
 
 // ==================================================
-// 💾 GENERAR PDF — FORMATO A4 VERTICAL ✅
+// 💾 GENERAR PDF — FORMATO A4 VERTICAL
 // ==================================================
 async function generarFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
@@ -330,26 +328,27 @@ async function generarFacturaPDF(datos) {
       const esOficial = datos.oficial;
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
+      
       const fecha = new Date().toLocaleDateString('es-AR', {
         day: '2-digit', month: '2-digit', year: 'numeric'
       });
-
+      
       const doc = new PDFDocument({
         size: 'A4',
         layout: 'portrait',
         margins: { top: 40, left: 40, right: 40, bottom: 40 }
       });
-
+      
       const stream = fs.createWriteStream(rutaCompleta);
       doc.pipe(stream);
-
+      
       // ===== ENCABEZADO =====
       doc.fontSize(20).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
       doc.fontSize(10).font('Helvetica').text(`CUIT: ${CUIT_EMPRESA}`, { align: 'center' });
       doc.text('Domicilio Fiscal: Roque Sáenz Peña y Castillón — Luis Beltrán — Río Negro', { align: 'center' });
       doc.text(`Punto de Venta N°: ${PUNTO_VENTA}`, { align: 'center' });
       doc.moveDown(1);
-
+      
       doc.fontSize(18).font('Helvetica-Bold').fillColor(esOficial ? '#22B548' : '#f59e0b').text('FACTURA B', { align: 'right' });
       doc.fillColor('black');
       doc.fontSize(11).font('Helvetica');
@@ -357,7 +356,7 @@ async function generarFacturaPDF(datos) {
       doc.text(`Fecha: ${fecha}`, { align: 'right' });
       doc.text(`CAE: ${cae}${vencimientoCAE ? ` — Vencimiento: ${vencimientoCAE}` : ''}`, { align: 'right' });
       doc.moveDown(1);
-
+      
       // ===== DATOS DEL COMPRADOR =====
       doc.fontSize(12).font('Helvetica-Bold').text('Datos del Comprador');
       doc.moveDown(0.5);
@@ -367,11 +366,11 @@ async function generarFacturaPDF(datos) {
       doc.text(`Domicilio: ${datos.domicilio || 'Sin especificar'}`);
       doc.text(`WhatsApp: ${datos.whatsapp || 'No indicado'}`);
       doc.moveDown(1);
-
+      
       // ===== TABLA DE PRODUCTOS =====
       doc.fontSize(12).font('Helvetica-Bold').text('Detalle de Compra');
       doc.moveDown(0.5);
-
+      
       const inicioY = doc.y;
       doc.fontSize(10).font('Helvetica-Bold');
       doc.text('Producto', 40, inicioY, { width: 260 });
@@ -381,7 +380,7 @@ async function generarFacturaPDF(datos) {
       
       doc.moveTo(40, inicioY + 15).lineTo(540, inicioY + 15).stroke();
       doc.fontSize(10).font('Helvetica');
-
+      
       let filaY = inicioY + 25;
       const productos = datos.productos || [];
       productos.forEach(p => {
@@ -389,7 +388,7 @@ async function generarFacturaPDF(datos) {
         const cant = Number(p.cantidad) || 1;
         const precio = Number(p.precio) || 0;
         const subtotal = precio * cant;
-
+        
         doc.text(nombre, 40, filaY, { width: 260 });
         doc.text(String(cant), 310, filaY, { width: 50, align: 'center' });
         doc.text(`$ ${formatearMonto(precio)}`, 370, filaY, { width: 80, align: 'right' });
@@ -398,16 +397,16 @@ async function generarFacturaPDF(datos) {
         filaY += 20;
         if (filaY > 750) { doc.addPage(); filaY = 60; }
       });
-
+      
       doc.moveDown(2);
       const totalNum = Number(datos.total) || 0;
       const ivaNum = totalNum * 0.21;
       
       doc.fontSize(11).font('Helvetica').text(`IVA (21%): $ ${formatearMonto(ivaNum)}`, { align: 'right' });
       doc.fontSize(14).font('Helvetica-Bold').fillColor('#22B548').text(`Total: $ ${formatearMonto(totalNum)}`, { align: 'right' });
-
+      
       doc.end();
-
+      
       stream.on('finish', () => {
         console.log(`✅ PDF GUARDADO: ${nombreArchivo}`);
         resolve({ 
@@ -417,7 +416,7 @@ async function generarFacturaPDF(datos) {
           cae 
         });
       });
-
+      
       stream.on('error', err => reject(err));
     } catch (error) {
       reject(error);
@@ -430,7 +429,6 @@ async function generarFacturaPDF(datos) {
 // ==================================================
 async function enviarCorreoConFactura(datos) {
   try {
-    // ✅ El número ya viene generado desde el controlador
     const numero = datos.numeroFactura;
     const datosCompletos = {
       ...datos,
@@ -438,7 +436,7 @@ async function enviarCorreoConFactura(datos) {
       dni: datos.dni_comprador || datos.dni || '00000000',
       domicilio: datos.domicilio_comprador || datos.domicilio || 'Sin especificar'
     };
-
+    
     // 1️⃣ Obtener ticket de AFIP
     const ticketAFIP = await obtenerTicketAFIP();
     
@@ -447,10 +445,10 @@ async function enviarCorreoConFactura(datos) {
     datosCompletos.cae = respuestaAFIP.cae;
     datosCompletos.vencimiento = respuestaAFIP.vencimiento;
     datosCompletos.oficial = respuestaAFIP.oficial;
-
+    
     // 3️⃣ Generar PDF
     const pdf = await generarFacturaPDF(datosCompletos);
-
+    
     // 4️⃣ Actualizar en la base de datos
     const db = require('../config/database');
     let resultado;
@@ -474,13 +472,13 @@ async function enviarCorreoConFactura(datos) {
     } else {
       throw new Error('Falta ID de pedido o sesión');
     }
-
+    
     if (resultado.rows.length === 0) throw new Error('Pedido no encontrado');
     const sesionIdFinal = resultado.rows[0].sesion_id;
-
+    
     // 5️⃣ Enlace de descarga segura
     const enlaceDescarga = `https://maximuebles-online.onrender.com/api/descargar-mi-factura/${encodeURIComponent(sesionIdFinal)}`;
-
+    
     // 6️⃣ Enlace de WhatsApp
     const mensaje = encodeURIComponent(
       `¡Hola ${datosCompletos.nombre}! Gracias por tu compra 🧾\n\n` +
@@ -493,7 +491,7 @@ async function enviarCorreoConFactura(datos) {
     const linkWhatsApp = datosCompletos.whatsapp
       ? `https://wa.me/${datosCompletos.whatsapp.replace(/\D/g, '')}?text=${mensaje}`
       : null;
-
+    
     console.log('\n' + '='.repeat(60));
     console.log(respuestaAFIP.oficial
       ? '✅ ✅ FACTURA ENVIADA A AFIP — CAE OFICIAL RECIBIDO ✅ ✅'
@@ -505,7 +503,7 @@ async function enviarCorreoConFactura(datos) {
     console.log(`🔗 Enlace descarga: ${enlaceDescarga}`);
     if (linkWhatsApp) console.log(`📱 WhatsApp: ${linkWhatsApp}`);
     console.log('='.repeat(60) + '\n');
-
+    
     return {
       exito: true,
       numero: numero,
@@ -516,7 +514,6 @@ async function enviarCorreoConFactura(datos) {
       whatsappLink: linkWhatsApp,
       oficial: respuestaAFIP.oficial
     };
-
   } catch (error) {
     console.log('❌ ERROR:', error.message);
     return { exito: false, error: error.message };

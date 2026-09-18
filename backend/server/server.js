@@ -1,13 +1,13 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ DESCARGA SEGURA DE FACTURAS + RUTAS CORRECTAS
-// ✅ CONEXIÓN NEON + MERCADO PAGO + PDFKIT
+// ✅ DESCARGA SEGURA DE FACTURAS + RUTAS UNIFICADAS ✅
+// ✅ CONEXIÓN NEON + MERCADO PAGO + PDF ✅
 // ==================================================
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs-extra'); // ✅ Cambiado a fs-extra
+const fs = require('fs-extra');
 const db = require('./config/database');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 
@@ -17,42 +17,34 @@ const mpClient = new MercadoPagoConfig({
 
 const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
 const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
-
 const app = express();
 
 // ==================================================
-// ✅ MANTENER NEON DESPIERTO CADA 3 MINUTOS
+// ✅ MANTENER NEON DESPIERTO
 // ==================================================
 setInterval(async () => {
   try {
     await db.query('SELECT 1');
     console.log('✅ Neon activo — Base de datos despierta');
   } catch (e) {
-    console.log('⚠️ Neon durmiendo, despertando...');
+    console.log('⚠️ Neon durmiendo...');
   }
 }, 180000);
 
 // ==================================================
-// ✅ CARPETA DE FACTURAS — RUTA CORRECTA Y GARANTIZADA
+// ✅ RUTA UNIFICADA DE FACTURAS — MISMA EN TODO EL SISTEMA
 // ==================================================
-const carpetaFacturas = path.join(__dirname, 'facturacionadmin', 'facturas-generadas');
-fs.ensureDirSync(carpetaFacturas); // ✅ Crea toda la ruta si no existe
-console.log('✅ Carpeta de facturas lista:', carpetaFacturas);
+const CARPETA_FACTURAS = path.join(__dirname, 'facturacionadmin', 'facturas-generadas');
+fs.ensureDirSync(CARPETA_FACTURAS);
+console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
 
-// ✅ BLOQUEAR ACCESO DIRECTO A LA CARPETA DE FACTURAS
+// ✅ BLOQUEAR ACCESO DIRECTO
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
-  res.status(403).send('🔒 Acceso restringido — Solo administración');
+  res.status(403).send('🔒 Acceso restringido');
 });
 
-// ✅ CARPETA PÚBLICA PARA ENLACES CORTOS (opcional, para WhatsApp)
-app.use('/facturas-publicas', express.static(carpetaFacturas, {
-  setHeaders: (res) => {
-    res.set('Content-Disposition', 'attachment'); // Fuerza descarga
-  }
-}));
-
 // ==================================================
-// ✅ DESCARGA SEGURA DE FACTURAS — POR sesion_id
+// ✅ DESCARGA SEGURA — POR sesion_id
 // ==================================================
 app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
   try {
@@ -65,13 +57,11 @@ app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
     );
 
     if (resultado.rows.length === 0) {
-      console.log("❌ NO encontrado. sesion_id =", sesionId);
-      const todos = await db.query('SELECT sesion_id FROM pedidos ORDER BY id DESC LIMIT 5');
-      console.log("📋 Últimos 5 sesion_id en BD:", todos.rows.map(r => r.sesion_id));
+      console.log("❌ Pedido no encontrado:", sesionId);
       return res.status(404).send(`
         <html style="font-family:system-ui;text-align:center;padding:3rem;">
           <h2 style="color:red;">⚠️ Factura no encontrada</h2>
-          <p>No hay pedido asociado a esta sesión.</p>
+          <p>No hay pedido asociado a este enlace.</p>
           <a href="/mi-cuenta/confirmacion.html">Volver a tu compra</a>
         </html>
       `);
@@ -80,50 +70,38 @@ app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
     const { factura_numero, factura_archivo, id } = resultado.rows[0];
     console.log("✅ Pedido encontrado — ID:", id, "Factura:", factura_numero);
 
-    if (!factura_numero || factura_numero === 'Pendiente') {
+    if (!factura_archivo) {
       return res.status(404).send(`
         <html style="font-family:system-ui;text-align:center;padding:3rem;">
           <h2 style="color:orange;">📄 Factura en proceso</h2>
-          <p>La factura aún no fue generada. Volvé a intentar en unos segundos.</p>
+          <p>La factura aún no fue generada. Intentá en unos segundos.</p>
           <a href="/mi-cuenta/confirmacion.html">Volver</a>
         </html>
       `);
     }
 
-    // ✅ Usar nombre de archivo guardado O armarlo
-    let nombreArchivo = factura_archivo;
-    if (!nombreArchivo) {
-      let nroLimpio = factura_numero.includes('|') 
-        ? factura_numero.split('|')[0].trim() 
-        : factura_numero;
-      nombreArchivo = `Factura-${nroLimpio}.pdf`;
-    }
+    const rutaCompleta = path.join(CARPETA_FACTURAS, factura_archivo);
+    console.log("📄 Buscando:", rutaCompleta);
+    console.log("✅ Existe:", fs.existsSync(rutaCompleta));
 
-    const rutaCompletaArchivo = path.join(carpetaFacturas, nombreArchivo);
-    console.log("📄 Buscando:", rutaCompletaArchivo);
-    console.log("✅ Existe:", fs.existsSync(rutaCompletaArchivo));
-
-    if (!fs.existsSync(rutaCompletaArchivo)) {
-      console.log("❌ Archivo NO existe");
-      const archivos = fs.readdirSync(carpetaFacturas);
-      console.log("📋 Archivos en carpeta:", archivos);
+    if (!fs.existsSync(rutaCompleta)) {
+      console.log("❌ Archivo NO existe en disco");
       return res.status(404).send(`
         <html style="font-family:system-ui;text-align:center;padding:3rem;">
           <h2 style="color:red;">❌ PDF no encontrado</h2>
-          <p>El archivo no se generó correctamente. Contactanos.</p>
+          <p>El archivo no se generó correctamente.</p>
         </html>
       `);
     }
 
-    res.download(rutaCompletaArchivo, nombreArchivo, (err) => {
+    res.download(rutaCompleta, factura_archivo, (err) => {
       if (err) {
         console.log('❌ Error descargando:', err.message);
         res.status(500).send('Error al descargar');
       } else {
-        console.log("✅ Descarga entregada:", nombreArchivo);
+        console.log("✅ Descarga entregada:", factura_archivo);
       }
     });
-
   } catch (error) {
     console.error('❌ Error:', error.message);
     res.status(500).send('Error del servidor');
@@ -140,7 +118,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ ARCHIVOS ESTÁTICOS — DESDE RAÍZ
+// ✅ ARCHIVOS ESTÁTICOS — desde raíz del proyecto
 app.use(express.static(path.join(__dirname, '../../')));
 
 // ✅ PÁGINA PRINCIPAL
@@ -200,10 +178,8 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
     res.json({ 
       ok: true, 
       mensaje: 'Preferencia creada', 
-      datos: respuesta,
       urlPago: respuesta.init_point
     });
-
   } catch (error) {
     console.error('❌ Error Mercado Pago:', error.message);
     res.json({ ok: false, mensaje: error.message });
@@ -220,12 +196,12 @@ app.get('/api/estado', (req, res) => {
     empresa: NOMBRE_EMPRESA,
     cuit: CUIT_EMPRESA,
     mp: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
-    carpeta_facturas: carpetaFacturas
+    carpeta_facturas: CARPETA_FACTURAS
   });
 });
 
 // ==================================================
-// ✅ RUTAS AMIGABLES SIN .HTML
+// ✅ RUTAS AMIGABLES
 // ==================================================
 const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
 app.use((req, res, siguiente) => {
@@ -234,12 +210,6 @@ app.use((req, res, siguiente) => {
   }
   siguiente();
 });
-
-// ✅ CACHÉ DE RECURSOS
-const unDia = 86400000, unaSemana = unDia * 7;
-app.use('/assets', express.static(path.join(__dirname, '../../assets'), { maxAge: unaSemana }));
-app.use('/css', express.static(path.join(__dirname, '../../css'), { maxAge: unDia * 3 }));
-app.use('/js', express.static(path.join(__dirname, '../../js'), { maxAge: unDia * 3 }));
 
 // ==================================================
 // ✅ INICIAR SERVIDOR
@@ -253,5 +223,5 @@ app.listen(PUERTO, () => {
   console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
   console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
   console.log(`🔑 Descarga segura: /api/descargar-mi-factura/`);
-  console.log(`📄 Carpeta PDFs: ${carpetaFacturas}`);
+  console.log(`📄 Carpeta PDFs: ${CARPETA_FACTURAS}`);
 });

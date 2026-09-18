@@ -1,6 +1,6 @@
 const db = require('../config/database');
 const { enviarCorreoConFactura } = require('../config/afip-facturacion');
-const { crearFacturaPDF } = require('../config/generar-pdf'); // ✅ Agregado
+const { crearFacturaPDF } = require('../config/generar-factura'); // ✅ Agregado
 
 // ✅ Crear pedido — WhatsApp + sesion_id confirmado desde BD
 exports.crearPedido = async (req, res) => {
