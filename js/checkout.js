@@ -149,16 +149,18 @@ async function procesarPago() {
       datosComprador: { nombre, whatsapp }
     });
 
-    console.log("💳 Respuesta Mercado Pago:", respPago);
+        console.log("💳 Respuesta Mercado Pago:", respPago);
 
-    // ✅ AHORA COINCIDE: respPago.urlPago
-    if (respPago.ok && respPago.urlPago) {
+    // ✅ CORRECTO: urlPago está DENTRO de .datos
+    if (respPago.ok && respPago.datos && respPago.datos.urlPago) {
       localStorage.removeItem("carrito");
       alert("✅ ¡Listo! A continuación serás redirigido a Mercado Pago");
-      window.location.href = respPago.urlPago; // ✅ ESTO ES LO QUE FALTABA
+      window.location.href = respPago.datos.urlPago;
     } else {
+      console.log("❌ No encontré urlPago en la respuesta:", respPago);
       alert(respPago.mensaje || "No se pudo generar el enlace de pago");
     }
+
   } catch (error) {
     console.error("❌ Error en el proceso:", error);
     alert("Hubo un problema al procesar tu compra. Intentá nuevamente.");
