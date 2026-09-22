@@ -1,6 +1,6 @@
 // ==================================================
 // SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ DESCARGA SEGURA DE FACTURAS + RUTAS UNIFICADAS ✅
+// ✅ DESCARGA SEGURA DE FACTURAS + RUTA DE GENERACIÓN ✅
 // ✅ CONEXIÓN NEON + MERCADO PAGO + PDF ✅
 // ==================================================
 require('dotenv').config();
@@ -10,6 +10,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const db = require('./config/database');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
+const { generarFacturaPDF } = require('./config/generar-factura'); // ✅ Importar generador
 
 const mpClient = new MercadoPagoConfig({ 
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN 
@@ -41,6 +42,70 @@ console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
 // ✅ BLOQUEAR ACCESO DIRECTO
 app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
   res.status(403).send('🔒 Acceso restringido');
+});
+
+// ==================================================
+// ✅ RUTA QUE FALTABA — GENERAR FACTURA PDF ✅
+// ==================================================
+app.post('/api/pedidos/generar-factura-pdf', async (req, res) => {
+  try {
+    const { sesion_id, nombre, whatsapp, dni, domicilio, productos, total } = req.body;
+    console.log("🧾 Generando factura para sesion_id:", sesion_id);
+
+    // 1. Obtener número secuencial de factura
+    const ultimo = await db.query(
+      'SELECT factura_numero FROM pedidos WHERE factura_numero IS NOT NULL ORDER BY id DESC LIMIT 1'
+    );
+    
+    let numeroSec = '00000001';
+    if (ultimo.rows.length > 0 && ultimo.rows[0].factura_numero) {
+      const num = ultimo.rows[0].factura_numero.split('-')[1];
+      numeroSec = String(parseInt(num) + 1).padStart(8, '0');
+    }
+    const numeroFactura = `00010-${numeroSec}`;
+    const nombreArchivo = `Factura-${numeroFactura}.pdf`;
+
+    // 2. Generar el PDF físico
+    await generarFacturaPDF({
+      numero: numeroFactura,
+      nombre: nombre || "Consumidor Final",
+      dni: dni || "Consumidor Final",
+      domicilio: domicilio || "Sin especificar",
+      productos: productos,
+      total: total,
+      archivo: nombreArchivo
+    });
+
+    // 3. Guardar en la base de datos
+    await db.query(`
+      UPDATE pedidos 
+      SET 
+        factura_numero = $1,
+        factura_archivo = $2,
+        dni_comprador = $3,
+        factura_generada = true,
+        fecha_factura = NOW()
+      WHERE sesion_id = $4
+    `, [numeroFactura, nombreArchivo, dni || null, sesion_id]);
+
+    console.log("✅ Factura generada y guardada:", numeroFactura, "→", nombreArchivo);
+
+    res.json({
+      ok: true,
+      mensaje: "Factura generada correctamente",
+      datos: {
+        numero: numeroFactura,
+        cae: "PENDIENTE_AFIP",
+        archivo: nombreArchivo
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error generando factura:", error);
+    res.status(500).json({ 
+      ok: false, 
+      mensaje: error.message || "No se pudo generar la factura" 
+    });
+  }
 });
 
 // ==================================================
@@ -175,7 +240,6 @@ app.post('/api/crear-preferencia-pago', async (req, res) => {
       }
     });
 
-    // ✅ Coincide con lo que busca checkout.js: respPago.datos.urlPago
     res.json({ 
       ok: true, 
       mensaje: 'Preferencia creada',
