@@ -1,24 +1,22 @@
 // ==================================================
 // 🧾 GENERADOR DE FACTURAS PDF — MAXIMUEBLES
 // ✅ MISMA RUTA EN TODO EL SISTEMA ✅
-// ✅ FORMATO A4 VERTICAL → NO SE DESORDENA AL IMPRIMIR ✅
-// ✅ NOMBRE DE ARCHIVO IGUAL EN DESCARGA ✅
+// ✅ FORMATO A4 VERTICAL ✅
+// ✅ NOMBRE DE FUNCIÓN COINCIDENTE ✅
 // ==================================================
-const fs = require('fs-extra'); // ✅ Crea carpetas automáticamente
+const fs = require('fs-extra');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
 // ==================================================
-// ✅ RUTA UNIFICADA — COINCIDE CON server.js y afip-facturacion.js
+// ✅ RUTA UNIFICADA — Coincide con server.js
 // ==================================================
 const CARPETA_FACTURAS = path.join(__dirname, '../facturacionadmin/facturas-generadas');
-
-// ✅ Crear carpeta completa si no existe
 fs.ensureDirSync(CARPETA_FACTURAS);
 console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
 
 // ==================================================
-// ✅ FORMATEAR NÚMEROS CON COMA ARGENTINA
+// ✅ FORMATEAR MONTOS CON FORMATO ARGENTINO
 // ==================================================
 function formatearMonto(n) {
   return Number(n || 0).toLocaleString('es-AR', {
@@ -28,9 +26,9 @@ function formatearMonto(n) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL
+// 🚀 FUNCIÓN PRINCIPAL — NOMBRE CORRECTO ✅
 // ==================================================
-async function crearFacturaPDF(datos) {
+async function generarFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
     try {
       const numero = datos.numero;
@@ -38,11 +36,11 @@ async function crearFacturaPDF(datos) {
       const vencimientoCAE = datos.vencimiento || '';
       const esOficial = datos.oficial !== false;
 
-      // ✅ NOMBRE EXACTO → Coincide con descarga segura
+      // ✅ NOMBRE DE ARCHIVO COINCIDENTE CON DESCARGA
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
-      
-      // ✅ Solo fecha, sin hora
+
+      // ✅ Fecha formato DD/MM/AAAA
       const fecha = new Date().toLocaleDateString('es-AR', {
         day: '2-digit', month: '2-digit', year: 'numeric'
       });
@@ -50,7 +48,7 @@ async function crearFacturaPDF(datos) {
       console.log(`📄 Generando factura: ${numero}`);
       console.log(`📂 Guardando en: ${rutaCompleta}`);
 
-      // ✅ DOCUMENTO A4 VERTICAL → Fijo para impresión
+      // ✅ DOCUMENTO A4 VERTICAL
       const doc = new PDFDocument({
         size: 'A4',
         layout: 'portrait',
@@ -61,7 +59,7 @@ async function crearFacturaPDF(datos) {
       doc.pipe(stream);
 
       // ======================================
-      // ✅ ENCABEZADO — TU DISEÑO PRESERVADO
+      // ✅ ENCABEZADO
       // ======================================
       doc.fontSize(20).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
       doc.fontSize(11).font('Helvetica').text(`CUIT: 30-71500272-4`, { align: 'center' });
@@ -89,11 +87,10 @@ async function crearFacturaPDF(datos) {
       doc.text(`WhatsApp: ${datos.whatsapp || 'No indicado'}`);
       doc.moveDown(1);
 
-      // ✅ DETALLE DE PRODUCTOS — TABLA ORDENADA
+      // ✅ DETALLE DE PRODUCTOS
       doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE COMPRA');
       doc.moveDown(0.5);
       doc.fontSize(11).font('Helvetica');
-
       const productos = datos.productos || [];
       productos.forEach(p => {
         const subtotal = formatearMonto((p.precio || 0) * (p.cantidad || 1));
@@ -120,12 +117,12 @@ async function crearFacturaPDF(datos) {
         resolve({ 
           ok: true, 
           numero: numero, 
-          archivo: nombreArchivo, // ← Coincide con BD
+          archivo: nombreArchivo,
           ruta: rutaCompleta
         });
       });
 
-      // ❌ ERROR
+      // ❌ ERROR AL GUARDAR
       stream.on('error', (err) => {
         console.log(`❌ ERROR AL GUARDAR PDF: ${err.message}`);
         reject(new Error(`No se pudo guardar la factura: ${err.message}`));
@@ -137,5 +134,5 @@ async function crearFacturaPDF(datos) {
   });
 }
 
-// ✅ EXPORTAR — para llamar desde el controlador y afip-facturacion
-module.exports = { crearFacturaPDF };
+// ✅ EXPORTACIÓN CORRECTA — Coincide con server.js
+module.exports = { generarFacturaPDF };
