@@ -1,294 +1,98 @@
 // ==================================================
-// SERVIDOR MAXIMUEBLES · TIENDA ONLINE
-// ✅ DESCARGA SEGURA DE FACTURAS + RUTA DE GENERACIÓN ✅
-// ✅ CONEXIÓN NEON + MERCADO PAGO + PDF ✅
+// 🧾 GENERADOR DE FACTURAS PDF — RUTA EN RAÍZ ✅
 // ==================================================
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
 const fs = require('fs-extra');
-const db = require('./config/database');
-const { MercadoPagoConfig, Preference } = require('mercadopago');
-const { generarFacturaPDF } = require('./config/generar-factura'); // ✅ Importar generador
+const path = require('path');
+const PDFDocument = require('pdfkit');
 
-const mpClient = new MercadoPagoConfig({ 
-  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN 
-});
-
-const CUIT_EMPRESA = process.env.CUIT_EMPRESA || "30715002724";
-const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA || "MAXIMUEBLES S.R.L.";
-const app = express();
-
-// ==================================================
-// ✅ MANTENER NEON DESPIERTO
-// ==================================================
-setInterval(async () => {
-  try {
-    await db.query('SELECT 1');
-    console.log('✅ Neon activo — Base de datos despierta');
-  } catch (e) {
-    console.log('⚠️ Neon durmiendo...');
-  }
-}, 180000);
-
-// ==================================================
-// ✅ RUTA UNIFICADA DE FACTURAS
-// ==================================================
-const CARPETA_FACTURAS = path.join(__dirname, 'facturacionadmin', 'facturas-generadas');
+// ✅ RUTA CORRECTA: subir dos niveles → raíz del proyecto
+const CARPETA_FACTURAS = path.join(__dirname, '../../../facturacionadmin/facturas-generadas');
 fs.ensureDirSync(CARPETA_FACTURAS);
 console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
 
-// ✅ BLOQUEAR ACCESO DIRECTO
-app.use('/facturacionadmin/facturas-generadas/', (req, res) => {
-  res.status(403).send('🔒 Acceso restringido');
-});
-
-// ==================================================
-// ✅ RUTA QUE FALTABA — GENERAR FACTURA PDF ✅
-// ==================================================
-app.post('/api/pedidos/generar-factura-pdf', async (req, res) => {
-  try {
-    const { sesion_id, nombre, whatsapp, dni, domicilio, productos, total } = req.body;
-    console.log("🧾 Generando factura para sesion_id:", sesion_id);
-
-    // 1. Obtener número secuencial de factura
-    const ultimo = await db.query(
-      'SELECT factura_numero FROM pedidos WHERE factura_numero IS NOT NULL ORDER BY id DESC LIMIT 1'
-    );
-    
-    let numeroSec = '00000001';
-    if (ultimo.rows.length > 0 && ultimo.rows[0].factura_numero) {
-      const num = ultimo.rows[0].factura_numero.split('-')[1];
-      numeroSec = String(parseInt(num) + 1).padStart(8, '0');
-    }
-    const numeroFactura = `00010-${numeroSec}`;
-    const nombreArchivo = `Factura-${numeroFactura}.pdf`;
-
-    // 2. Generar el PDF físico
-    await generarFacturaPDF({
-      numero: numeroFactura,
-      nombre: nombre || "Consumidor Final",
-      dni: dni || "Consumidor Final",
-      domicilio: domicilio || "Sin especificar",
-      productos: productos,
-      total: total,
-      archivo: nombreArchivo
-    });
-
-    // 3. Guardar en la base de datos
-    await db.query(`
-      UPDATE pedidos 
-      SET 
-        factura_numero = $1,
-        factura_archivo = $2,
-        dni_comprador = $3,
-        factura_generada = true,
-        fecha_factura = NOW()
-      WHERE sesion_id = $4
-    `, [numeroFactura, nombreArchivo, dni || null, sesion_id]);
-
-    console.log("✅ Factura generada y guardada:", numeroFactura, "→", nombreArchivo);
-
-    res.json({
-      ok: true,
-      mensaje: "Factura generada correctamente",
-      datos: {
-        numero: numeroFactura,
-        cae: "PENDIENTE_AFIP",
-        archivo: nombreArchivo
-      }
-    });
-  } catch (error) {
-    console.error("❌ Error generando factura:", error);
-    res.status(500).json({ 
-      ok: false, 
-      mensaje: error.message || "No se pudo generar la factura" 
-    });
-  }
-});
-
-// ==================================================
-// ✅ DESCARGA SEGURA — POR sesion_id
-// ==================================================
-app.get('/api/descargar-mi-factura/:sesionId(*)', async (req, res) => {
-  try {
-    const sesionId = decodeURIComponent(req.params.sesionId);
-    console.log("📥 Buscando sesion_id:", sesionId);
-
-    const resultado = await db.query(
-      'SELECT factura_numero, factura_archivo, id FROM pedidos WHERE sesion_id = $1 LIMIT 1',
-      [sesionId]
-    );
-
-    if (resultado.rows.length === 0) {
-      console.log("❌ Pedido no encontrado:", sesionId);
-      return res.status(404).send(`
-        <html style="font-family:system-ui;text-align:center;padding:3rem;">
-          <h2 style="color:red;">⚠️ Factura no encontrada</h2>
-          <p>No hay pedido asociado a este enlace.</p>
-          <a href="/mi-cuenta/confirmacion.html">Volver a tu compra</a>
-        </html>
-      `);
-    }
-
-    const { factura_numero, factura_archivo, id } = resultado.rows[0];
-    console.log("✅ Pedido encontrado — ID:", id, "Factura:", factura_numero);
-
-    if (!factura_archivo) {
-      return res.status(404).send(`
-        <html style="font-family:system-ui;text-align:center;padding:3rem;">
-          <h2 style="color:orange;">📄 Factura en proceso</h2>
-          <p>La factura aún no fue generada. Intentá en unos segundos.</p>
-          <a href="/mi-cuenta/confirmacion.html">Volver</a>
-        </html>
-      `);
-    }
-
-    const rutaCompleta = path.join(CARPETA_FACTURAS, factura_archivo);
-    console.log("📄 Buscando:", rutaCompleta);
-    console.log("✅ Existe:", fs.existsSync(rutaCompleta));
-
-    if (!fs.existsSync(rutaCompleta)) {
-      console.log("❌ Archivo NO existe en disco");
-      return res.status(404).send(`
-        <html style="font-family:system-ui;text-align:center;padding:3rem;">
-          <h2 style="color:red;">❌ PDF no encontrado</h2>
-          <p>El archivo no se generó correctamente.</p>
-        </html>
-      `);
-    }
-
-    res.download(rutaCompleta, factura_archivo, (err) => {
-      if (err) {
-        console.log('❌ Error descargando:', err.message);
-        res.status(500).send('Error al descargar');
-      } else {
-        console.log("✅ Descarga entregada:", factura_archivo);
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-    res.status(500).send('Error del servidor');
-  }
-});
-
-// ==================================================
-// ✅ CONFIGURACIÓN GENERAL
-// ==================================================
-const PUERTO = process.env.PORT || 10000;
-const WEB_URL = process.env.WEB_URL || "https://maximuebles-online.onrender.com";
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ✅ ARCHIVOS ESTÁTICOS — desde raíz del proyecto
-app.use(express.static(path.join(__dirname, '../../')));
-
-// ✅ PÁGINA PRINCIPAL
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../index.html'));
-});
-
-// ==================================================
-// ✅ RUTAS DE LA TIENDA
-// ==================================================
-const productosRutas = require('./routes/productos.routes');
-app.use('/api/productos', productosRutas);
-
-const carritoRutas = require('./routes/carrito.routes');
-app.use('/api/carrito', carritoRutas);
-
-const pedidosRutas = require('./routes/pedidos.routes');
-app.use('/api/pedidos', pedidosRutas);
-
-const contactoRutas = require('./routes/contacto.routes');
-app.use('/api/contacto', contactoRutas);
-
-// ==================================================
-// 💳 MERCADO PAGO — Respuesta coincidente con frontend ✅
-// ==================================================
-app.post('/api/crear-preferencia-pago', async (req, res) => {
-  try {
-    const { productos, total, datosComprador } = req.body;
-    const sesion_id = req.query.sesion_id || 'invitado';
-
-    const items = productos.map(item => ({
-      id: String(item.id),
-      title: item.nombre,
-      quantity: Number(item.cantidad),
-      unit_price: Number(item.precio)
-    }));
-
-    const preferencia = new Preference(mpClient);
-    const respuesta = await preferencia.create({
-      body: {
-        items,
-        payer: {
-          name: datosComprador?.nombre || 'Invitado',
-          email: datosComprador?.whatsapp || 'cliente@maximuebles.com'
-        },
-        back_urls: {
-          success: `${WEB_URL}/mi-cuenta/confirmacion.html`,
-          failure: `${WEB_URL}/mi-cuenta/carrito.html`,
-          pending: `${WEB_URL}/mi-cuenta/confirmacion.html`
-        },
-        auto_return: 'approved',
-        notification_url: `${WEB_URL}/api/notificacion-pago?sesion_id=${sesion_id}`,
-        external_reference: sesion_id
-      }
-    });
-
-    res.json({ 
-      ok: true, 
-      mensaje: 'Preferencia creada',
-      datos: {
-        urlPago: respuesta.init_point
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error Mercado Pago:', error.message);
-    res.json({ ok: false, mensaje: error.message });
-  }
-});
-
-// ==================================================
-// ✅ ESTADO DEL SERVIDOR
-// ==================================================
-app.get('/api/estado', (req, res) => {
-  res.json({
-    ok: true,
-    mensaje: '✅ Servidor en línea',
-    empresa: NOMBRE_EMPRESA,
-    cuit: CUIT_EMPRESA,
-    mp: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
-    carpeta_facturas: CARPETA_FACTURAS
+function formatearMonto(n) {
+  return Number(n || 0).toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
-});
+}
 
-// ==================================================
-// ✅ RUTAS AMIGABLES
-// ==================================================
-const rutasSinHtml = ['/index','/nosotros','/contacto','/ayuda','/comedor','/dormitorio','/living','/oficina','/ofertas'];
-app.use((req, res, siguiente) => {
-  if (rutasSinHtml.includes(req.path)) {
-    return res.sendFile(path.join(__dirname, `../../${req.path.slice(1)}.html`));
-  }
-  siguiente();
-});
+async function generarFacturaPDF(datos) {
+  return new Promise((resolve, reject) => {
+    try {
+      const numero = datos.numero;
+      const cae = datos.cae || 'EN PROCESO';
+      const nombreArchivo = `Factura-${numero}.pdf`;
+      const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
 
-// ==================================================
-// ✅ INICIAR SERVIDOR
-// ==================================================
-app.listen(PUERTO, () => {
-  console.log('='.repeat(60));
-  console.log(`✅ SERVIDOR DE ${NOMBRE_EMPRESA} — EN LÍNEA`);
-  console.log('='.repeat(60));
-  console.log(`📍 Puerto: ${PUERTO}`);
-  console.log(`🗄️  DB: Conectada ✅`);
-  console.log(`💳 MP: ${process.env.MERCADO_PAGO_ACCESS_TOKEN ? '✅' : '❌'}`);
-  console.log(`🔒 Carpeta facturacionadmin: PROTEGIDA`);
-  console.log(`🔑 Descarga segura: /api/descargar-mi-factura/`);
-  console.log(`📄 Carpeta PDFs: ${CARPETA_FACTURAS}`);
-});
+      const fecha = new Date().toLocaleDateString('es-AR', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+
+      console.log(`📄 Generando: ${numero} → ${rutaCompleta}`);
+
+      const doc = new PDFDocument({
+        size: 'A4',
+        layout: 'portrait',
+        margins: { top: 40, left: 40, right: 40, bottom: 50 }
+      });
+
+      const stream = fs.createWriteStream(rutaCompleta);
+      doc.pipe(stream);
+
+      // Encabezado
+      doc.fontSize(20).font('Helvetica-Bold').text('MAXIMUEBLES S.R.L.', { align: 'center' });
+      doc.fontSize(11).font('Helvetica').text('CUIT: 30-71500272-4', { align: 'center' });
+      doc.text('Domicilio Fiscal: Roque Sáenz Peña y Castillón — Luis Beltrán — Río Negro', { align: 'center' });
+      doc.text(`Punto de Venta N°: ${process.env.AFIP_PUNTO_VENTA || "00010"}`, { align: 'center' });
+      doc.moveDown(1);
+
+      doc.fontSize(18).font('Helvetica-Bold').text('FACTURA B', { align: 'right' });
+      doc.fontSize(11).font('Helvetica');
+      doc.text(`N°: ${numero}`, { align: 'right' });
+      doc.text(`Fecha: ${fecha}`, { align: 'right' });
+      doc.text(`CAE: ${cae}`, { align: 'right' });
+      doc.moveDown(1);
+
+      doc.fontSize(12).font('Helvetica-Bold').text('DATOS DEL COMPRADOR');
+      doc.moveDown(0.5);
+      doc.fontSize(11).font('Helvetica');
+      doc.text(`Nombre: ${datos.nombre || 'Consumidor Final'}`);
+      doc.text(`DNI/CUIL: ${datos.dni || 'Consumidor Final'}`);
+      doc.text(`Domicilio: ${datos.domicilio || 'Sin especificar'}`);
+      doc.text(`WhatsApp: ${datos.whatsapp || 'No indicado'}`);
+      doc.moveDown(1);
+
+      doc.fontSize(12).font('Helvetica-Bold').text('DETALLE DE COMPRA');
+      doc.moveDown(0.5);
+      doc.fontSize(11).font('Helvetica');
+      const productos = datos.productos || [];
+      productos.forEach(p => {
+        const subtotal = formatearMonto((p.precio || 0) * (p.cantidad || 1));
+        doc.text(`• ${p.nombre || 'Producto'}  × ${p.cantidad || 1}  —  $ ${subtotal}`);
+      });
+      doc.moveDown(1);
+
+      const total = formatearMonto(datos.total || 0);
+      doc.fontSize(14).font('Helvetica-Bold').fillColor('#22B548');
+      doc.text(`TOTAL A PAGAR: $ ${total}`, { align: 'right' });
+      doc.fillColor('black');
+
+      doc.end();
+
+      stream.on('finish', () => {
+        console.log(`✅ PDF GUARDADO: ${nombreArchivo}`);
+        resolve({ ok: true, archivo: nombreArchivo });
+      });
+
+      stream.on('error', (err) => {
+        console.log(`❌ Error: ${err.message}`);
+        reject(err);
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+module.exports = { generarFacturaPDF };

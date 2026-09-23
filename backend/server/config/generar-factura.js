@@ -1,17 +1,19 @@
 // ==================================================
 // 🧾 GENERADOR DE FACTURAS PDF — MAXIMUEBLES
-// ✅ MISMA RUTA EN TODO EL SISTEMA ✅
+// ✅ RUTA EN RAÍZ DEL PROYECTO ✅
 // ✅ FORMATO A4 VERTICAL ✅
-// ✅ NOMBRE DE FUNCIÓN COINCIDENTE ✅
 // ==================================================
 const fs = require('fs-extra');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
 // ==================================================
-// ✅ RUTA UNIFICADA — Coincide con server.js
+// ✅ RUTA CORREGIDA → SUBE 3 NIVELES HASTA LA RAÍZ
 // ==================================================
-const CARPETA_FACTURAS = path.join(__dirname, '../facturacionadmin/facturas-generadas');
+// Ubicación de este archivo: backend/server/config/generar-factura.js
+// Carpeta destino: facturacionadmin/facturas-generadas/ (en raíz)
+const CARPETA_FACTURAS = path.join(__dirname, '../../../facturacionadmin/facturas-generadas');
+
 fs.ensureDirSync(CARPETA_FACTURAS);
 console.log('✅ Carpeta de facturas lista:', CARPETA_FACTURAS);
 
@@ -26,7 +28,7 @@ function formatearMonto(n) {
 }
 
 // ==================================================
-// 🚀 FUNCIÓN PRINCIPAL — NOMBRE CORRECTO ✅
+// 🚀 FUNCIÓN PRINCIPAL
 // ==================================================
 async function generarFacturaPDF(datos) {
   return new Promise((resolve, reject) => {
@@ -36,7 +38,7 @@ async function generarFacturaPDF(datos) {
       const vencimientoCAE = datos.vencimiento || '';
       const esOficial = datos.oficial !== false;
 
-      // ✅ NOMBRE DE ARCHIVO COINCIDENTE CON DESCARGA
+      // ✅ NOMBRE DE ARCHIVO
       const nombreArchivo = `Factura-${numero}.pdf`;
       const rutaCompleta = path.join(CARPETA_FACTURAS, nombreArchivo);
 
@@ -134,5 +136,5 @@ async function generarFacturaPDF(datos) {
   });
 }
 
-// ✅ EXPORTACIÓN CORRECTA — Coincide con server.js
+// ✅ EXPORTACIÓN
 module.exports = { generarFacturaPDF };
